@@ -53,6 +53,29 @@ streamlit run app.py
 
 La aplicación quedará disponible por defecto en `http://localhost:8501`.
 
+## Docker
+
+Build local:
+
+```bash
+docker build -t arquetipos-app .
+```
+
+Run local:
+
+```bash
+docker run --rm -p 8501:8501 arquetipos-app
+```
+
+La imagen expone `8501` y también soporta la variable de entorno `PORT`, útil para Coolify.
+
+## Coolify
+
+- Tipo de despliegue: `Dockerfile`
+- Puerto interno: `8501`
+- Rama recomendada: `develop`
+- Comando de inicio adicional: no es necesario
+
 ## Notas
 
 - El resultado es interpretativo y educativo.
