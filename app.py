@@ -255,7 +255,7 @@ def generar_pdf_reporte() -> BytesIO:
 
 
 def render_landing() -> None:
-    st.title("Descubre la fuerza que dirige tu vida")
+    st.title("🙂 Descubre la fuerza que dirige tu vida")
     st.markdown(
         "Existe un patrón psicológico oculto guiando tus decisiones, crisis y relaciones. "
         "Descúbrelo en **60 segundos**."
