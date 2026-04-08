@@ -55,6 +55,14 @@ def obtener_ranking(scores: dict[str, float]) -> list[tuple[str, float]]:
     return sorted(scores.items(), key=lambda item: item[1], reverse=True)
 
 
+def obtener_rango_edad(edad: int) -> str:
+    if edad <= 34:
+        return "18 - 34 años (Construcción del Ego)"
+    if edad <= 50:
+        return "35 - 50 años (La Transición / Metanoia)"
+    return "51+ años (Integración y Sabiduría)"
+
+
 def inicializar_estado() -> None:
     defaults = {
         "step": "landing",
@@ -149,76 +157,50 @@ def aplicar_estilos() -> None:
         font-size: 0.92rem;
         margin-top: 0.85rem;
     }
-    .likert-shell {
+    .likert-preview {
         background: rgba(255,255,255,0.84);
-        border-radius: 28px;
+        border-radius: 26px;
         border: 1px solid rgba(132, 151, 193, 0.18);
         box-shadow: 0 16px 34px rgba(68, 89, 135, 0.10);
-        padding: 0.9rem 0.8rem 0.7rem;
+        padding: 0.85rem 0.75rem 0.6rem;
         margin-top: 0.85rem;
-        position: relative;
     }
-    .likert-track {
+    .likert-preview-grid {
         display: grid;
         grid-template-columns: repeat(5, 1fr);
-        border-radius: 999px;
-        overflow: hidden;
-        border: 1px solid rgba(130, 149, 192, 0.18);
-        margin-bottom: 0.55rem;
+        gap: 0.35rem;
+        align-items: start;
     }
-    .likert-segment {
-        min-height: 58px;
+    .likert-preview-item {
+        text-align: center;
+    }
+    .likert-preview-icon {
+        min-height: 54px;
+        border-radius: 999px;
         display: flex;
         align-items: center;
         justify-content: center;
         color: white;
-        font-size: 1.45rem;
+        font-size: 1.4rem;
         font-weight: 800;
+        box-shadow: inset 0 -2px 0 rgba(0,0,0,0.05);
     }
-    .likert-bubble-row {
-        position: relative;
-        height: 0;
-        z-index: 3;
-    }
-    .likert-bubble {
-        position: absolute;
-        top: -4.35rem;
-        width: 58px;
-        height: 58px;
-        border-radius: 999px;
-        background: white;
-        border: 6px solid rgba(255,255,255,0.95);
-        box-shadow: 0 8px 18px rgba(74, 94, 136, 0.22);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.45rem;
-        transform: translateX(-50%);
-    }
-    .likert-bubble::after {
-        content: "";
-        position: absolute;
-        inset: 4px;
-        border-radius: 999px;
-        border: 1px solid rgba(120, 138, 174, 0.18);
-    }
-    .likert-labels {
-        display: grid;
-        grid-template-columns: repeat(5, 1fr);
-        gap: 0.15rem;
-        text-align: center;
-    }
-    .likert-labels span {
+    .likert-preview-text {
+        margin-top: 0.38rem;
         color: #5f6f8f;
         font-size: 0.72rem;
         line-height: 1.05;
         font-weight: 700;
     }
-    .nav-caption {
+    .likert-selected-note {
+        margin-top: 0.75rem;
+        border-radius: 18px;
+        background: #eef4ff;
+        color: #55709f;
         text-align: center;
-        color: #71809f;
-        font-size: 0.85rem;
-        margin-top: 0.35rem;
+        padding: 0.6rem 0.75rem;
+        font-size: 0.86rem;
+        font-weight: 700;
     }
     .stButton > button {
         width: 100%;
@@ -239,11 +221,13 @@ def aplicar_estilos() -> None:
     .answer-button-3 .stButton > button,
     .answer-button-4 .stButton > button,
     .answer-button-5 .stButton > button {
-        min-height: 3.55rem;
-        border-radius: 999px !important;
+        min-height: 4.3rem;
+        border-radius: 24px !important;
         color: white !important;
         border: none !important;
-        font-size: 1.18rem !important;
+        font-size: 0.95rem !important;
+        line-height: 1.05 !important;
+        white-space: normal !important;
         box-shadow: 0 12px 22px rgba(82, 98, 132, 0.18);
     }
     .answer-button-1 .stButton > button { background: #ef5b4c !important; }
@@ -252,9 +236,9 @@ def aplicar_estilos() -> None:
     .answer-button-4 .stButton > button { background: #8fd98c !important; }
     .answer-button-5 .stButton > button { background: #3db54a !important; }
     .answer-button-selected .stButton > button {
-        transform: scale(1.06);
-        box-shadow: 0 14px 26px rgba(69, 92, 141, 0.24) !important;
-        outline: 4px solid rgba(255,255,255,0.92);
+        transform: translateY(-4px) scale(1.1);
+        box-shadow: 0 18px 30px rgba(69, 92, 141, 0.28) !important;
+        outline: 5px solid rgba(255,255,255,0.95);
     }
     .nav-button .stButton > button {
         min-height: 2.5rem;
@@ -306,7 +290,9 @@ def construir_pdf_reporte() -> BytesIO:
         0,
         7,
         normalizar_pdf(
-            f"Perfil base: {demo.get('genero', 'No especificado')} | {demo.get('edad', 'No especificado')}"
+            f"Perfil base: {demo.get('genero', 'No especificado')} | "
+            f"{demo.get('edad_exacta', 'No especificado')} años | "
+            f"{demo.get('rango_edad', 'No especificado')}"
         ),
     )
     pdf.multi_cell(
@@ -317,7 +303,7 @@ def construir_pdf_reporte() -> BytesIO:
     pdf.ln(3)
 
     pdf.set_font("Helvetica", "B", 13)
-    pdf.cell(0, 8, normalizar_pdf("1. Lectura ejecutiva"), new_x="LMARGIN", new_y="NEXT")
+    pdf.cell(0, 8, normalizar_pdf("1. Lectura ejecutiva"), ln=1)
     pdf.set_font("Helvetica", "", 11)
     pdf.multi_cell(
         0,
@@ -331,20 +317,19 @@ def construir_pdf_reporte() -> BytesIO:
     pdf.ln(2)
 
     pdf.set_font("Helvetica", "B", 13)
-    pdf.cell(0, 8, normalizar_pdf("2. Ranking de arquetipos"), new_x="LMARGIN", new_y="NEXT")
+    pdf.cell(0, 8, normalizar_pdf("2. Ranking de arquetipos"), ln=1)
     pdf.set_font("Helvetica", "", 11)
     for indice, (nombre, puntaje) in enumerate(ranking, start=1):
         pdf.cell(
             0,
             6,
             normalizar_pdf(f"{indice}. {nombre}: {puntaje:.1f} puntos"),
-            new_x="LMARGIN",
-            new_y="NEXT",
+            ln=1,
         )
     pdf.ln(2)
 
     pdf.set_font("Helvetica", "B", 13)
-    pdf.cell(0, 8, normalizar_pdf("3. Estructuras clinicas"), new_x="LMARGIN", new_y="NEXT")
+    pdf.cell(0, 8, normalizar_pdf("3. Estructuras clinicas"), ln=1)
     pdf.set_font("Helvetica", "", 11)
     pdf.multi_cell(
         0,
@@ -449,26 +434,24 @@ def procesar_premium() -> None:
 
 
 def render_likert_visual(selected_value: int | None = None) -> None:
-    pills = "".join(
-        f"<div class='likert-segment' style='background:{option['color']};'>{option['emoji']}</div>"
-        for option in LIKERT_OPTIONS
-    )
-    labels = "".join(f"<span>{option['label']}</span>" for option in LIKERT_OPTIONS)
-    bubble = ""
-    if selected_value:
-        selected = next(option for option in LIKERT_OPTIONS if option["value"] == selected_value)
-        left = 10 + (selected_value - 1) * 20
-        bubble = (
-            "<div class='likert-bubble-row'>"
-            f"<div class='likert-bubble' style='left:{left}%; color:{selected['color']};'>{selected['emoji']}</div>"
+    preview_items = "".join(
+        (
+            "<div class='likert-preview-item'>"
+            f"<div class='likert-preview-icon' style='background:{option['color']};'>{option['emoji']}</div>"
+            f"<div class='likert-preview-text'>{option['label']}</div>"
             "</div>"
         )
+        for option in LIKERT_OPTIONS
+    )
+    selected_note = "Selecciona una opción para continuar."
+    if selected_value:
+        selected = next(option for option in LIKERT_OPTIONS if option["value"] == selected_value)
+        selected_note = f"Respuesta actual: {selected['label']}"
     st.markdown(
         f"""
-<div class="likert-shell">
-    {bubble}
-    <div class="likert-track">{pills}</div>
-    <div class="likert-labels">{labels}</div>
+<div class="likert-preview">
+    <div class="likert-preview-grid">{preview_items}</div>
+    <div class="likert-selected-note">{selected_note}</div>
 </div>
 """,
         unsafe_allow_html=True,
@@ -532,7 +515,7 @@ def render_questionnaire(
                 unsafe_allow_html=True,
             )
             if st.button(
-                option["emoji"],
+                f"{option['emoji']} {option['label']}",
                 key=f"{state_answers_key}_{answer_key}_{option['value']}",
                 use_container_width=True,
             ):
@@ -546,15 +529,6 @@ def render_questionnaire(
                 )
             st.markdown("</div>", unsafe_allow_html=True)
 
-    selected_value = st.session_state[state_answers_key].get(answer_key)
-    selected_label = ""
-    if selected_value:
-        selected_label = next(item["label"] for item in LIKERT_OPTIONS if item["value"] == selected_value)
-    st.markdown(
-        f"<div class='nav-caption'>{'Respuesta actual: ' + selected_label if selected_label else 'Toca un botón para seguir.'}</div>",
-        unsafe_allow_html=True,
-    )
-
     nav_left, nav_right = st.columns([1, 1.6], gap="small")
     with nav_left:
         st.markdown("<div class='nav-button'>", unsafe_allow_html=True)
@@ -563,7 +537,7 @@ def render_questionnaire(
             st.rerun()
         st.markdown("</div>", unsafe_allow_html=True)
     with nav_right:
-        st.caption("La respuesta guarda avance y pasa a la siguiente pantalla.")
+        st.caption("La selección se guarda y avanza automáticamente.")
 
 
 def render_landing() -> None:
@@ -579,17 +553,20 @@ def render_landing() -> None:
     )
     st.subheader("Paso 1: Calibración Demográfica")
     genero = st.selectbox("Género", ["Hombre", "Mujer", "Otro"])
-    edad = st.selectbox(
-        "Rango de edad",
-        [
-            "18 - 34 años (Construcción del Ego)",
-            "35 - 50 años (La Transición / Metanoia)",
-            "51+ años (Integración y Sabiduría)",
-        ],
+    edad = st.number_input(
+        "Edad exacta",
+        min_value=18,
+        max_value=99,
+        value=35,
+        step=1,
     )
     st.markdown("<div class='cta-button'>", unsafe_allow_html=True)
     if st.button("Continuar al Test Clínico ⚡", type="primary", use_container_width=True):
-        st.session_state.demo = {"genero": genero, "edad": edad}
+        st.session_state.demo = {
+            "genero": genero,
+            "edad_exacta": int(edad),
+            "rango_edad": obtener_rango_edad(int(edad)),
+        }
         st.session_state.hook_answers = {}
         st.session_state.hook_index = 0
         st.session_state.step = "hook_quiz"
@@ -601,13 +578,13 @@ def render_teaser() -> None:
     st.progress(0.50)
     ordenados = obtener_ranking(st.session_state.scores)
     dominante = ordenados[0][0]
-    edad_str = st.session_state.demo["edad"].split(" ")[0]
+    edad_exacta = st.session_state.demo.get("edad_exacta", "No especificada")
     st.markdown(
         f"""
 <div class="summary-card">
     <div class="eyebrow">Diagnóstico Estructural Preliminar</div>
     <h3>Estructura Dominante: {dominante.upper()}</h3>
-    <p>A tus <strong>{edad_str}</strong>, tu psique está operando bajo la energía del <strong>{dominante}</strong>. Eres el ancla de tu entorno; tu instinto primario es estructurar tu realidad y asegurar la supervivencia de tus proyectos.</p>
+    <p>A tus <strong>{edad_exacta}</strong> años, tu psique está operando bajo la energía del <strong>{dominante}</strong>. Eres el ancla de tu entorno; tu instinto primario es estructurar tu realidad y asegurar la supervivencia de tus proyectos.</p>
 </div>
 """,
         unsafe_allow_html=True,
