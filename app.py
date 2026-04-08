@@ -175,6 +175,20 @@ def aplicar_estilos() -> None:
         font-size: 0.86rem;
         font-weight: 700;
     }
+    .evolution-bar {
+        width: 100%;
+        height: 16px;
+        border-radius: 999px;
+        background: rgba(217, 226, 242, 0.95);
+        overflow: hidden;
+        box-shadow: inset 0 1px 2px rgba(110, 129, 171, 0.10);
+        margin-top: 0.95rem;
+    }
+    .evolution-fill {
+        height: 100%;
+        border-radius: 999px;
+        background: linear-gradient(90deg, #ef5b4c 0%, #f6b46b 35%, #8fd98c 68%, #3db54a 100%);
+    }
     .likert-button-row {
         background: rgba(255,255,255,0.88);
         border-radius: 24px;
@@ -480,6 +494,10 @@ def render_questionnaire(
     <div class="question-help">{subtitle}</div>
 </div>
 """,
+        unsafe_allow_html=True,
+    )
+    st.markdown(
+        f"<div class='evolution-bar'><div class='evolution-fill' style='width:{progress_value * 100:.0f}%;'></div></div>",
         unsafe_allow_html=True,
     )
     st.markdown("<div class='likert-button-row'>", unsafe_allow_html=True)
