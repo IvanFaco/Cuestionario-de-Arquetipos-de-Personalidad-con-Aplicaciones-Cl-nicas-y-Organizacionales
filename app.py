@@ -165,16 +165,6 @@ def aplicar_estilos() -> None:
         font-size: 0.92rem;
         margin-top: 0.85rem;
     }
-    .likert-selected-note {
-        margin-top: 0.9rem;
-        border-radius: 18px;
-        background: #eef4ff;
-        color: #55709f;
-        text-align: center;
-        padding: 0.6rem 0.75rem;
-        font-size: 0.86rem;
-        font-weight: 700;
-    }
     .evolution-bar {
         width: 100%;
         height: 16px;
@@ -189,14 +179,6 @@ def aplicar_estilos() -> None:
         border-radius: 999px;
         background: linear-gradient(90deg, #ef5b4c 0%, #f6b46b 35%, #8fd98c 68%, #3db54a 100%);
     }
-    .likert-button-row {
-        background: rgba(255,255,255,0.88);
-        border-radius: 24px;
-        border: 1px solid rgba(132, 151, 193, 0.18);
-        box-shadow: 0 16px 34px rgba(68, 89, 135, 0.10);
-        padding: 0.7rem 0.45rem 0.55rem;
-        margin-top: 0.9rem;
-    }
     .likert-label {
         text-align: center;
         color: #5f6f8f;
@@ -206,11 +188,18 @@ def aplicar_estilos() -> None:
         margin-top: 0.36rem;
         min-height: 30px;
     }
-    .question-footer-note {
+    .question-bottom-note {
+        margin-top: 0.8rem;
+        border-radius: 18px;
+        background: rgba(255,255,255,0.82);
+        border: 1px solid rgba(132, 151, 193, 0.16);
+        box-shadow: 0 10px 24px rgba(68, 89, 135, 0.08);
+        padding: 0.75rem 0.9rem;
         text-align: center;
-        color: #71809f;
+        color: #5e739e;
         font-size: 0.9rem;
-        margin-top: 0.35rem;
+        line-height: 1.35;
+        font-weight: 700;
     }
     .stButton > button {
         width: 100%;
@@ -451,6 +440,14 @@ def render_likert_selected_note(selected_value: int | None = None) -> None:
     )
 
 
+def render_question_status_note(selected_value: int | None = None) -> None:
+    message = "Selecciona una opción para continuar. La selección se guarda y avanza automáticamente."
+    if selected_value:
+        selected = next(option for option in LIKERT_OPTIONS if option["value"] == selected_value)
+        message = f"Respuesta actual: {selected['label']}. La selección se guarda y avanza automáticamente."
+    st.markdown(f"<div class='question-bottom-note'>{message}</div>", unsafe_allow_html=True)
+
+
 def responder_pregunta(
     answer_key: str,
     answer_value: int,
@@ -500,7 +497,6 @@ def render_questionnaire(
         f"<div class='evolution-bar'><div class='evolution-fill' style='width:{progress_value * 100:.0f}%;'></div></div>",
         unsafe_allow_html=True,
     )
-    st.markdown("<div class='likert-button-row'>", unsafe_allow_html=True)
     cols = st.columns(5, gap="small")
     for option, col in zip(LIKERT_OPTIONS, cols):
         with col:
@@ -524,9 +520,7 @@ def render_questionnaire(
                 )
             st.markdown(f"<div class='likert-label'>{option['label']}</div>", unsafe_allow_html=True)
             st.markdown("</div>", unsafe_allow_html=True)
-    st.markdown("</div>", unsafe_allow_html=True)
-
-    render_likert_selected_note(selected_value)
+    render_question_status_note(selected_value)
 
     nav_left, nav_right = st.columns([1, 1.6], gap="small")
     with nav_left:
