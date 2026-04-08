@@ -175,6 +175,14 @@ def aplicar_estilos() -> None:
         font-size: 0.86rem;
         font-weight: 700;
     }
+    .likert-button-row {
+        background: rgba(255,255,255,0.88);
+        border-radius: 24px;
+        border: 1px solid rgba(132, 151, 193, 0.18);
+        box-shadow: 0 16px 34px rgba(68, 89, 135, 0.10);
+        padding: 0.7rem 0.55rem 0.6rem;
+        margin-top: 0.9rem;
+    }
     .stButton > button {
         width: 100%;
         min-height: 3rem;
@@ -194,14 +202,16 @@ def aplicar_estilos() -> None:
     .answer-button-3 .stButton > button,
     .answer-button-4 .stButton > button,
     .answer-button-5 .stButton > button {
-        min-height: 4.3rem;
-        border-radius: 24px !important;
+        min-height: 3.35rem;
+        border-radius: 999px !important;
         color: white !important;
         border: none !important;
-        font-size: 0.95rem !important;
-        line-height: 1.05 !important;
+        font-size: 0.82rem !important;
+        line-height: 1.1 !important;
         white-space: normal !important;
-        box-shadow: 0 12px 22px rgba(82, 98, 132, 0.18);
+        padding-top: 0.2rem !important;
+        padding-bottom: 0.2rem !important;
+        box-shadow: 0 10px 18px rgba(82, 98, 132, 0.16);
     }
     .answer-button-1 .stButton > button { background: #ef5b4c !important; }
     .answer-button-2 .stButton > button { background: #f39a7f !important; }
@@ -213,14 +223,14 @@ def aplicar_estilos() -> None:
     .answer-button-3 .stButton > button:hover,
     .answer-button-4 .stButton > button:hover,
     .answer-button-5 .stButton > button:hover {
-        transform: translateY(-4px) scale(1.06);
-        box-shadow: 0 18px 30px rgba(69, 92, 141, 0.24) !important;
+        transform: translateY(-3px) scale(1.04);
+        box-shadow: 0 16px 24px rgba(69, 92, 141, 0.22) !important;
         filter: saturate(1.08) brightness(1.02);
     }
     .answer-button-selected .stButton > button {
-        transform: translateY(-4px) scale(1.1);
-        box-shadow: 0 18px 30px rgba(69, 92, 141, 0.28) !important;
-        outline: 5px solid rgba(255,255,255,0.95);
+        transform: translateY(-3px) scale(1.06);
+        box-shadow: 0 18px 28px rgba(69, 92, 141, 0.26) !important;
+        outline: 4px solid rgba(255,255,255,0.95);
     }
     .nav-button .stButton > button {
         min-height: 2.5rem;
@@ -460,6 +470,7 @@ def render_questionnaire(
 """,
         unsafe_allow_html=True,
     )
+    st.markdown("<div class='likert-button-row'>", unsafe_allow_html=True)
     cols = st.columns(5, gap="small")
     for option, col in zip(LIKERT_OPTIONS, cols):
         with col:
@@ -469,7 +480,7 @@ def render_questionnaire(
                 unsafe_allow_html=True,
             )
             if st.button(
-                f"{option['emoji']} {option['label']}",
+                f"{option['emoji']}\n{option['label']}",
                 key=f"{state_answers_key}_{answer_key}_{option['value']}",
                 use_container_width=True,
             ):
@@ -482,6 +493,7 @@ def render_questionnaire(
                     on_complete=on_complete,
                 )
             st.markdown("</div>", unsafe_allow_html=True)
+    st.markdown("</div>", unsafe_allow_html=True)
 
     render_likert_selected_note(selected_value)
 
