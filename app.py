@@ -175,13 +175,36 @@ def aplicar_estilos() -> None:
         font-size: 0.86rem;
         font-weight: 700;
     }
+    .evolution-bar {
+        width: 100%;
+        height: 22px;
+        border-radius: 999px;
+        background: rgba(217, 226, 242, 0.95);
+        overflow: hidden;
+        box-shadow: inset 0 1px 2px rgba(110, 129, 171, 0.10);
+        margin-top: 0.95rem;
+    }
+    .evolution-fill {
+        height: 100%;
+        border-radius: 999px;
+        background: linear-gradient(90deg, #ef5b4c 0%, #f6b46b 35%, #8fd98c 68%, #3db54a 100%);
+    }
     .likert-button-row {
         background: rgba(255,255,255,0.88);
         border-radius: 24px;
         border: 1px solid rgba(132, 151, 193, 0.18);
         box-shadow: 0 16px 34px rgba(68, 89, 135, 0.10);
-        padding: 0.7rem 0.55rem 0.6rem;
+        padding: 0.7rem 0.45rem 0.55rem;
         margin-top: 0.9rem;
+    }
+    .likert-label {
+        text-align: center;
+        color: #5f6f8f;
+        font-size: 0.68rem;
+        line-height: 1.02;
+        font-weight: 700;
+        margin-top: 0.36rem;
+        min-height: 30px;
     }
     .stButton > button {
         width: 100%;
@@ -202,15 +225,13 @@ def aplicar_estilos() -> None:
     .answer-button-3 .stButton > button,
     .answer-button-4 .stButton > button,
     .answer-button-5 .stButton > button {
-        min-height: 3.35rem;
+        min-height: 2.55rem;
         border-radius: 999px !important;
         color: white !important;
         border: none !important;
-        font-size: 0.82rem !important;
-        line-height: 1.1 !important;
-        white-space: normal !important;
-        padding-top: 0.2rem !important;
-        padding-bottom: 0.2rem !important;
+        font-size: 1.15rem !important;
+        line-height: 1 !important;
+        padding: 0 !important;
         box-shadow: 0 10px 18px rgba(82, 98, 132, 0.16);
     }
     .answer-button-1 .stButton > button { background: #ef5b4c !important; }
@@ -223,7 +244,7 @@ def aplicar_estilos() -> None:
     .answer-button-3 .stButton > button:hover,
     .answer-button-4 .stButton > button:hover,
     .answer-button-5 .stButton > button:hover {
-        transform: translateY(-3px) scale(1.04);
+        transform: translateY(-3px) scale(1.06);
         box-shadow: 0 16px 24px rgba(69, 92, 141, 0.22) !important;
         filter: saturate(1.08) brightness(1.02);
     }
@@ -456,7 +477,6 @@ def render_questionnaire(
     selected_value = st.session_state[state_answers_key].get(answer_key)
     progress_value = progress_start + ((current_index + 1) / len(questions)) * (progress_end - progress_start)
 
-    st.progress(progress_value)
     st.markdown(
         f"""
 <div class="question-card">
@@ -470,6 +490,10 @@ def render_questionnaire(
 """,
         unsafe_allow_html=True,
     )
+    st.markdown(
+        f"<div class='evolution-bar'><div class='evolution-fill' style='width:{progress_value * 100:.0f}%;'></div></div>",
+        unsafe_allow_html=True,
+    )
     st.markdown("<div class='likert-button-row'>", unsafe_allow_html=True)
     cols = st.columns(5, gap="small")
     for option, col in zip(LIKERT_OPTIONS, cols):
@@ -480,7 +504,7 @@ def render_questionnaire(
                 unsafe_allow_html=True,
             )
             if st.button(
-                f"{option['emoji']}\n{option['label']}",
+                option["emoji"],
                 key=f"{state_answers_key}_{answer_key}_{option['value']}",
                 use_container_width=True,
             ):
@@ -492,6 +516,7 @@ def render_questionnaire(
                     questions=questions,
                     on_complete=on_complete,
                 )
+            st.markdown(f"<div class='likert-label'>{option['label']}</div>", unsafe_allow_html=True)
             st.markdown("</div>", unsafe_allow_html=True)
     st.markdown("</div>", unsafe_allow_html=True)
 
