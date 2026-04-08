@@ -13,3 +13,4 @@ build/
 *.xlsx
 *.pdf
 .DS_Store
+AGENTS.md
