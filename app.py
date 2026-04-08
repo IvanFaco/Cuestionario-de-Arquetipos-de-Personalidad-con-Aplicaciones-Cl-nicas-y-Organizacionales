@@ -127,8 +127,13 @@ def construir_pdf_reporte() -> BytesIO:
         ),
     )
 
-    buffer = BytesIO()
-    buffer.write(bytes(pdf.output()))
+    contenido_pdf = pdf.output(dest="S")
+    pdf_bytes = (
+        contenido_pdf.encode("latin-1")
+        if isinstance(contenido_pdf, str)
+        else bytes(contenido_pdf)
+    )
+    buffer = BytesIO(pdf_bytes)
     buffer.seek(0)
     return buffer
 
