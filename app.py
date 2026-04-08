@@ -1,4 +1,5 @@
 from io import BytesIO
+import textwrap
 import unicodedata
 
 from fpdf import FPDF
@@ -53,6 +54,13 @@ def normalizar_pdf(texto: str) -> str:
 
 def obtener_ranking(scores: dict[str, float]) -> list[tuple[str, float]]:
     return sorted(scores.items(), key=lambda item: item[1], reverse=True)
+
+
+def escribir_parrafo_pdf(pdf: FPDF, texto: str, line_height: int = 7, width: int = 82) -> None:
+    for bloque in texto.split("\n"):
+        lineas = textwrap.wrap(bloque, width=width) or [""]
+        for linea in lineas:
+            pdf.cell(0, line_height, normalizar_pdf(linea), ln=1)
 
 
 def obtener_rango_edad(edad: int) -> str:
@@ -157,43 +165,8 @@ def aplicar_estilos() -> None:
         font-size: 0.92rem;
         margin-top: 0.85rem;
     }
-    .likert-preview {
-        background: rgba(255,255,255,0.84);
-        border-radius: 26px;
-        border: 1px solid rgba(132, 151, 193, 0.18);
-        box-shadow: 0 16px 34px rgba(68, 89, 135, 0.10);
-        padding: 0.85rem 0.75rem 0.6rem;
-        margin-top: 0.85rem;
-    }
-    .likert-preview-grid {
-        display: grid;
-        grid-template-columns: repeat(5, 1fr);
-        gap: 0.35rem;
-        align-items: start;
-    }
-    .likert-preview-item {
-        text-align: center;
-    }
-    .likert-preview-icon {
-        min-height: 54px;
-        border-radius: 999px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        font-size: 1.4rem;
-        font-weight: 800;
-        box-shadow: inset 0 -2px 0 rgba(0,0,0,0.05);
-    }
-    .likert-preview-text {
-        margin-top: 0.38rem;
-        color: #5f6f8f;
-        font-size: 0.72rem;
-        line-height: 1.05;
-        font-weight: 700;
-    }
     .likert-selected-note {
-        margin-top: 0.75rem;
+        margin-top: 0.9rem;
         border-radius: 18px;
         background: #eef4ff;
         color: #55709f;
@@ -235,6 +208,15 @@ def aplicar_estilos() -> None:
     .answer-button-3 .stButton > button { background: #bfc5cf !important; color: #3e4654 !important; }
     .answer-button-4 .stButton > button { background: #8fd98c !important; }
     .answer-button-5 .stButton > button { background: #3db54a !important; }
+    .answer-button-1 .stButton > button:hover,
+    .answer-button-2 .stButton > button:hover,
+    .answer-button-3 .stButton > button:hover,
+    .answer-button-4 .stButton > button:hover,
+    .answer-button-5 .stButton > button:hover {
+        transform: translateY(-4px) scale(1.06);
+        box-shadow: 0 18px 30px rgba(69, 92, 141, 0.24) !important;
+        filter: saturate(1.08) brightness(1.02);
+    }
     .answer-button-selected .stButton > button {
         transform: translateY(-4px) scale(1.1);
         box-shadow: 0 18px 30px rgba(69, 92, 141, 0.28) !important;
@@ -282,33 +264,27 @@ def construir_pdf_reporte() -> BytesIO:
     pdf.set_auto_page_break(auto=True, margin=15)
     pdf.add_page()
     pdf.set_font("Helvetica", "B", 18)
-    pdf.multi_cell(0, 10, normalizar_pdf("Reporte Clinico Ejecutivo"))
+    escribir_parrafo_pdf(pdf, "Reporte Clinico Ejecutivo", line_height=10, width=50)
     pdf.ln(2)
 
     pdf.set_font("Helvetica", "", 11)
-    pdf.multi_cell(
-        0,
-        7,
-        normalizar_pdf(
+    escribir_parrafo_pdf(
+        pdf,
+        (
             f"Perfil base: {demo.get('genero', 'No especificado')} | "
             f"{demo.get('edad_exacta', 'No especificado')} años | "
             f"{demo.get('rango_edad', 'No especificado')}"
         ),
     )
-    pdf.multi_cell(
-        0,
-        7,
-        normalizar_pdf(f"Estructura dominante: {dominante} | Triada principal: {triada}"),
-    )
+    escribir_parrafo_pdf(pdf, f"Estructura dominante: {dominante} | Triada principal: {triada}")
     pdf.ln(3)
 
     pdf.set_font("Helvetica", "B", 13)
     pdf.cell(0, 8, normalizar_pdf("1. Lectura ejecutiva"), ln=1)
     pdf.set_font("Helvetica", "", 11)
-    pdf.multi_cell(
-        0,
-        7,
-        normalizar_pdf(
+    escribir_parrafo_pdf(
+        pdf,
+        (
             f"La psique se organiza principalmente desde el arquetipo {dominante}. "
             f"La triada dominante ({triada}) sugiere un estilo de adaptacion consistente "
             "entre estructura, defensa y direccion vital."
@@ -331,27 +307,20 @@ def construir_pdf_reporte() -> BytesIO:
     pdf.set_font("Helvetica", "B", 13)
     pdf.cell(0, 8, normalizar_pdf("3. Estructuras clinicas"), ln=1)
     pdf.set_font("Helvetica", "", 11)
-    pdf.multi_cell(
-        0,
-        7,
-        normalizar_pdf(
-            f"Persona: {estructuras.get('Persona', 0):.1f}/5 | "
-            f"Sombra profunda: {sombra_total:.1f}/5"
-        ),
+    escribir_parrafo_pdf(
+        pdf,
+        f"Persona: {estructuras.get('Persona', 0):.1f}/5 | Sombra profunda: {sombra_total:.1f}/5",
     )
-    pdf.multi_cell(0, 7, normalizar_pdf(f"Sombra: {sombra_texto}"))
-    pdf.multi_cell(
-        0,
-        7,
-        normalizar_pdf(
-            f"Keirsey: {estructuras.get('Keirsey', 'No disponible')}. "
-            f"Campbell: {estructuras.get('Campbell', 'No disponible')}."
-        ),
+    escribir_parrafo_pdf(pdf, f"Sombra: {sombra_texto}")
+    escribir_parrafo_pdf(
+        pdf,
+        f"Keirsey: {estructuras.get('Keirsey', 'No disponible')}. "
+        f"Campbell: {estructuras.get('Campbell', 'No disponible')}.",
     )
 
     pdf.add_page()
     pdf.set_font("Helvetica", "B", 14)
-    pdf.multi_cell(0, 9, normalizar_pdf("Plan de accion breve"))
+    escribir_parrafo_pdf(pdf, "Plan de accion breve", line_height=9, width=40)
     pdf.ln(2)
     pdf.set_font("Helvetica", "", 11)
     recomendaciones = [
@@ -361,16 +330,15 @@ def construir_pdf_reporte() -> BytesIO:
         f"Trabajar la etapa Campbell actual: {estructuras.get('Campbell', 'No disponible')}.",
     ]
     for recomendacion in recomendaciones:
-        pdf.multi_cell(0, 7, normalizar_pdf(f"- {recomendacion}"))
+        escribir_parrafo_pdf(pdf, f"- {recomendacion}")
 
     pdf.ln(4)
     pdf.set_font("Helvetica", "I", 9)
-    pdf.multi_cell(
-        0,
-        5,
-        normalizar_pdf(
-            "Documento interpretativo y educativo. No sustituye evaluacion clinica profesional."
-        ),
+    escribir_parrafo_pdf(
+        pdf,
+        "Documento interpretativo y educativo. No sustituye evaluacion clinica profesional.",
+        line_height=5,
+        width=95,
     )
 
     contenido_pdf = pdf.output(dest="S")
@@ -433,26 +401,14 @@ def procesar_premium() -> None:
     st.rerun()
 
 
-def render_likert_visual(selected_value: int | None = None) -> None:
-    preview_items = "".join(
-        (
-            "<div class='likert-preview-item'>"
-            f"<div class='likert-preview-icon' style='background:{option['color']};'>{option['emoji']}</div>"
-            f"<div class='likert-preview-text'>{option['label']}</div>"
-            "</div>"
-        )
-        for option in LIKERT_OPTIONS
-    )
+def render_likert_selected_note(selected_value: int | None = None) -> None:
     selected_note = "Selecciona una opción para continuar."
     if selected_value:
         selected = next(option for option in LIKERT_OPTIONS if option["value"] == selected_value)
         selected_note = f"Respuesta actual: {selected['label']}"
     st.markdown(
         f"""
-<div class="likert-preview">
-    <div class="likert-preview-grid">{preview_items}</div>
-    <div class="likert-selected-note">{selected_note}</div>
-</div>
+<div class="likert-selected-note">{selected_note}</div>
 """,
         unsafe_allow_html=True,
     )
@@ -504,8 +460,6 @@ def render_questionnaire(
 """,
         unsafe_allow_html=True,
     )
-    render_likert_visual(selected_value)
-
     cols = st.columns(5, gap="small")
     for option, col in zip(LIKERT_OPTIONS, cols):
         with col:
@@ -528,6 +482,8 @@ def render_questionnaire(
                     on_complete=on_complete,
                 )
             st.markdown("</div>", unsafe_allow_html=True)
+
+    render_likert_selected_note(selected_value)
 
     nav_left, nav_right = st.columns([1, 1.6], gap="small")
     with nav_left:
