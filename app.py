@@ -175,20 +175,6 @@ def aplicar_estilos() -> None:
         font-size: 0.86rem;
         font-weight: 700;
     }
-    .evolution-bar {
-        width: 100%;
-        height: 22px;
-        border-radius: 999px;
-        background: rgba(217, 226, 242, 0.95);
-        overflow: hidden;
-        box-shadow: inset 0 1px 2px rgba(110, 129, 171, 0.10);
-        margin-top: 0.95rem;
-    }
-    .evolution-fill {
-        height: 100%;
-        border-radius: 999px;
-        background: linear-gradient(90deg, #ef5b4c 0%, #f6b46b 35%, #8fd98c 68%, #3db54a 100%);
-    }
     .likert-button-row {
         background: rgba(255,255,255,0.88);
         border-radius: 24px;
@@ -205,6 +191,12 @@ def aplicar_estilos() -> None:
         font-weight: 700;
         margin-top: 0.36rem;
         min-height: 30px;
+    }
+    .question-footer-note {
+        text-align: center;
+        color: #71809f;
+        font-size: 0.9rem;
+        margin-top: 0.35rem;
     }
     .stButton > button {
         width: 100%;
@@ -490,10 +482,6 @@ def render_questionnaire(
 """,
         unsafe_allow_html=True,
     )
-    st.markdown(
-        f"<div class='evolution-bar'><div class='evolution-fill' style='width:{progress_value * 100:.0f}%;'></div></div>",
-        unsafe_allow_html=True,
-    )
     st.markdown("<div class='likert-button-row'>", unsafe_allow_html=True)
     cols = st.columns(5, gap="small")
     for option, col in zip(LIKERT_OPTIONS, cols):
@@ -530,7 +518,10 @@ def render_questionnaire(
             st.rerun()
         st.markdown("</div>", unsafe_allow_html=True)
     with nav_right:
-        st.caption("La selección se guarda y avanza automáticamente.")
+        st.markdown(
+            "<div class='question-footer-note'>La selección se guarda y avanza automáticamente.</div>",
+            unsafe_allow_html=True,
+        )
 
 
 def render_landing() -> None:
