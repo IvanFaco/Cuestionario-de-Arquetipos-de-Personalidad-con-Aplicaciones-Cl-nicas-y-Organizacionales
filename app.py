@@ -1,6 +1,136 @@
+from io import BytesIO
+import unicodedata
+
+from fpdf import FPDF
 import pandas as pd
 import plotly.express as px
 import streamlit as st
+
+
+def normalizar_pdf(texto: str) -> str:
+    return unicodedata.normalize("NFKD", texto).encode("ascii", "ignore").decode("ascii")
+
+
+def obtener_ranking(scores: dict[str, float]) -> list[tuple[str, float]]:
+    return sorted(scores.items(), key=lambda item: item[1], reverse=True)
+
+
+def construir_pdf_reporte() -> BytesIO:
+    scores = st.session_state.scores
+    estructuras = st.session_state.estructuras
+    demo = st.session_state.demo
+    ranking = obtener_ranking(scores)
+    dominante = ranking[0][0]
+    triada = ", ".join(nombre for nombre, _ in ranking[:3])
+    sombra_total = estructuras.get("Sombra_Total", 0)
+
+    if sombra_total >= 3.5:
+        sombra_texto = (
+            "Alto nivel de represion. Conviene integrar vulnerabilidad y bajar la autoexigencia antes del burnout."
+        )
+    else:
+        sombra_texto = (
+            "Relacion sana con los impulsos e identidad. La autenticidad aparece como un recurso disponible."
+        )
+
+    pdf = FPDF()
+    pdf.set_auto_page_break(auto=True, margin=15)
+    pdf.add_page()
+    pdf.set_font("Helvetica", "B", 18)
+    pdf.multi_cell(0, 10, normalizar_pdf("Reporte Clínico Ejecutivo"))
+    pdf.ln(2)
+
+    pdf.set_font("Helvetica", "", 11)
+    pdf.multi_cell(
+        0,
+        7,
+        normalizar_pdf(
+            f"Perfil base: {demo.get('genero', 'No especificado')} | {demo.get('edad', 'No especificado')}"
+        ),
+    )
+    pdf.multi_cell(
+        0,
+        7,
+        normalizar_pdf(f"Estructura dominante: {dominante} | Triada principal: {triada}"),
+    )
+    pdf.ln(3)
+
+    pdf.set_font("Helvetica", "B", 13)
+    pdf.cell(0, 8, normalizar_pdf("1. Lectura ejecutiva"), new_x="LMARGIN", new_y="NEXT")
+    pdf.set_font("Helvetica", "", 11)
+    pdf.multi_cell(
+        0,
+        7,
+        normalizar_pdf(
+            f"La psique se organiza principalmente desde el arquetipo {dominante}. "
+            f"La triada dominante ({triada}) sugiere un estilo de adaptacion consistente "
+            "entre estructura, defensa y direccion vital."
+        ),
+    )
+    pdf.ln(2)
+
+    pdf.set_font("Helvetica", "B", 13)
+    pdf.cell(0, 8, normalizar_pdf("2. Ranking de arquetipos"), new_x="LMARGIN", new_y="NEXT")
+    pdf.set_font("Helvetica", "", 11)
+    for indice, (nombre, puntaje) in enumerate(ranking, start=1):
+        pdf.cell(
+            0,
+            6,
+            normalizar_pdf(f"{indice}. {nombre}: {puntaje:.1f} puntos"),
+            new_x="LMARGIN",
+            new_y="NEXT",
+        )
+    pdf.ln(2)
+
+    pdf.set_font("Helvetica", "B", 13)
+    pdf.cell(0, 8, normalizar_pdf("3. Estructuras clinicas"), new_x="LMARGIN", new_y="NEXT")
+    pdf.set_font("Helvetica", "", 11)
+    pdf.multi_cell(
+        0,
+        7,
+        normalizar_pdf(
+            f"Persona: {estructuras.get('Persona', 0):.1f}/5 | "
+            f"Sombra profunda: {sombra_total:.1f}/5"
+        ),
+    )
+    pdf.multi_cell(0, 7, normalizar_pdf(f"Sombra: {sombra_texto}"))
+    pdf.multi_cell(
+        0,
+        7,
+        normalizar_pdf(
+            f"Keirsey: {estructuras.get('Keirsey', 'No disponible')}. "
+            f"Campbell: {estructuras.get('Campbell', 'No disponible')}."
+        ),
+    )
+
+    pdf.add_page()
+    pdf.set_font("Helvetica", "B", 14)
+    pdf.multi_cell(0, 9, normalizar_pdf("Plan de accion breve"))
+    pdf.ln(2)
+    pdf.set_font("Helvetica", "", 11)
+    recomendaciones = [
+        f"Fortalecer el arquetipo dominante ({dominante}) sin rigidizar la identidad.",
+        "Bajar la distancia entre imagen publica y experiencia emocional real.",
+        "Usar el temperamento Keirsey como criterio para decidir bajo estres.",
+        f"Trabajar la etapa Campbell actual: {estructuras.get('Campbell', 'No disponible')}.",
+    ]
+    for recomendacion in recomendaciones:
+        pdf.multi_cell(0, 7, normalizar_pdf(f"- {recomendacion}"))
+
+    pdf.ln(4)
+    pdf.set_font("Helvetica", "I", 9)
+    pdf.multi_cell(
+        0,
+        5,
+        normalizar_pdf(
+            "Documento interpretativo y educativo. No sustituye evaluacion clinica profesional."
+        ),
+    )
+
+    buffer = BytesIO()
+    buffer.write(bytes(pdf.output()))
+    buffer.seek(0)
+    return buffer
 
 
 st.set_page_config(
@@ -155,7 +285,7 @@ elif st.session_state.step == "hook_quiz":
 
 elif st.session_state.step == "teaser":
     st.progress(0.50)
-    ordenados = sorted(st.session_state.scores.items(), key=lambda x: x[1], reverse=True)
+    ordenados = obtener_ranking(st.session_state.scores)
     dom = ordenados[0][0]
 
     st.title("📊 Diagnóstico Estructural Preliminar")
@@ -319,7 +449,7 @@ elif st.session_state.step == "premium_quiz":
 elif st.session_state.step == "dashboard":
     st.progress(1.0)
     st.balloons()
-    ordenados = sorted(st.session_state.scores.items(), key=lambda x: x[1], reverse=True)
+    ordenados = obtener_ranking(st.session_state.scores)
 
     st.title("👑 TU MAPA CLÍNICO Y ESTRUCTURAL")
     st.write(
@@ -400,9 +530,11 @@ elif st.session_state.step == "dashboard":
     st.success(
         "Tu diagnóstico ha sido empaquetado editorialmente en un formato conciso de 2 páginas."
     )
+    pdf_buffer = construir_pdf_reporte()
     st.download_button(
         "📥 DESCARGAR DIAGNÓSTICO EJECUTIVO (PDF - 2 Páginas)",
-        data="PDF_DATA_SIMULADO",
+        data=pdf_buffer,
         file_name="Reporte_Clinico_Ejecutivo.pdf",
+        mime="application/pdf",
         use_container_width=True,
     )
