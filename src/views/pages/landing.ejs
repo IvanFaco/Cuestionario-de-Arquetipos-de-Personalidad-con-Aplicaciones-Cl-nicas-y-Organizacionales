@@ -1,0 +1,30 @@
+<section class="hero-shell">
+  <div class="hero-card">
+    <p class="eyebrow mb-2"><%= pageData.eyebrow %></p>
+    <h1 class="display-6 fw-bold mb-3"><%= pageData.headline %></h1>
+    <p class="lead text-muted mb-4"><%= pageData.description %></p>
+    <div class="d-flex flex-wrap gap-2">
+      <a class="btn btn-primary" href="/health">Healthcheck</a>
+      <a class="btn btn-outline-primary" href="/migration/phase-0">Plan de Fase 0</a>
+    </div>
+  </div>
+</section>
+
+<section class="mt-4">
+  <div class="row g-3">
+    <% pageData.phases.forEach((phase) => { %>
+      <div class="col-12 col-md-4">
+        <article class="phase-card h-100">
+          <div class="d-flex justify-content-between align-items-start mb-3">
+            <span class="badge text-bg-<%= phase.status === 'done' ? 'success' : 'secondary' %>">
+              <%= phase.status === "done" ? "Listo" : "Siguiente" %>
+            </span>
+            <small class="text-muted text-uppercase"><%= phase.id %></small>
+          </div>
+          <h2 class="h5 mb-2"><%= phase.title %></h2>
+          <p class="mb-0 text-muted"><%= phase.summary %></p>
+        </article>
+      </div>
+    <% }) %>
+  </div>
+</section>

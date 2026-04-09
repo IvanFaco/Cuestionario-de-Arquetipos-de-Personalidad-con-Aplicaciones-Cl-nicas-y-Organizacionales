@@ -1,0 +1,41 @@
+:root {
+  --surface: #ffffff;
+  --surface-muted: #f2f7fb;
+  --border-soft: rgba(43, 99, 140, 0.12);
+  --shadow-soft: 0 18px 40px rgba(31, 68, 103, 0.12);
+}
+
+body {
+  background:
+    radial-gradient(circle at top, rgba(111, 181, 214, 0.12), transparent 30%),
+    linear-gradient(180deg, #f5fbff 0%, #eaf2f8 100%);
+}
+
+.hero-shell {
+  max-width: 840px;
+}
+
+.hero-card,
+.phase-card {
+  background: var(--surface);
+  border: 1px solid var(--border-soft);
+  border-radius: 1.5rem;
+  box-shadow: var(--shadow-soft);
+}
+
+.hero-card {
+  padding: 2rem;
+}
+
+.phase-card {
+  padding: 1.25rem;
+  background: linear-gradient(180deg, var(--surface) 0%, var(--surface-muted) 100%);
+}
+
+.eyebrow {
+  color: #3f789a;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
