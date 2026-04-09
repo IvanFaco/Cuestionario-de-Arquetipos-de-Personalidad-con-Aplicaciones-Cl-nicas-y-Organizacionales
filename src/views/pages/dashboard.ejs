@@ -1,69 +1,75 @@
-<section class="flow-shell">
-  <div class="hero-card dashboard-card">
-    <div class="compact-stack">
-      <p class="eyebrow mb-1">Dashboard estructural</p>
-      <div class="dashboard-head">
-        <div>
-          <h1 class="hero-title mb-1"><%= pageData.dominantArchetype %></h1>
-          <p class="hero-copy mb-0">Triada principal: <strong><%= pageData.topThree.join(", ") %></strong></p>
-        </div>
-        <a class="btn btn-primary primary-cta primary-cta--small" href="/dashboard/pdf">PDF</a>
-      </div>
-
-      <div class="metrics-grid">
-        <article class="metric-card">
-          <span class="metric-card__label">Persona</span>
-          <span class="metric-card__value"><%= pageData.persona %></span>
-        </article>
-        <article class="metric-card">
-          <span class="metric-card__label">Sombra base</span>
-          <span class="metric-card__value"><%= pageData.sombraBase %></span>
-        </article>
-        <article class="metric-card">
-          <span class="metric-card__label">Sombra total</span>
-          <span class="metric-card__value"><%= pageData.sombraTotal %></span>
-        </article>
-      </div>
-
-      <div class="insight-stack">
-        <div class="alert alert-info compact-alert mb-0" role="alert"><%= pageData.shadowLabel %></div>
-        <div class="micro-panels">
-          <div class="micro-panel">
-            <span class="micro-panel__label">Keirsey</span>
-            <strong><%= pageData.keirsey %></strong>
-          </div>
-          <div class="micro-panel">
-            <span class="micro-panel__label">Campbell</span>
-            <strong><%= pageData.campbell %></strong>
-          </div>
-        </div>
-      </div>
-
-      <section class="ranking-summary">
-        <div class="d-flex justify-content-between align-items-center">
-          <h2 class="h6 mb-0">Top 3</h2>
-          <span class="text-muted small">12 arquetipos</span>
-        </div>
-        <div class="summary-ranking-list">
-          <% pageData.scores.slice(0, 3).forEach((item, index) => { %>
-            <div class="summary-ranking-item">
-              <span class="summary-ranking-item__name"><strong><%= index + 1 %>.</strong> <%= item.name %></span>
-              <span class="summary-ranking-item__score"><%= item.score.toFixed(1) %></span>
-            </div>
-          <% }) %>
-        </div>
-        <details class="ranking-details">
-          <summary>Ver ranking completo</summary>
-          <div class="summary-ranking-list mt-2">
-            <% pageData.scores.forEach((item, index) => { %>
-              <div class="summary-ranking-item">
-                <span class="summary-ranking-item__name"><strong><%= index + 1 %>.</strong> <%= item.name %></span>
-                <span class="summary-ranking-item__score"><%= item.score.toFixed(1) %></span>
-              </div>
-            <% }) %>
-          </div>
-        </details>
-      </section>
+<section class="stage-page dashboard-screen">
+  <header class="question-header dashboard-screen__header">
+    <p class="eyebrow mb-0">Dashboard estructural</p>
+    <div class="dashboard-screen__title-row">
+      <h1 class="question-title dashboard-screen__title"><%= pageData.dominantArchetype %></h1>
+      <a class="btn btn-primary dashboard-screen__pdf" href="/dashboard/pdf">PDF</a>
     </div>
-  </div>
+    <p class="teaser-card__summary dashboard-screen__summary mb-0">
+      Triada principal: <strong><%= pageData.topThree.join(", ") %></strong>
+    </p>
+  </header>
+
+  <article class="question-card-panel dashboard-card-panel">
+    <div class="dashboard-card-panel__hero">
+      <div class="dashboard-card-panel__metrics">
+        <article class="dashboard-metric">
+          <span class="dashboard-metric__label">Persona</span>
+          <strong class="dashboard-metric__value"><%= pageData.persona %></strong>
+        </article>
+        <article class="dashboard-metric">
+          <span class="dashboard-metric__label">Sombra base</span>
+          <strong class="dashboard-metric__value"><%= pageData.sombraBase %></strong>
+        </article>
+        <article class="dashboard-metric">
+          <span class="dashboard-metric__label">Sombra total</span>
+          <strong class="dashboard-metric__value"><%= pageData.sombraTotal %></strong>
+        </article>
+      </div>
+
+      <div class="question-card-panel__selection dashboard-card-panel__insight">
+        <span class="question-card-panel__selection-label">Lectura estructural</span>
+        <strong class="question-card-panel__selection-value"><%= pageData.shadowLabel %></strong>
+      </div>
+    </div>
+  </article>
+
+  <section class="dashboard-meta">
+    <article class="dashboard-meta__item">
+      <span class="dashboard-meta__label">Keirsey</span>
+      <strong class="dashboard-meta__value"><%= pageData.keirsey %></strong>
+    </article>
+    <article class="dashboard-meta__item">
+      <span class="dashboard-meta__label">Campbell</span>
+      <strong class="dashboard-meta__value"><%= pageData.campbell %></strong>
+    </article>
+  </section>
+
+  <section class="dashboard-ranking" aria-label="Ranking arquetipal">
+    <div class="dashboard-ranking__head">
+      <h2 class="dashboard-ranking__title mb-0">Top 3</h2>
+      <span class="dashboard-ranking__meta"><%= pageData.scores.length %> arquetipos</span>
+    </div>
+
+    <div class="summary-ranking-list">
+      <% pageData.scores.slice(0, 3).forEach((item, index) => { %>
+        <div class="summary-ranking-item">
+          <span class="summary-ranking-item__name"><strong><%= index + 1 %>.</strong> <%= item.name %></span>
+          <span class="summary-ranking-item__score"><%= item.score.toFixed(1) %></span>
+        </div>
+      <% }) %>
+    </div>
+
+    <details class="ranking-details">
+      <summary>Ver ranking completo</summary>
+      <div class="summary-ranking-list summary-ranking-list--full mt-2">
+        <% pageData.scores.forEach((item, index) => { %>
+          <div class="summary-ranking-item">
+            <span class="summary-ranking-item__name"><strong><%= index + 1 %>.</strong> <%= item.name %></span>
+            <span class="summary-ranking-item__score"><%= item.score.toFixed(1) %></span>
+          </div>
+        <% }) %>
+      </div>
+    </details>
+  </section>
 </section>
