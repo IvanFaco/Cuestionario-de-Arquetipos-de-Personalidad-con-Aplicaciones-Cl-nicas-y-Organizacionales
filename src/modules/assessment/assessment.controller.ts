@@ -146,7 +146,7 @@ export function renderLanding(req: Request, res: Response) {
     title: "MiRealYo | Inicio",
     page: "../pages/landing",
     pageData: {
-      title: "El Mapa de tu Psique",
+      title: "MiRealYo.com",
       subtitle:
         "Descubre tu estructura psicológica, tu sombra y tu temperamento en un flujo guiado, móvil y server-render.",
       hookCount: hookQuestions.length,
@@ -164,7 +164,7 @@ export function startAssessment(req: Request, res: Response) {
       title: "MiRealYo | Inicio",
       page: "../pages/landing",
       pageData: {
-        title: "El Mapa de tu Psique",
+        title: "MiRealYo.com",
         subtitle:
           "Descubre tu estructura psicológica, tu sombra y tu temperamento en un flujo guiado, móvil y server-render.",
         hookCount: hookQuestions.length,

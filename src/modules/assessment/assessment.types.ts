@@ -32,6 +32,7 @@ export type PremiumQuestionId =
 export type QuestionOption = {
   value: LikertValue;
   emoji: string;
+  iconPath: string;
   label: string;
   short: string;
   color: string;

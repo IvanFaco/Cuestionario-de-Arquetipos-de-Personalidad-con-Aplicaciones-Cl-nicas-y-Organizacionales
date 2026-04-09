@@ -25,6 +25,7 @@
   function setSelection(input) {
     const answerLabel = input.dataset.answerLabel ?? "";
     const answerEmoji = input.dataset.answerEmoji ?? "";
+    const answerIcon = input.dataset.answerIcon ?? "";
     const answerIndex = Number.parseInt(input.dataset.answerIndex ?? "-1", 10);
 
     selectionLabel.textContent = "Elegiste:";
@@ -43,7 +44,8 @@
       selectedBubble.classList.add(bubbleClasses[answerIndex]);
       selectedBubble.style.left = positions[answerIndex];
     }
-    selectedBubbleIcon.textContent = answerEmoji;
+    selectedBubbleIcon.setAttribute("src", answerIcon);
+    selectedBubbleIcon.setAttribute("data-fallback-emoji", answerEmoji);
 
     if (!hasVisibleSelection) {
       playEntryAnimation();

@@ -16,6 +16,7 @@ app.set("trust proxy", 1);
 
 app.set("view engine", "ejs");
 app.set("views", viewsPath);
+app.locals.assetVersion = env.assetVersion;
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());

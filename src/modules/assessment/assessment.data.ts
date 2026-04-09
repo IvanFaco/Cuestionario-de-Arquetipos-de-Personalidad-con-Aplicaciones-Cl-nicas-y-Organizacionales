@@ -6,11 +6,46 @@ import type {
 } from "./assessment.types.js";
 
 export const likertOptions: QuestionOption[] = [
-  { value: 1, emoji: "✖", label: "Para nada", short: "1", color: "#ef5b4c" },
-  { value: 2, emoji: "👎", label: "No tanto", short: "2", color: "#f39a7f" },
-  { value: 3, emoji: "😐", label: "Me da igual", short: "3", color: "#c6cbd5" },
-  { value: 4, emoji: "👍", label: "Puede ser", short: "4", color: "#8fd98c" },
-  { value: 5, emoji: "🔥", label: "Sí, soy yo", short: "5", color: "#3db54a" }
+  {
+    value: 1,
+    emoji: "✖",
+    iconPath: "/imgs/para-nada.png",
+    label: "Para nada",
+    short: "1",
+    color: "#ef5b4c"
+  },
+  {
+    value: 2,
+    emoji: "👎",
+    iconPath: "/imgs/no-tanto.png",
+    label: "No tanto",
+    short: "2",
+    color: "#f39a7f"
+  },
+  {
+    value: 3,
+    emoji: "😐",
+    iconPath: "/imgs/me-da-igual.png",
+    label: "Me da igual",
+    short: "3",
+    color: "#c6cbd5"
+  },
+  {
+    value: 4,
+    emoji: "👍",
+    iconPath: "/imgs/puede-ser.png",
+    label: "Puede ser",
+    short: "4",
+    color: "#8fd98c"
+  },
+  {
+    value: 5,
+    emoji: "🔥",
+    iconPath: "/imgs/si-soy-yo.png",
+    label: "Sí, soy yo",
+    short: "5",
+    color: "#3db54a"
+  }
 ];
 
 export const hookQuestions: Question<HookQuestionId>[] = [

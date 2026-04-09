@@ -1,29 +1,44 @@
-<section class="flow-shell">
-  <div class="hero-card screen-fit">
-    <div class="compact-stack">
-      <p class="eyebrow mb-1">Diagnostico preliminar</p>
-      <h1 class="hero-title mb-1"><%= pageData.dominantArchetype %> al frente</h1>
-      <p class="hero-copy mb-0">
-        A tus <strong><%= pageData.age %></strong> anos, la triada visible es
-        <strong><%= pageData.topThree.join(", ") %></strong>.
-      </p>
+<section class="stage-page teaser-screen">
+  <header class="question-header teaser-screen__header">
+    <p class="eyebrow mb-0">Diagnostico preliminar</p>
+    <h1 class="question-title teaser-screen__title">Tu mapa visible ya asomó</h1>
+  </header>
 
-      <div class="stat-strip">
-        <% pageData.topThree.forEach((item, index) => { %>
-          <div class="mini-stat mini-stat--soft">
-            <span class="mini-stat__value"><%= index + 1 %></span>
-            <span class="mini-stat__label"><%= item %></span>
-          </div>
-        <% }) %>
+  <article class="question-card-panel teaser-card">
+    <div class="question-card-panel__body teaser-card__body">
+      <div class="teaser-card__copy">
+        <p class="teaser-card__kicker mb-0">Arquetipo dominante</p>
+        <h2 class="teaser-card__headline mb-0"><%= pageData.dominantArchetype %> al frente</h2>
+        <p class="teaser-card__summary mb-0">
+          A tus <strong><%= pageData.age %></strong> anos, la triada visible se ordena como
+          <strong><%= pageData.topThree.join(", ") %></strong>.
+        </p>
       </div>
-
-      <div class="alert alert-warning compact-alert mb-0" role="alert">
-        Tu punto ciego está entre imagen publica e impulsos ocultos. Vale la pena afinarlo antes de tomar decisiones grandes.
-      </div>
-
-      <form action="/teaser" method="post" class="mt-auto">
-        <button class="btn btn-primary btn-lg primary-cta" type="submit">Desbloquear mapa profundo</button>
-      </form>
     </div>
-  </div>
+
+    <div class="question-card-panel__selection teaser-card__insight">
+      <span class="question-card-panel__selection-label">Lectura rapida</span>
+      <strong class="question-card-panel__selection-value">
+        Tu punto ciego está entre imagen publica e impulsos ocultos.
+      </strong>
+    </div>
+  </article>
+
+  <section class="teaser-ranking" aria-label="Triada visible">
+    <% pageData.topThree.forEach((item, index) => { %>
+      <article class="teaser-ranking__item">
+        <span class="teaser-ranking__position">#<%= index + 1 %></span>
+        <strong class="teaser-ranking__name"><%= item %></strong>
+      </article>
+    <% }) %>
+  </section>
+
+  <form action="/teaser" method="post" class="question-actions teaser-screen__actions">
+    <span class="question-actions__back question-actions__back--ghost"></span>
+    <div class="flex-grow-1">
+      <button class="btn btn-primary question-actions__next" type="submit">
+        Desbloquear mapa profundo
+      </button>
+    </div>
+  </form>
 </section>
