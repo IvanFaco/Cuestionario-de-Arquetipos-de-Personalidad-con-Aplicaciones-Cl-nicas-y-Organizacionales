@@ -1,4 +1,5 @@
 (function () {
+  const positions = ["10%", "30%", "50%", "70%", "90%"];
   const root = document.querySelector("[data-question-flow]");
   const nextButton = document.querySelector("[data-next-button]");
   const selectedBubble = document.querySelector("[data-selected-bubble]");
@@ -33,7 +34,7 @@
     selectedBubble.classList.remove("is-hidden", ...bubbleClasses);
     if (answerIndex >= 0 && answerIndex < bubbleClasses.length) {
       selectedBubble.classList.add(bubbleClasses[answerIndex]);
-      selectedBubble.style.left = `calc((${answerIndex} * 20%) + 10%)`;
+      selectedBubble.style.left = positions[answerIndex];
     }
     selectedBubbleIcon.textContent = answerEmoji;
   }
