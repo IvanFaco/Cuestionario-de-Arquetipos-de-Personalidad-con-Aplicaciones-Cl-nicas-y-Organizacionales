@@ -37,8 +37,8 @@ export function getLandingViewModel(): LandingViewModel {
       {
         id: "fase-1",
         title: "Extraccion de dominio",
-        status: "next",
-        summary: "Mover preguntas, scoring y reglas a servicios y contratos testeables."
+        status: "done",
+        summary: "Preguntas, scoring, ranking y reglas derivadas migradas a funciones puras con tests."
       },
       {
         id: "fase-2",
