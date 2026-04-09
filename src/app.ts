@@ -1,0 +1,36 @@
+import path from "node:path";
+
+import express from "express";
+import session from "express-session";
+
+import { env } from "./config/env.js";
+import { assessmentRouter } from "./modules/assessment/assessment.routes.js";
+
+const viewsPath = path.join(process.cwd(), "src/views");
+const publicPath = path.join(process.cwd(), "public");
+
+const app = express();
+
+app.set("view engine", "ejs");
+app.set("views", viewsPath);
+
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
+app.use(
+  session({
+    secret: env.sessionSecret,
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: env.nodeEnv === "production"
+    }
+  })
+);
+app.use(express.static(publicPath));
+app.use("/", assessmentRouter);
+
+app.listen(env.port, () => {
+  console.log(`MiRealYo migration scaffold listening on http://localhost:${env.port}`);
+});

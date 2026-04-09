@@ -3,6 +3,10 @@ __pycache__/
 *$py.class
 *.so
 .Python
+node_modules/
+coverage/
+*.tsbuildinfo
+.env
 env/
 venv/
 .venv
