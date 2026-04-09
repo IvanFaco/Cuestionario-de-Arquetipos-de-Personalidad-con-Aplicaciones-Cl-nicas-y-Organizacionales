@@ -1,9 +1,7 @@
 .git
 .gitignore
-__pycache__
-*.pyc
-*.pyo
-*.pyd
-.pytest_cache
-.streamlit
+node_modules
+dist
+coverage
+*.tsbuildinfo
 AGENTS.md
