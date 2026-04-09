@@ -33,7 +33,7 @@ assessmentRouter.get("/health", (_req, res) => {
   res.json({
     status: "ok",
     service: "mi-real-yo-migration",
-    phase: "fase-2"
+    phase: "fase-4"
   });
 });
 
