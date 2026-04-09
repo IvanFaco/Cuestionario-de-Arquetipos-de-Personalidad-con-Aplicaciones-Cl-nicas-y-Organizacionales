@@ -1,17 +1,29 @@
-<section class="hero-shell">
-  <div class="hero-card">
-    <p class="eyebrow mb-2">Diagnostico estructural preliminar</p>
-    <h1 class="display-6 fw-bold mb-3">Tu energia dominante apunta a <%= pageData.dominantArchetype %></h1>
-    <p class="lead text-muted mb-3">
-      A tus <strong><%= pageData.age %></strong> anos, la triada mas visible es
-      <strong><%= pageData.topThree.join(", ") %></strong>.
-    </p>
-    <div class="alert alert-warning" role="alert">
-      Punto ciego detectado: vemos tension entre tu imagen publica y tus impulsos ocultos.
-      Si esa sombra no se integra, puede aparecer como fatiga cronica, aislamiento o burnout.
+<section class="flow-shell">
+  <div class="hero-card screen-fit">
+    <div class="compact-stack">
+      <p class="eyebrow mb-1">Diagnostico preliminar</p>
+      <h1 class="hero-title mb-1"><%= pageData.dominantArchetype %> al frente</h1>
+      <p class="hero-copy mb-0">
+        A tus <strong><%= pageData.age %></strong> anos, la triada visible es
+        <strong><%= pageData.topThree.join(", ") %></strong>.
+      </p>
+
+      <div class="stat-strip">
+        <% pageData.topThree.forEach((item, index) => { %>
+          <div class="mini-stat mini-stat--soft">
+            <span class="mini-stat__value"><%= index + 1 %></span>
+            <span class="mini-stat__label"><%= item %></span>
+          </div>
+        <% }) %>
+      </div>
+
+      <div class="alert alert-warning compact-alert mb-0" role="alert">
+        Tu punto ciego está entre imagen publica e impulsos ocultos. Vale la pena afinarlo antes de tomar decisiones grandes.
+      </div>
+
+      <form action="/teaser" method="post" class="mt-auto">
+        <button class="btn btn-primary btn-lg primary-cta" type="submit">Desbloquear mapa profundo</button>
+      </form>
     </div>
-    <form action="/teaser" method="post">
-      <button class="btn btn-primary btn-lg" type="submit">Acceder a la calibracion profunda</button>
-    </form>
   </div>
 </section>

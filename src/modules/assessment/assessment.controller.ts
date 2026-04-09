@@ -94,20 +94,24 @@ function renderQuestionPage(
   {
     title,
     eyebrow,
-    action,
+    selectAction,
+    nextAction,
     index,
     total,
     prompt,
     selectedValue,
+    selectedLabel,
     backHref
   }: {
     title: string;
     eyebrow: string;
-    action: string;
+    selectAction: string;
+    nextAction: string;
     index: number;
     total: number;
     prompt: string;
     selectedValue?: LikertValue;
+    selectedLabel?: string;
     backHref?: string;
   }
 ) {
@@ -117,11 +121,17 @@ function renderQuestionPage(
     pageData: {
       title,
       eyebrow,
-      action,
+      selectAction,
+      nextAction,
       currentIndex: index,
       totalQuestions: total,
       prompt,
       selectedValue,
+      selectedLabel,
+      selectedIndex:
+        selectedValue !== undefined
+          ? likertOptions.findIndex((option) => option.value === selectedValue)
+          : -1,
       progressPercent: Math.round((index / total) * 100),
       options: likertOptions,
       backHref
@@ -185,20 +195,23 @@ export function renderHookQuestion(req: Request, res: Response) {
   const requestedIndex = parseIndex(req.params.index, hookQuestions.length);
   const index = Math.min(requestedIndex, resumeIndex);
   const question = hookQuestions[index - 1];
+  const selectedValue = session.hookAnswers[question.id];
 
   renderQuestionPage(res, {
     title: "MiRealYo | Hook Quiz",
     eyebrow: "Tus Instintos Primarios",
-    action: `/hook/${index}`,
+    selectAction: `/hook/${index}/select`,
+    nextAction: `/hook/${index}/next`,
     index,
     total: hookQuestions.length,
     prompt: question.prompt,
-    selectedValue: session.hookAnswers[question.id],
+    selectedValue,
+    selectedLabel: likertOptions.find((option) => option.value === selectedValue)?.label,
     backHref: index > 1 ? `/hook/${index - 1}` : undefined
   });
 }
 
-export function submitHookQuestion(req: Request, res: Response) {
+export function selectHookAnswer(req: Request, res: Response) {
   const session = ensureAssessmentSession(req);
 
   if (!session.demo) {
@@ -214,6 +227,22 @@ export function submitHookQuestion(req: Request, res: Response) {
   }
 
   session.hookAnswers[question.id] = answer;
+  return res.redirect(`/hook/${index}`);
+}
+
+export function submitHookQuestion(req: Request, res: Response) {
+  const session = ensureAssessmentSession(req);
+
+  if (!session.demo) {
+    return res.redirect("/");
+  }
+
+  const index = parseIndex(req.params.index, hookQuestions.length);
+  const question = hookQuestions[index - 1];
+
+  if (session.hookAnswers[question.id] === undefined) {
+    return res.redirect(`/hook/${index}`);
+  }
 
   if (index < hookQuestions.length) {
     return res.redirect(`/hook/${index + 1}`);
@@ -274,20 +303,23 @@ export function renderPremiumQuestion(req: Request, res: Response) {
   const requestedIndex = parseIndex(req.params.index, premiumQuestions.length);
   const index = Math.min(requestedIndex, resumeIndex);
   const question = premiumQuestions[index - 1];
+  const selectedValue = session.premiumAnswers[question.id];
 
   renderQuestionPage(res, {
     title: "MiRealYo | Premium Quiz",
     eyebrow: "Calibracion Profunda",
-    action: `/premium/${index}`,
+    selectAction: `/premium/${index}/select`,
+    nextAction: `/premium/${index}/next`,
     index,
     total: premiumQuestions.length,
     prompt: question.prompt,
-    selectedValue: session.premiumAnswers[question.id],
+    selectedValue,
+    selectedLabel: likertOptions.find((option) => option.value === selectedValue)?.label,
     backHref: index > 1 ? `/premium/${index - 1}` : undefined
   });
 }
 
-export function submitPremiumQuestion(req: Request, res: Response) {
+export function selectPremiumAnswer(req: Request, res: Response) {
   const session = ensureAssessmentSession(req);
 
   if (!session.hookOutcome) {
@@ -303,6 +335,22 @@ export function submitPremiumQuestion(req: Request, res: Response) {
   }
 
   session.premiumAnswers[question.id] = answer;
+  return res.redirect(`/premium/${index}`);
+}
+
+export function submitPremiumQuestion(req: Request, res: Response) {
+  const session = ensureAssessmentSession(req);
+
+  if (!session.hookOutcome) {
+    return res.redirect("/");
+  }
+
+  const index = parseIndex(req.params.index, premiumQuestions.length);
+  const question = premiumQuestions[index - 1];
+
+  if (session.premiumAnswers[question.id] === undefined) {
+    return res.redirect(`/premium/${index}`);
+  }
 
   if (index < premiumQuestions.length) {
     return res.redirect(`/premium/${index + 1}`);

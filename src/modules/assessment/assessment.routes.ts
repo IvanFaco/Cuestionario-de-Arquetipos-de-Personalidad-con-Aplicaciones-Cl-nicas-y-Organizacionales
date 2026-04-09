@@ -9,6 +9,8 @@ import {
   renderPhaseZero,
   renderPremiumQuestion,
   renderTeaser,
+  selectHookAnswer,
+  selectPremiumAnswer,
   startAssessment,
   startPremium,
   submitHookQuestion,
@@ -20,11 +22,13 @@ export const assessmentRouter = Router();
 assessmentRouter.get("/", renderLanding);
 assessmentRouter.post("/start", startAssessment);
 assessmentRouter.get("/hook/:index", renderHookQuestion);
-assessmentRouter.post("/hook/:index", submitHookQuestion);
+assessmentRouter.post("/hook/:index/select", selectHookAnswer);
+assessmentRouter.post("/hook/:index/next", submitHookQuestion);
 assessmentRouter.get("/teaser", renderTeaser);
 assessmentRouter.post("/teaser", startPremium);
 assessmentRouter.get("/premium/:index", renderPremiumQuestion);
-assessmentRouter.post("/premium/:index", submitPremiumQuestion);
+assessmentRouter.post("/premium/:index/select", selectPremiumAnswer);
+assessmentRouter.post("/premium/:index/next", submitPremiumQuestion);
 assessmentRouter.get("/dashboard", renderDashboard);
 assessmentRouter.get("/dashboard/pdf", downloadDashboardPdf);
 assessmentRouter.get("/migration", renderMigrationStatus);
