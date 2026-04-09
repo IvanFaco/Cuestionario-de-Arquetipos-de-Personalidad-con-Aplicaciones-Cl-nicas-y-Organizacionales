@@ -52,8 +52,10 @@ export type DemoProfile = DemoInput & {
 };
 
 export type HookAnswers = Record<HookQuestionId, LikertValue>;
+export type PartialHookAnswers = Partial<HookAnswers>;
 
 export type PremiumAnswers = Record<PremiumQuestionId, LikertValue>;
+export type PartialPremiumAnswers = Partial<PremiumAnswers>;
 
 export type ArchetypeScore = {
   name: string;
