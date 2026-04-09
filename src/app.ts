@@ -11,6 +11,9 @@ const publicPath = path.join(process.cwd(), "public");
 
 const app = express();
 
+// Coolify and similar platforms terminate TLS before the Node app.
+app.set("trust proxy", 1);
+
 app.set("view engine", "ejs");
 app.set("views", viewsPath);
 
