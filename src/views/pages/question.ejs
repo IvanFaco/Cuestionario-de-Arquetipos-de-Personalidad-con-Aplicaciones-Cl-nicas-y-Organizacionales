@@ -1,45 +1,76 @@
-<section class="hero-shell">
-  <div class="hero-card">
-    <p class="eyebrow mb-2"><%= pageData.eyebrow %></p>
-    <div class="d-flex justify-content-between align-items-center mb-3">
-      <span class="badge text-bg-light border">
-        Pregunta <%= pageData.currentIndex %> de <%= pageData.totalQuestions %>
-      </span>
-      <span class="text-muted small"><%= pageData.progressPercent %>%</span>
-    </div>
-
-    <div class="progress soft-progress mb-4" role="progressbar" aria-valuenow="<%= pageData.progressPercent %>" aria-valuemin="0" aria-valuemax="100">
-      <div class="progress-bar" style="width: <%= pageData.progressPercent %>%"></div>
-    </div>
-
-    <blockquote class="question-quote mb-4">
-      <p class="question-text mb-0">"<%= pageData.prompt %>"</p>
-    </blockquote>
-
-    <form action="<%= pageData.action %>" method="post" class="vstack gap-3">
-      <div class="row g-2">
-        <% pageData.options.forEach((option) => { %>
-          <div class="col-6 col-md">
-            <button
-              class="btn btn-answer w-100 <%= pageData.selectedValue === option.value ? 'selected' : '' %>"
-              type="submit"
-              name="answer"
-              value="<%= option.value %>"
-              style="--answer-color: <%= option.color %>;"
-            >
-              <span class="d-block fs-3"><%= option.emoji %></span>
-              <span class="small fw-semibold"><%= option.label %></span>
-            </button>
-          </div>
-        <% }) %>
+<section class="stage-page question-screen">
+  <header class="question-header">
+    <div class="question-progress">
+      <div class="progress soft-progress question-progress__bar" role="progressbar" aria-valuenow="<%= pageData.progressPercent %>" aria-valuemin="0" aria-valuemax="100">
+        <div class="progress-bar" style="width: <%= pageData.progressPercent %>%"></div>
       </div>
-    </form>
+      <span class="question-progress__count"><%= pageData.currentIndex %>/<%= pageData.totalQuestions %></span>
+    </div>
+    <h1 class="question-title">¿Te identificas con la siguiente afirmación?</h1>
+  </header>
 
-    <div class="d-flex justify-content-between align-items-center mt-4">
-      <div class="text-muted small">La respuesta se guarda y avanza automaticamente.</div>
-      <% if (pageData.backHref) { %>
-        <a class="btn btn-outline-secondary btn-sm" href="<%= pageData.backHref %>">Volver</a>
+  <article class="question-card-panel">
+    <div class="question-card-panel__body">
+      <p class="question-text question-text--center mb-0">"<%= pageData.prompt %>"</p>
+    </div>
+    <div class="question-card-panel__selection">
+      <% if (pageData.selectedLabel) { %>
+        <span class="question-card-panel__selection-label">Elegiste:</span>
+        <strong class="question-card-panel__selection-value"><%= pageData.selectedLabel %></strong>
+      <% } else { %>
+        <span class="question-card-panel__selection-label">Aun no eliges una opcion</span>
+        <strong class="question-card-panel__selection-value">Selecciona una respuesta</strong>
       <% } %>
     </div>
-  </div>
+  </article>
+
+  <form action="<%= pageData.selectAction %>" method="post" class="rating-bar-container">
+    <div class="bar-track">
+      <div class="bar-pill">
+        <% pageData.options.forEach((option, index) => { %>
+          <button
+            class="segment <%= index === 0 ? 'seg-x' : '' %><%= index === 1 ? ' seg-down' : '' %><%= index === 2 ? ' seg-neutral' : '' %><%= index === 3 ? ' seg-up' : '' %><%= index === 4 ? ' seg-fire' : '' %>"
+            type="submit"
+            name="answer"
+            value="<%= option.value %>"
+            aria-label="<%= option.label %>"
+          >
+            <span class="seg-icon"><%= option.emoji %></span>
+          </button>
+        <% }) %>
+      </div>
+      <% if (pageData.selectedValue) { %>
+        <div
+          class="selected-bubble <%= pageData.selectedIndex === 0 ? 'bubble-x' : '' %><%= pageData.selectedIndex === 1 ? ' bubble-down' : '' %><%= pageData.selectedIndex === 2 ? ' bubble-neutral' : '' %><%= pageData.selectedIndex === 3 ? ' bubble-up' : '' %><%= pageData.selectedIndex === 4 ? ' bubble-fire' : '' %>"
+          style="left: calc((<%= pageData.selectedIndex %> * 20%) + 10%);"
+        >
+          <div class="bub-inner">
+            <span class="seg-icon"><%= pageData.options[pageData.selectedIndex].emoji %></span>
+          </div>
+        </div>
+      <% } %>
+    </div>
+    <div class="labels-row">
+      <% pageData.options.forEach((option, index) => { %>
+        <div class="label-item <%= pageData.selectedIndex === index ? 'active' : '' %>">
+          <%- option.label.replace(' ', '<br>') %>
+        </div>
+      <% }) %>
+    </div>
+  </form>
+
+  <footer class="question-actions">
+    <% if (pageData.backHref) { %>
+      <a class="question-actions__back" href="<%= pageData.backHref %>">
+        <span aria-hidden="true">←</span>
+      </a>
+    <% } else { %>
+      <span class="question-actions__back question-actions__back--ghost"></span>
+    <% } %>
+    <form action="<%= pageData.nextAction %>" method="post" class="flex-grow-1">
+      <button class="btn btn-primary question-actions__next" type="submit" <%= pageData.selectedValue ? "" : "disabled" %>>
+        Siguiente
+      </button>
+    </form>
+  </footer>
 </section>

@@ -1,49 +1,69 @@
-<section class="hero-shell">
-  <div class="hero-card">
-    <p class="eyebrow mb-2">Dashboard estructural</p>
-    <h1 class="display-6 fw-bold mb-3">Arquetipo dominante: <%= pageData.dominantArchetype %></h1>
-    <p class="lead text-muted mb-4">Triada principal: <strong><%= pageData.topThree.join(", ") %></strong></p>
-
-    <div class="row g-3 mb-4">
-      <div class="col-12 col-md-4">
-        <article class="phase-card h-100">
-          <h2 class="h6">Persona</h2>
-          <p class="display-6 mb-0"><%= pageData.persona %></p>
-        </article>
-      </div>
-      <div class="col-12 col-md-4">
-        <article class="phase-card h-100">
-          <h2 class="h6">Sombra base</h2>
-          <p class="display-6 mb-0"><%= pageData.sombraBase %></p>
-        </article>
-      </div>
-      <div class="col-12 col-md-4">
-        <article class="phase-card h-100">
-          <h2 class="h6">Sombra total</h2>
-          <p class="display-6 mb-0"><%= pageData.sombraTotal %></p>
-        </article>
-      </div>
-    </div>
-
-    <div class="alert alert-info" role="alert"><%= pageData.shadowLabel %></div>
-    <div class="alert alert-secondary" role="alert">Keirsey: <strong><%= pageData.keirsey %></strong></div>
-    <div class="alert alert-secondary" role="alert">Campbell: <strong><%= pageData.campbell %></strong></div>
-
-    <h2 class="h5 mt-4">Ranking</h2>
-    <div class="list-group list-group-flush mt-3">
-      <% pageData.scores.forEach((item, index) => { %>
-        <div class="list-group-item d-flex justify-content-between align-items-center px-0 bg-transparent">
-          <span><strong><%= index + 1 %>.</strong> <%= item.name %></span>
-          <span class="badge text-bg-light border"><%= item.score.toFixed(1) %></span>
+<section class="flow-shell">
+  <div class="hero-card dashboard-card">
+    <div class="compact-stack">
+      <p class="eyebrow mb-1">Dashboard estructural</p>
+      <div class="dashboard-head">
+        <div>
+          <h1 class="hero-title mb-1"><%= pageData.dominantArchetype %></h1>
+          <p class="hero-copy mb-0">Triada principal: <strong><%= pageData.topThree.join(", ") %></strong></p>
         </div>
-      <% }) %>
-    </div>
-
-    <div class="alert alert-light border mt-4 mb-0" role="alert">
-      <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
-        <span>El PDF ejecutivo ya esta disponible. Las visualizaciones avanzadas pueden entrar como mejora posterior.</span>
-        <a class="btn btn-primary" href="/dashboard/pdf">Descargar PDF</a>
+        <a class="btn btn-primary primary-cta primary-cta--small" href="/dashboard/pdf">PDF</a>
       </div>
+
+      <div class="metrics-grid">
+        <article class="metric-card">
+          <span class="metric-card__label">Persona</span>
+          <span class="metric-card__value"><%= pageData.persona %></span>
+        </article>
+        <article class="metric-card">
+          <span class="metric-card__label">Sombra base</span>
+          <span class="metric-card__value"><%= pageData.sombraBase %></span>
+        </article>
+        <article class="metric-card">
+          <span class="metric-card__label">Sombra total</span>
+          <span class="metric-card__value"><%= pageData.sombraTotal %></span>
+        </article>
+      </div>
+
+      <div class="insight-stack">
+        <div class="alert alert-info compact-alert mb-0" role="alert"><%= pageData.shadowLabel %></div>
+        <div class="micro-panels">
+          <div class="micro-panel">
+            <span class="micro-panel__label">Keirsey</span>
+            <strong><%= pageData.keirsey %></strong>
+          </div>
+          <div class="micro-panel">
+            <span class="micro-panel__label">Campbell</span>
+            <strong><%= pageData.campbell %></strong>
+          </div>
+        </div>
+      </div>
+
+      <section class="ranking-summary">
+        <div class="d-flex justify-content-between align-items-center">
+          <h2 class="h6 mb-0">Top 3</h2>
+          <span class="text-muted small">12 arquetipos</span>
+        </div>
+        <div class="summary-ranking-list">
+          <% pageData.scores.slice(0, 3).forEach((item, index) => { %>
+            <div class="summary-ranking-item">
+              <span class="summary-ranking-item__name"><strong><%= index + 1 %>.</strong> <%= item.name %></span>
+              <span class="summary-ranking-item__score"><%= item.score.toFixed(1) %></span>
+            </div>
+          <% }) %>
+        </div>
+        <details class="ranking-details">
+          <summary>Ver ranking completo</summary>
+          <div class="summary-ranking-list mt-2">
+            <% pageData.scores.forEach((item, index) => { %>
+              <div class="summary-ranking-item">
+                <span class="summary-ranking-item__name"><strong><%= index + 1 %>.</strong> <%= item.name %></span>
+                <span class="summary-ranking-item__score"><%= item.score.toFixed(1) %></span>
+              </div>
+            <% }) %>
+          </div>
+        </details>
+      </section>
     </div>
   </div>
 </section>

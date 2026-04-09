@@ -1,42 +1,79 @@
-<section class="hero-shell">
-  <div class="hero-card">
-    <p class="eyebrow mb-2">Mapa Psicologico Premium</p>
-    <h1 class="display-5 fw-bold mb-3"><%= pageData.title %></h1>
-    <p class="lead text-muted mb-4"><%= pageData.subtitle %></p>
-    <div class="d-flex flex-wrap gap-2 mb-4">
-      <span class="badge text-bg-light border">Hook quiz: <%= pageData.hookCount %> preguntas</span>
-      <span class="badge text-bg-light border">Premium quiz: <%= pageData.premiumCount %> preguntas</span>
-      <a class="badge text-bg-secondary text-decoration-none" href="/migration">Estado migracion</a>
+<section class="stage-page landing-page">
+  <header class="landing-hero">
+    <div class="d-flex justify-content-between align-items-start gap-3">
+      <div>
+        <p class="eyebrow mb-2">Mapa Psicologico Premium</p>
+        <h1 class="hero-title mb-2"><%= pageData.title %></h1>
+      </div>
+      <a class="status-pill text-decoration-none" href="/migration">Migracion</a>
     </div>
 
-    <% if (pageData.error) { %>
-      <div class="alert alert-danger" role="alert"><%= pageData.error %></div>
-    <% } %>
+    <p class="hero-copy mb-0"><%= pageData.subtitle %></p>
 
-    <form action="/start" method="post" class="vstack gap-3">
-      <div>
-        <label class="form-label fw-semibold" for="genero">Genero</label>
-        <select class="form-select form-select-lg" id="genero" name="genero" required>
-          <option value="">Selecciona una opcion</option>
-          <option value="Hombre">Hombre</option>
-          <option value="Mujer">Mujer</option>
-          <option value="Otro">Otro</option>
-        </select>
+    <div class="stat-strip">
+      <div class="mini-stat">
+        <span class="mini-stat__value"><%= pageData.hookCount %></span>
+        <span class="mini-stat__label">Hook</span>
       </div>
-      <div>
-        <label class="form-label fw-semibold" for="edad_exacta">Edad exacta</label>
-        <input
-          class="form-control form-control-lg"
-          id="edad_exacta"
-          name="edad_exacta"
-          type="number"
-          min="18"
-          max="99"
-          value="35"
-          required
-        />
+      <div class="mini-stat">
+        <span class="mini-stat__value"><%= pageData.premiumCount %></span>
+        <span class="mini-stat__label">Profundo</span>
       </div>
-      <button class="btn btn-primary btn-lg" type="submit">Continuar al test clinico</button>
-    </form>
-  </div>
+      <div class="mini-stat">
+        <span class="mini-stat__value">2</span>
+        <span class="mini-stat__label">Minutos</span>
+      </div>
+    </div>
+
+    <div class="landing-bullets">
+      <span>Arquetipo dominante</span>
+      <span>Sombra y estructura</span>
+      <span>PDF ejecutivo</span>
+    </div>
+  </header>
+
+  <section class="landing-form-panel">
+    <div class="compact-stack">
+      <div>
+        <p class="eyebrow mb-2">Calibracion inicial</p>
+        <h2 class="landing-form-title mb-1">Empieza el mapa</h2>
+        <p class="hero-copy mb-0">Dos datos y entras al flujo guiado sin friccion.</p>
+      </div>
+
+      <% if (pageData.error) { %>
+        <div class="alert alert-danger compact-alert" role="alert"><%= pageData.error %></div>
+      <% } %>
+
+      <form action="/start" method="post" class="vstack gap-3">
+        <div class="row g-2">
+          <div class="col-7">
+            <label class="form-label form-label-sm fw-semibold" for="genero">Genero</label>
+            <select class="form-select form-select-lg compact-control" id="genero" name="genero" required>
+              <option value="">Selecciona</option>
+              <option value="Hombre">Hombre</option>
+              <option value="Mujer">Mujer</option>
+              <option value="Otro">Otro</option>
+            </select>
+          </div>
+          <div class="col-5">
+            <label class="form-label form-label-sm fw-semibold" for="edad_exacta">Edad</label>
+            <input
+              class="form-control form-control-lg compact-control"
+              id="edad_exacta"
+              name="edad_exacta"
+              type="number"
+              min="18"
+              max="99"
+              value="35"
+              required
+            />
+          </div>
+        </div>
+        <div class="surface-note">
+          Responde una pregunta por pantalla. Seleccionas, avanzas y el progreso queda guardado.
+        </div>
+        <button class="btn btn-primary btn-lg primary-cta" type="submit">Empezar ahora</button>
+      </form>
+    </div>
+  </section>
 </section>
