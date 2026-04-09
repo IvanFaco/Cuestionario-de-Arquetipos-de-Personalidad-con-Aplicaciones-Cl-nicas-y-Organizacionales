@@ -24,53 +24,72 @@
     </div>
   </article>
 
-  <form action="<%= pageData.selectAction %>" method="post" class="rating-bar-container">
-    <div class="bar-track">
-      <div class="bar-pill">
-        <% pageData.options.forEach((option, index) => { %>
-          <button
-            class="segment <%= index === 0 ? 'seg-x' : '' %><%= index === 1 ? ' seg-down' : '' %><%= index === 2 ? ' seg-neutral' : '' %><%= index === 3 ? ' seg-up' : '' %><%= index === 4 ? ' seg-fire' : '' %>"
-            type="submit"
-            name="answer"
-            value="<%= option.value %>"
-            aria-label="<%= option.label %>"
-          >
-            <span class="seg-icon"><%= option.emoji %></span>
-          </button>
-        <% }) %>
-      </div>
-      <% if (pageData.selectedValue) { %>
+  <form
+    action="<%= pageData.nextAction %>"
+    method="post"
+    class="question-flow-form"
+    data-question-flow
+    data-selected-index="<%= pageData.selectedIndex %>"
+    data-selected-label="<%= pageData.selectedLabel ?? '' %>"
+  >
+    <section class="rating-bar-container">
+      <div class="bar-track">
+        <div class="bar-pill">
+          <% pageData.options.forEach((option, index) => { %>
+            <label
+              class="segment <%= index === 0 ? 'seg-x' : '' %><%= index === 1 ? ' seg-down' : '' %><%= index === 2 ? ' seg-neutral' : '' %><%= index === 3 ? ' seg-up' : '' %><%= index === 4 ? ' seg-fire' : '' %>"
+              aria-label="<%= option.label %>"
+            >
+              <input
+                class="segment-input visually-hidden"
+                type="radio"
+                name="answer"
+                value="<%= option.value %>"
+                <%= pageData.selectedValue === option.value ? "checked" : "" %>
+                <%= index === 0 ? "required" : "" %>
+                data-answer-input
+                data-answer-label="<%= option.label %>"
+                data-answer-index="<%= index %>"
+                data-answer-emoji="<%= option.emoji %>"
+              />
+              <span class="seg-icon"><%= option.emoji %></span>
+            </label>
+          <% }) %>
+        </div>
         <div
-          class="selected-bubble <%= pageData.selectedIndex === 0 ? 'bubble-x' : '' %><%= pageData.selectedIndex === 1 ? ' bubble-down' : '' %><%= pageData.selectedIndex === 2 ? ' bubble-neutral' : '' %><%= pageData.selectedIndex === 3 ? ' bubble-up' : '' %><%= pageData.selectedIndex === 4 ? ' bubble-fire' : '' %>"
-          style="left: calc((<%= pageData.selectedIndex %> * 20%) + 10%);"
+          class="selected-bubble <%= pageData.selectedValue ? '' : 'is-hidden' %><%= pageData.selectedIndex === 0 ? ' bubble-x' : '' %><%= pageData.selectedIndex === 1 ? ' bubble-down' : '' %><%= pageData.selectedIndex === 2 ? ' bubble-neutral' : '' %><%= pageData.selectedIndex === 3 ? ' bubble-up' : '' %><%= pageData.selectedIndex === 4 ? ' bubble-fire' : '' %>"
+          data-selected-bubble
+          style="<%= pageData.selectedValue ? `left: calc((${pageData.selectedIndex} * 20%) + 10%);` : '' %>"
         >
           <div class="bub-inner">
-            <span class="seg-icon"><%= pageData.options[pageData.selectedIndex].emoji %></span>
+            <span class="seg-icon" data-selected-bubble-icon><%= pageData.selectedValue ? pageData.options[pageData.selectedIndex].emoji : '' %></span>
           </div>
         </div>
-      <% } %>
-    </div>
-    <div class="labels-row">
-      <% pageData.options.forEach((option, index) => { %>
-        <div class="label-item <%= pageData.selectedIndex === index ? 'active' : '' %>">
-          <%- option.label.replace(' ', '<br>') %>
-        </div>
-      <% }) %>
-    </div>
-  </form>
+      </div>
+      <div class="labels-row" data-labels-row>
+        <% pageData.options.forEach((option, index) => { %>
+          <div class="label-item <%= pageData.selectedIndex === index ? 'active' : '' %>" data-label-item data-label-index="<%= index %>">
+            <%- option.label.replace(' ', '<br>') %>
+          </div>
+        <% }) %>
+      </div>
+    </section>
 
-  <footer class="question-actions">
-    <% if (pageData.backHref) { %>
-      <a class="question-actions__back" href="<%= pageData.backHref %>">
-        <span aria-hidden="true">←</span>
-      </a>
-    <% } else { %>
-      <span class="question-actions__back question-actions__back--ghost"></span>
-    <% } %>
-    <form action="<%= pageData.nextAction %>" method="post" class="flex-grow-1">
-      <button class="btn btn-primary question-actions__next" type="submit" <%= pageData.selectedValue ? "" : "disabled" %>>
-        Siguiente
-      </button>
-    </form>
-  </footer>
+    <footer class="question-actions">
+      <% if (pageData.backHref) { %>
+        <a class="question-actions__back" href="<%= pageData.backHref %>">
+          <span aria-hidden="true">←</span>
+        </a>
+      <% } else { %>
+        <span class="question-actions__back question-actions__back--ghost"></span>
+      <% } %>
+      <div class="flex-grow-1">
+        <button class="btn btn-primary question-actions__next" type="submit" data-next-button>
+          Siguiente
+        </button>
+      </div>
+    </footer>
+  </form>
 </section>
+
+<script src="/scripts/question-flow.js"></script>

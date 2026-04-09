@@ -239,6 +239,11 @@ export function submitHookQuestion(req: Request, res: Response) {
 
   const index = parseIndex(req.params.index, hookQuestions.length);
   const question = hookQuestions[index - 1];
+  const answer = parseLikertValue(req.body.answer);
+
+  if (answer) {
+    session.hookAnswers[question.id] = answer;
+  }
 
   if (session.hookAnswers[question.id] === undefined) {
     return res.redirect(`/hook/${index}`);
@@ -347,6 +352,11 @@ export function submitPremiumQuestion(req: Request, res: Response) {
 
   const index = parseIndex(req.params.index, premiumQuestions.length);
   const question = premiumQuestions[index - 1];
+  const answer = parseLikertValue(req.body.answer);
+
+  if (answer) {
+    session.premiumAnswers[question.id] = answer;
+  }
 
   if (session.premiumAnswers[question.id] === undefined) {
     return res.redirect(`/premium/${index}`);
