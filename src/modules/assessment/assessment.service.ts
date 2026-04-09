@@ -43,8 +43,20 @@ export function getLandingViewModel(): LandingViewModel {
       {
         id: "fase-2",
         title: "Paridad del funnel SSR",
-        status: "next",
-        summary: "Recrear landing, quizzes, teaser y dashboard con sesion server-side."
+        status: "done",
+        summary: "Landing, quizzes, teaser y dashboard funcionando con sesion server-side."
+      },
+      {
+        id: "fase-3",
+        title: "Recuperacion de PDF",
+        status: "done",
+        summary: "Reporte ejecutivo en PDF disponible desde el dashboard SSR."
+      },
+      {
+        id: "fase-4",
+        title: "Validacion y cierre",
+        status: "done",
+        summary: "Checklist de equivalencia y comando unico de verificacion agregados."
       }
     ]
   };
