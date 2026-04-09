@@ -1,6 +1,7 @@
 import { Router } from "express";
 
 import {
+  downloadDashboardPdf,
   renderDashboard,
   renderHookQuestion,
   renderLanding,
@@ -25,6 +26,7 @@ assessmentRouter.post("/teaser", startPremium);
 assessmentRouter.get("/premium/:index", renderPremiumQuestion);
 assessmentRouter.post("/premium/:index", submitPremiumQuestion);
 assessmentRouter.get("/dashboard", renderDashboard);
+assessmentRouter.get("/dashboard/pdf", downloadDashboardPdf);
 assessmentRouter.get("/migration", renderMigrationStatus);
 
 assessmentRouter.get("/health", (_req, res) => {

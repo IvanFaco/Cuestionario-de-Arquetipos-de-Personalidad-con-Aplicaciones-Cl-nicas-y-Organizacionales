@@ -6,6 +6,7 @@ import {
   buildPremiumOutcome
 } from "./assessment.domain.js";
 import { hookQuestions, likertOptions, premiumQuestions } from "./assessment.data.js";
+import { buildExecutiveReportPdf, getShadowLabel } from "./assessment.report.service.js";
 import {
   getLandingViewModel,
   getPhaseZeroViewModel
@@ -330,11 +331,6 @@ export function renderDashboard(req: Request, res: Response) {
   }
 
   const ranking = session.hookOutcome.ranking;
-  const shadowLabel =
-    session.premiumOutcome.Sombra_Total >= 3.5
-      ? "Alto nivel de represion. Conviene integrar vulnerabilidad antes del burnout."
-      : "Relacion sana con los impulsos. La autenticidad aparece como un recurso disponible.";
-
   res.render("layouts/main", {
     title: "MiRealYo | Dashboard",
     page: "../pages/dashboard",
@@ -345,11 +341,29 @@ export function renderDashboard(req: Request, res: Response) {
       persona: session.hookOutcome.estructuras.Persona,
       sombraBase: session.hookOutcome.estructuras.Sombra_Base,
       sombraTotal: session.premiumOutcome.Sombra_Total,
-      shadowLabel,
+      shadowLabel: getShadowLabel(session.premiumOutcome.Sombra_Total),
       keirsey: session.premiumOutcome.Keirsey,
       campbell: session.premiumOutcome.Campbell
     }
   });
+}
+
+export async function downloadDashboardPdf(req: Request, res: Response) {
+  const session = ensureAssessmentSession(req);
+
+  if (!session.demo || !session.hookOutcome || !session.premiumOutcome) {
+    return res.redirect("/");
+  }
+
+  const pdfBuffer = await buildExecutiveReportPdf({
+    demo: session.demo,
+    hook: session.hookOutcome,
+    premium: session.premiumOutcome
+  });
+
+  res.setHeader("Content-Type", "application/pdf");
+  res.setHeader("Content-Disposition", 'attachment; filename="Reporte_Clinico_Ejecutivo.pdf"');
+  return res.send(pdfBuffer);
 }
 
 export function renderMigrationStatus(req: Request, res: Response) {
