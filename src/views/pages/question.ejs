@@ -1,0 +1,45 @@
+<section class="hero-shell">
+  <div class="hero-card">
+    <p class="eyebrow mb-2"><%= pageData.eyebrow %></p>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <span class="badge text-bg-light border">
+        Pregunta <%= pageData.currentIndex %> de <%= pageData.totalQuestions %>
+      </span>
+      <span class="text-muted small"><%= pageData.progressPercent %>%</span>
+    </div>
+
+    <div class="progress soft-progress mb-4" role="progressbar" aria-valuenow="<%= pageData.progressPercent %>" aria-valuemin="0" aria-valuemax="100">
+      <div class="progress-bar" style="width: <%= pageData.progressPercent %>%"></div>
+    </div>
+
+    <blockquote class="question-quote mb-4">
+      <p class="question-text mb-0">"<%= pageData.prompt %>"</p>
+    </blockquote>
+
+    <form action="<%= pageData.action %>" method="post" class="vstack gap-3">
+      <div class="row g-2">
+        <% pageData.options.forEach((option) => { %>
+          <div class="col-6 col-md">
+            <button
+              class="btn btn-answer w-100 <%= pageData.selectedValue === option.value ? 'selected' : '' %>"
+              type="submit"
+              name="answer"
+              value="<%= option.value %>"
+              style="--answer-color: <%= option.color %>;"
+            >
+              <span class="d-block fs-3"><%= option.emoji %></span>
+              <span class="small fw-semibold"><%= option.label %></span>
+            </button>
+          </div>
+        <% }) %>
+      </div>
+    </form>
+
+    <div class="d-flex justify-content-between align-items-center mt-4">
+      <div class="text-muted small">La respuesta se guarda y avanza automaticamente.</div>
+      <% if (pageData.backHref) { %>
+        <a class="btn btn-outline-secondary btn-sm" href="<%= pageData.backHref %>">Volver</a>
+      <% } %>
+    </div>
+  </div>
+</section>

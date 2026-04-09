@@ -32,6 +32,45 @@ body {
   background: linear-gradient(180deg, var(--surface) 0%, var(--surface-muted) 100%);
 }
 
+.question-quote {
+  border-left: 0;
+  background: linear-gradient(180deg, #ffffff 0%, #f5f9fd 100%);
+  border: 1px solid rgba(43, 99, 140, 0.1);
+  border-radius: 1rem;
+  padding: 1.25rem;
+}
+
+.question-text {
+  color: #153b52;
+  font-size: 1.45rem;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.soft-progress {
+  height: 0.85rem;
+  background: #dce9f2;
+  border-radius: 999px;
+}
+
+.soft-progress .progress-bar {
+  background: linear-gradient(90deg, #ef5b4c 0%, #f6b46b 35%, #8fd98c 68%, #3db54a 100%);
+}
+
+.btn-answer {
+  min-height: 5.5rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(43, 99, 140, 0.12);
+  background: color-mix(in srgb, var(--answer-color) 12%, white);
+  color: #113046;
+}
+
+.btn-answer:hover,
+.btn-answer.selected {
+  border-color: var(--answer-color);
+  box-shadow: 0 12px 24px color-mix(in srgb, var(--answer-color) 24%, transparent);
+}
+
 .eyebrow {
   color: #3f789a;
   font-size: 0.8rem;

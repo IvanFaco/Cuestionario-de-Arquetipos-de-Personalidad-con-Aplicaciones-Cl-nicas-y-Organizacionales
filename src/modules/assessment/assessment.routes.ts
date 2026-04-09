@@ -1,33 +1,38 @@
 import { Router } from "express";
 
-import { getLandingViewModel, getPhaseZeroViewModel } from "./assessment.service.js";
+import {
+  renderDashboard,
+  renderHookQuestion,
+  renderLanding,
+  renderMigrationStatus,
+  renderPhaseZero,
+  renderPremiumQuestion,
+  renderTeaser,
+  startAssessment,
+  startPremium,
+  submitHookQuestion,
+  submitPremiumQuestion
+} from "./assessment.controller.js";
 
 export const assessmentRouter = Router();
 
-assessmentRouter.get("/", (_req, res) => {
-  const viewModel = getLandingViewModel();
-
-  res.render("layouts/main", {
-    title: viewModel.title,
-    page: "../pages/landing",
-    pageData: viewModel
-  });
-});
+assessmentRouter.get("/", renderLanding);
+assessmentRouter.post("/start", startAssessment);
+assessmentRouter.get("/hook/:index", renderHookQuestion);
+assessmentRouter.post("/hook/:index", submitHookQuestion);
+assessmentRouter.get("/teaser", renderTeaser);
+assessmentRouter.post("/teaser", startPremium);
+assessmentRouter.get("/premium/:index", renderPremiumQuestion);
+assessmentRouter.post("/premium/:index", submitPremiumQuestion);
+assessmentRouter.get("/dashboard", renderDashboard);
+assessmentRouter.get("/migration", renderMigrationStatus);
 
 assessmentRouter.get("/health", (_req, res) => {
   res.json({
     status: "ok",
     service: "mi-real-yo-migration",
-    phase: "fase-1"
+    phase: "fase-2"
   });
 });
 
-assessmentRouter.get("/migration/phase-0", (_req, res) => {
-  const viewModel = getPhaseZeroViewModel();
-
-  res.render("layouts/main", {
-    title: viewModel.title,
-    page: "../pages/phase-zero",
-    pageData: viewModel
-  });
-});
+assessmentRouter.get("/migration/phase-0", renderPhaseZero);
