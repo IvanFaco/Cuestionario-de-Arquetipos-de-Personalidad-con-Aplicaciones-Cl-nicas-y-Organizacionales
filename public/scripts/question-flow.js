@@ -14,6 +14,13 @@
   const bubbleClasses = ["bubble-x", "bubble-down", "bubble-neutral", "bubble-up", "bubble-fire"];
   const labelItems = Array.from(document.querySelectorAll("[data-label-item]"));
   const answerInputs = Array.from(document.querySelectorAll("[data-answer-input]"));
+  let hasVisibleSelection = answerInputs.some((input) => input.checked);
+
+  function playEntryAnimation() {
+    selectedBubble.classList.remove("is-entering");
+    void selectedBubble.offsetWidth;
+    selectedBubble.classList.add("is-entering");
+  }
 
   function setSelection(input) {
     const answerLabel = input.dataset.answerLabel ?? "";
@@ -37,6 +44,11 @@
       selectedBubble.style.left = positions[answerIndex];
     }
     selectedBubbleIcon.textContent = answerEmoji;
+
+    if (!hasVisibleSelection) {
+      playEntryAnimation();
+      hasVisibleSelection = true;
+    }
   }
 
   answerInputs.forEach((input) => {
@@ -51,4 +63,8 @@
   if (selectedInput) {
     setSelection(selectedInput);
   }
+
+  selectedBubble.addEventListener("animationend", function () {
+    selectedBubble.classList.remove("is-entering");
+  });
 })();
