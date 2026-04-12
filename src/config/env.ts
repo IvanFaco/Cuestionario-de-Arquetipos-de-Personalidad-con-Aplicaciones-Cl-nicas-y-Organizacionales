@@ -5,10 +5,12 @@ const assetVersion =
   process.env.SOURCE_COMMIT ??
   process.env.COOLIFY_RESOURCE_UUID ??
   (nodeEnv === "production" ? `${Date.now()}` : "dev");
+const normalizedPort = Number.isNaN(port) ? 3000 : port;
 
 export const env = {
   nodeEnv,
-  port: Number.isNaN(port) ? 3000 : port,
+  port: normalizedPort,
   sessionSecret: process.env.SESSION_SECRET ?? "dev-session-secret-change-me",
-  assetVersion
+  assetVersion,
+  siteUrl: process.env.SITE_URL ?? `http://localhost:${normalizedPort}`
 };

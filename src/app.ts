@@ -4,6 +4,7 @@ import express from "express";
 import session from "express-session";
 
 import { env } from "./config/env.js";
+import { assessmentPlatformRouter } from "./modules/assessment/assessment.platform.routes.js";
 import { assessmentRouter } from "./modules/assessment/assessment.routes.js";
 
 const viewsPath = path.join(process.cwd(), "src/views");
@@ -17,6 +18,7 @@ app.set("trust proxy", 1);
 app.set("view engine", "ejs");
 app.set("views", viewsPath);
 app.locals.assetVersion = env.assetVersion;
+app.locals.siteUrl = env.siteUrl;
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
@@ -33,6 +35,7 @@ app.use(
   })
 );
 app.use(express.static(publicPath));
+app.use("/", assessmentPlatformRouter);
 app.use("/", assessmentRouter);
 
 app.listen(env.port, () => {

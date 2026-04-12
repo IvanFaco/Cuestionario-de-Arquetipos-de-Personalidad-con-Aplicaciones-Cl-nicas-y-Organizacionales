@@ -7,6 +7,7 @@ import {
 } from "./assessment.domain.js";
 import { hookQuestions, likertOptions, premiumQuestions } from "./assessment.data.js";
 import { buildExecutiveReportPdf, getShadowLabel } from "./assessment.report.service.js";
+import { buildSeoMeta } from "./assessment.seo.js";
 import {
   getLandingViewModel,
   getPhaseZeroViewModel
@@ -125,6 +126,15 @@ function renderQuestionPage(
   res.render("layouts/main", {
     title,
     page: "../pages/quick-test/question",
+    seo: buildSeoMeta(
+      {
+        title,
+        description: "Responde una afirmacion breve para avanzar en tu lectura inicial de personalidad.",
+        canonicalPath: selectAction.replace(/\/select$/, ""),
+        robots: "noindex,nofollow"
+      },
+      res.app.locals.siteUrl
+    ),
     pageData: {
       title,
       eyebrow,
@@ -154,6 +164,15 @@ export function renderLanding(req: Request, res: Response) {
   res.render("layouts/main", {
     title: "MiRealYo | Inicio",
     page: "../pages/splash/index",
+    seo: buildSeoMeta(
+      {
+        title: "MiRealYo | Descubre tu personalidad y arquetipo",
+        description:
+          "Explora tu arquetipo, tu sombra y tu estructura de personalidad con una experiencia guiada y un reporte final interpretativo.",
+        canonicalPath: "/"
+      },
+      res.app.locals.siteUrl
+    ),
     pageData: {
       hookCount: hookQuestions.length,
       premiumCount: premiumQuestions.length
@@ -167,6 +186,15 @@ export function renderOnboarding(req: Request, res: Response) {
   res.render("layouts/main", {
     title: "MiRealYo | Onboarding",
     page: "../pages/onboarding/index",
+    seo: buildSeoMeta(
+      {
+        title: "MiRealYo | Empieza tu lectura de personalidad",
+        description:
+          "Comparte un poco de contexto personal para que la lectura de personalidad y el reporte final se adapten mejor a tu experiencia.",
+        canonicalPath: "/onboarding"
+      },
+      res.app.locals.siteUrl
+    ),
     pageData: {
       title: "Conocerte mejor empieza con un poco de contexto",
       subtitle:
@@ -187,6 +215,16 @@ export function renderQuickTestIntro(req: Request, res: Response) {
   res.render("layouts/main", {
     title: "MiRealYo | Quick Test",
     page: "../pages/quick-test/intro",
+    seo: buildSeoMeta(
+      {
+        title: "MiRealYo | Quick test de personalidad",
+        description:
+          "Conoce de que va el quick test: una lectura inicial de tus impulsos, estilo de respuesta y energia predominante.",
+        canonicalPath: "/quick-test",
+        robots: "noindex,nofollow"
+      },
+      res.app.locals.siteUrl
+    ),
     pageData: {
       hookCount: hookQuestions.length
     }
@@ -232,6 +270,15 @@ export function startAssessment(req: Request, res: Response) {
     return res.status(400).render("layouts/main", {
       title: "MiRealYo | Onboarding",
       page: "../pages/onboarding/index",
+      seo: buildSeoMeta(
+        {
+          title: "MiRealYo | Empieza tu lectura de personalidad",
+          description:
+            "Comparte un poco de contexto personal para que la lectura de personalidad y el reporte final se adapten mejor a tu experiencia.",
+          canonicalPath: "/onboarding"
+        },
+        res.app.locals.siteUrl
+      ),
       pageData: {
         title: "Conocerte mejor empieza con un poco de contexto",
         subtitle:
@@ -354,6 +401,16 @@ export function renderTeaser(req: Request, res: Response) {
   res.render("layouts/main", {
     title: "MiRealYo | Quick Results",
     page: "../pages/quick-results/index",
+    seo: buildSeoMeta(
+      {
+        title: "MiRealYo | Lectura inicial de personalidad",
+        description:
+          "Visualiza una primera lectura de tus arquetipos dominantes antes de pasar a una exploracion mas profunda.",
+        canonicalPath: "/quick-results",
+        robots: "noindex,nofollow"
+      },
+      res.app.locals.siteUrl
+    ),
     pageData: {
       dominantArchetype: session.hookOutcome.ranking[0].name,
       ageRangeLabel: session.demo.rango_edad_label,
@@ -391,6 +448,16 @@ export function renderPremiumQuestion(req: Request, res: Response) {
   res.render("layouts/main", {
     title: "MiRealYo | Full Test",
     page: "../pages/full-test/question",
+    seo: buildSeoMeta(
+      {
+        title: "MiRealYo | Calibracion profunda",
+        description:
+          "Avanza por la calibracion profunda para completar tu lectura estructural y tu reporte final.",
+        canonicalPath: `/full-test/${index}`,
+        robots: "noindex,nofollow"
+      },
+      res.app.locals.siteUrl
+    ),
     pageData: {
       title: "MiRealYo | Full Test",
       eyebrow: "Calibracion Profunda",
@@ -482,6 +549,16 @@ export function renderDashboard(req: Request, res: Response) {
   res.render("layouts/main", {
     title: "MiRealYo | Full Results",
     page: "../pages/full-results/index",
+    seo: buildSeoMeta(
+      {
+        title: "MiRealYo | Resultado completo de personalidad",
+        description:
+          "Accede a tu lectura profunda: arquetipo dominante, estructuras clinicas, Keirsey, Campbell y reporte ejecutivo.",
+        canonicalPath: "/full-results",
+        robots: "noindex,nofollow"
+      },
+      res.app.locals.siteUrl
+    ),
     pageData: {
       dominantArchetype: ranking[0].name,
       topThree: ranking.slice(0, 3).map((item) => item.name),
@@ -520,6 +597,15 @@ export function renderMigrationStatus(req: Request, res: Response) {
   res.render("layouts/main", {
     title: viewModel.title,
     page: "../pages/migration-status",
+    seo: buildSeoMeta(
+      {
+        title: viewModel.title,
+        description: viewModel.description,
+        canonicalPath: "/migration",
+        robots: "noindex,nofollow"
+      },
+      res.app.locals.siteUrl
+    ),
     pageData: viewModel
   });
 }
@@ -530,6 +616,15 @@ export function renderPhaseZero(req: Request, res: Response) {
   res.render("layouts/main", {
     title: viewModel.title,
     page: "../pages/phase-zero",
+    seo: buildSeoMeta(
+      {
+        title: viewModel.title,
+        description: viewModel.summary,
+        canonicalPath: "/migration/phase-0",
+        robots: "noindex,nofollow"
+      },
+      res.app.locals.siteUrl
+    ),
     pageData: viewModel
   });
 }
