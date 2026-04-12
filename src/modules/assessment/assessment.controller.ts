@@ -1,6 +1,12 @@
 import type { Request, Response } from "express";
 
 import {
+  getAppearanceOptions,
+  getAppearanceSettings,
+  getCurrentFontDescriptor,
+  updateAppearanceSettings
+} from "./assessment.appearance.js";
+import {
   buildDemoProfile,
   buildHookOutcome,
   buildPremiumOutcome
@@ -13,17 +19,15 @@ import {
   getPhaseZeroViewModel
 } from "./assessment.service.js";
 import type {
-  AgeRangeKey,
   DemoInput,
-  EnergyProfileKey,
   HookAnswers,
   HookQuestionId,
   LikertValue,
+  ObjectiveKey,
   PartialHookAnswers,
   PartialPremiumAnswers,
   PremiumAnswers,
-  PremiumQuestionId,
-  SpiritualOrientationKey
+  PremiumQuestionId
 } from "./assessment.types.js";
 
 function ensureAssessmentSession(req: Request) {
@@ -64,6 +68,17 @@ function parseLikertValue(input: unknown): LikertValue | null {
 
   return null;
 }
+
+const objectiveOptions: { value: ObjectiveKey; label: string }[] = [
+  { value: "clarity_patterns", label: "Entender con mas claridad mis patrones de personalidad" },
+  { value: "emotional_blocks", label: "Identificar bloqueos emocionales o internos" },
+  { value: "relationships", label: "Comprender mejor como me vinculo con otras personas" },
+  { value: "purpose_direction", label: "Ganar claridad sobre mi proposito o direccion vital" },
+  { value: "stress_decisions", label: "Entender como reacciono bajo estres y al tomar decisiones" },
+  { value: "self_esteem_identity", label: "Fortalecer mi autoestima y mi sentido de identidad" },
+  { value: "shadow_integration", label: "Reconocer aspectos de mi sombra e integrarlos mejor" },
+  { value: "life_transition", label: "Orientarme mejor en un momento de cambio o transicion" }
+];
 
 function getQuestionIndexToResume<TQuestionId extends string>(
   questions: { id: TQuestionId }[],
@@ -180,27 +195,130 @@ export function renderLanding(req: Request, res: Response) {
   });
 }
 
+export function renderAdmin(req: Request, res: Response) {
+  const options = getAppearanceOptions();
+
+  res.render("layouts/main", {
+    title: "MiRealYo | Admin",
+    page: "../pages/admin/index",
+    seo: buildSeoMeta(
+      {
+        title: "MiRealYo | Admin",
+        description: "Vista administrativa interna para acceso directo por URL.",
+        canonicalPath: "/admin",
+        robots: "noindex,nofollow"
+      },
+      res.app.locals.siteUrl
+    ),
+    pageData: {
+      appearance: getAppearanceSettings(),
+      themeOptions: options.themes,
+      fontOptions: options.fonts,
+      saved: req.query.saved === "1"
+    },
+    appearance: getAppearanceSettings(),
+    appearanceFont: getCurrentFontDescriptor()
+  });
+}
+
+export function updateAdminAppearance(req: Request, res: Response) {
+  updateAppearanceSettings({
+    bootswatchTheme: String(req.body.bootswatchTheme ?? ""),
+    fontOption: String(req.body.fontOption ?? ""),
+    customFontCssHref: String(req.body.customFontCssHref ?? ""),
+    customFontFamily: String(req.body.customFontFamily ?? "")
+  });
+
+  res.app.locals.appearance = getAppearanceSettings();
+  res.app.locals.appearanceFont = getCurrentFontDescriptor();
+
+  return res.redirect("/admin?saved=1");
+}
+
+export function renderPreOnboarding(req: Request, res: Response) {
+  const session = ensureAssessmentSession(req);
+
+  res.render("layouts/main", {
+    title: "MiRealYo | Empezar",
+    page: "../pages/pre-onboarding/index",
+    seo: buildSeoMeta(
+      {
+        title: "MiRealYo | Empezar tu lectura",
+        description:
+          "Comparte solo tu nombre para comenzar el quick test de personalidad con una experiencia mas personal.",
+        canonicalPath: "/empezar"
+      },
+      res.app.locals.siteUrl
+    ),
+    pageData: {
+      name: session.leadName
+    }
+  });
+}
+
+export function startLeadCapture(req: Request, res: Response) {
+  const session = ensureAssessmentSession(req);
+  const nombre = String(req.body.nombre ?? "").trim();
+
+  if (nombre.length < 2) {
+    return res.status(400).render("layouts/main", {
+      title: "MiRealYo | Empezar",
+      page: "../pages/pre-onboarding/index",
+      seo: buildSeoMeta(
+        {
+          title: "MiRealYo | Empezar tu lectura",
+          description:
+            "Comparte solo tu nombre para comenzar el quick test de personalidad con una experiencia mas personal.",
+          canonicalPath: "/empezar"
+        },
+        res.app.locals.siteUrl
+      ),
+      pageData: {
+        name: nombre,
+        error: "Escribe tu nombre para continuar."
+      }
+    });
+  }
+
+  session.leadName = nombre;
+  session.hookAnswers = {};
+  session.premiumAnswers = {};
+  session.hookOutcome = undefined;
+  session.premiumOutcome = undefined;
+  session.demo = undefined;
+
+  return res.redirect("/quick-test");
+}
+
 export function renderOnboarding(req: Request, res: Response) {
-  ensureAssessmentSession(req);
+  const session = ensureAssessmentSession(req);
+
+  if (!session.leadName) {
+    return res.redirect("/empezar");
+  }
+
+  if (!session.hookOutcome) {
+    return res.redirect("/quick-test");
+  }
 
   res.render("layouts/main", {
     title: "MiRealYo | Onboarding",
     page: "../pages/onboarding/index",
     seo: buildSeoMeta(
       {
-        title: "MiRealYo | Empieza tu lectura de personalidad",
+        title: "MiRealYo | Personaliza tu lectura",
         description:
-          "Comparte un poco de contexto personal para que la lectura de personalidad y el reporte final se adapten mejor a tu experiencia.",
+          "Comparte tu nombre y el objetivo que te trae aqui para personalizar la devolucion de tu lectura y tu reporte final.",
         canonicalPath: "/onboarding"
       },
       res.app.locals.siteUrl
     ),
     pageData: {
-      title: "Conocerte mejor empieza con un poco de contexto",
+      title: "Tu lectura esta lista para volverse mas personal",
       subtitle:
-        "Usamos unas pocas señales bio-psico-sociales para contextualizar la experiencia de forma sutil y respetuosa.",
-      hookCount: hookQuestions.length,
-      premiumCount: premiumQuestions.length
+        "Antes de mostrartela, queremos entender que buscas comprender mejor de ti.",
+      name: session.leadName,
+      objectiveOptions
     }
   });
 }
@@ -208,8 +326,8 @@ export function renderOnboarding(req: Request, res: Response) {
 export function renderQuickTestIntro(req: Request, res: Response) {
   const session = ensureAssessmentSession(req);
 
-  if (!session.demo) {
-    return res.redirect("/onboarding");
+  if (!session.leadName) {
+    return res.redirect("/empezar");
   }
 
   res.render("layouts/main", {
@@ -234,8 +352,8 @@ export function renderQuickTestIntro(req: Request, res: Response) {
 export function startQuickTest(req: Request, res: Response) {
   const session = ensureAssessmentSession(req);
 
-  if (!session.demo) {
-    return res.redirect("/onboarding");
+  if (!session.leadName) {
+    return res.redirect("/empezar");
   }
 
   const resumeIndex = getQuestionIndexToResume(hookQuestions, session.hookAnswers);
@@ -243,73 +361,55 @@ export function startQuickTest(req: Request, res: Response) {
 }
 
 export function startAssessment(req: Request, res: Response) {
-  const gender = String(req.body.genero ?? "");
-  const ageRange = String(req.body.rango_edad ?? "") as AgeRangeKey;
-  const spiritualOrientation = (String(req.body.orientacion_espiritual ?? "") ||
-    undefined) as SpiritualOrientationKey | undefined;
-  const energyProfile = String(req.body.energia_base ?? "") as EnergyProfileKey;
+  const session = ensureAssessmentSession(req);
+  const objetivo = String(req.body.objetivo ?? "") as ObjectiveKey;
 
-  if (
-    !["Hombre", "Mujer", "Otro"].includes(gender) ||
-    !["18_24", "25_34", "35_49", "50_plus"].includes(ageRange) ||
-    !["ecto", "meso", "endo", "mixed"].includes(energyProfile) ||
-    (spiritualOrientation !== undefined &&
-      ![
-        "secular",
-        "agnostic",
-        "spiritual_non_religious",
-        "believer_non_practicing",
-        "religious_practicing",
-        "naturalist",
-        "buddhist",
-        "exploring",
-        "other",
-        "prefer_not_to_say"
-      ].includes(spiritualOrientation))
-  ) {
+  if (!session.leadName) {
+    return res.redirect("/empezar");
+  }
+
+  if (!session.hookOutcome) {
+    return res.redirect("/quick-test");
+  }
+
+  if (!objectiveOptions.some((option) => option.value === objetivo)) {
     return res.status(400).render("layouts/main", {
       title: "MiRealYo | Onboarding",
       page: "../pages/onboarding/index",
       seo: buildSeoMeta(
         {
-          title: "MiRealYo | Empieza tu lectura de personalidad",
+          title: "MiRealYo | Personaliza tu lectura",
           description:
-            "Comparte un poco de contexto personal para que la lectura de personalidad y el reporte final se adapten mejor a tu experiencia.",
+            "Comparte tu nombre y el objetivo que te trae aqui para personalizar la devolucion de tu lectura y tu reporte final.",
           canonicalPath: "/onboarding"
         },
         res.app.locals.siteUrl
       ),
       pageData: {
-        title: "Conocerte mejor empieza con un poco de contexto",
+        title: "Tu lectura esta lista para volverse mas personal",
         subtitle:
-          "Usamos unas pocas señales bio-psico-sociales para contextualizar la experiencia de forma sutil y respetuosa.",
-        hookCount: hookQuestions.length,
-        premiumCount: premiumQuestions.length,
-        error: "Completa estos dos campos para continuar."
+          "Antes de mostrartela, queremos entender que buscas comprender mejor de ti.",
+        name: session.leadName,
+        objectiveOptions,
+        selectedObjective: objetivo,
+        error: "Selecciona la opcion que mejor represente lo que buscas comprender."
       }
     });
   }
 
-  const session = ensureAssessmentSession(req);
   session.demo = buildDemoProfile({
-    genero: gender as DemoInput["genero"],
-    rango_edad: ageRange,
-    orientacion_espiritual: spiritualOrientation,
-    energia_base: energyProfile
+    nombre: session.leadName as DemoInput["nombre"],
+    objetivo: objetivo as DemoInput["objetivo"]
   });
-  session.hookAnswers = {};
-  session.premiumAnswers = {};
-  session.hookOutcome = undefined;
-  session.premiumOutcome = undefined;
 
-  return res.redirect("/quick-test");
+  return res.redirect("/quick-results");
 }
 
 export function renderHookQuestion(req: Request, res: Response) {
   const session = ensureAssessmentSession(req);
 
-  if (!session.demo) {
-    return res.redirect("/onboarding");
+  if (!session.leadName) {
+    return res.redirect("/empezar");
   }
 
   const resumeIndex = getQuestionIndexToResume(hookQuestions, session.hookAnswers);
@@ -337,8 +437,8 @@ export function renderHookQuestion(req: Request, res: Response) {
 export function selectHookAnswer(req: Request, res: Response) {
   const session = ensureAssessmentSession(req);
 
-  if (!session.demo) {
-    return res.redirect("/onboarding");
+  if (!session.leadName) {
+    return res.redirect("/empezar");
   }
 
   const index = parseIndex(req.params.index, hookQuestions.length);
@@ -356,8 +456,8 @@ export function selectHookAnswer(req: Request, res: Response) {
 export function submitHookQuestion(req: Request, res: Response) {
   const session = ensureAssessmentSession(req);
 
-  if (!session.demo) {
-    return res.redirect("/onboarding");
+  if (!session.leadName) {
+    return res.redirect("/empezar");
   }
 
   const index = parseIndex(req.params.index, hookQuestions.length);
@@ -388,14 +488,14 @@ export function submitHookQuestion(req: Request, res: Response) {
   }
 
   session.hookOutcome = buildHookOutcome(completedAnswers as HookAnswers);
-  return res.redirect("/quick-results");
+  return res.redirect("/onboarding");
 }
 
 export function renderTeaser(req: Request, res: Response) {
   const session = ensureAssessmentSession(req);
 
   if (!session.demo || !session.hookOutcome) {
-    return res.redirect("/onboarding");
+    return res.redirect(session.hookOutcome ? "/onboarding" : "/quick-test");
   }
 
   res.render("layouts/main", {
@@ -412,9 +512,13 @@ export function renderTeaser(req: Request, res: Response) {
       res.app.locals.siteUrl
     ),
     pageData: {
+      name: session.demo.nombre,
       dominantArchetype: session.hookOutcome.ranking[0].name,
-      ageRangeLabel: session.demo.rango_edad_label,
-      topThree: session.hookOutcome.ranking.slice(0, 3).map((item) => item.name)
+      objective: session.demo.objetivo_label,
+      topThree: session.hookOutcome.ranking.slice(0, 3).map((item) => item.name),
+      topScores: session.hookOutcome.ranking.slice(0, 3),
+      persona: session.hookOutcome.estructuras.Persona,
+      sombraBase: session.hookOutcome.estructuras.Sombra_Base
     }
   });
 }
@@ -423,7 +527,7 @@ export function startPremium(req: Request, res: Response) {
   const session = ensureAssessmentSession(req);
 
   if (!session.hookOutcome) {
-    return res.redirect("/onboarding");
+    return res.redirect("/quick-test");
   }
 
   session.premiumAnswers = {};
@@ -436,7 +540,7 @@ export function renderPremiumQuestion(req: Request, res: Response) {
   const session = ensureAssessmentSession(req);
 
   if (!session.hookOutcome) {
-    return res.redirect("/onboarding");
+    return res.redirect("/quick-test");
   }
 
   const resumeIndex = getQuestionIndexToResume(premiumQuestions, session.premiumAnswers);
@@ -485,7 +589,7 @@ export function selectPremiumAnswer(req: Request, res: Response) {
   const session = ensureAssessmentSession(req);
 
   if (!session.hookOutcome) {
-    return res.redirect("/onboarding");
+    return res.redirect("/quick-test");
   }
 
   const index = parseIndex(req.params.index, premiumQuestions.length);
@@ -504,7 +608,7 @@ export function submitPremiumQuestion(req: Request, res: Response) {
   const session = ensureAssessmentSession(req);
 
   if (!session.hookOutcome) {
-    return res.redirect("/");
+    return res.redirect("/quick-test");
   }
 
   const index = parseIndex(req.params.index, premiumQuestions.length);

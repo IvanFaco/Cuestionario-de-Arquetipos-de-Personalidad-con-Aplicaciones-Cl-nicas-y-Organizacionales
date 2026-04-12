@@ -1,17 +1,13 @@
 export type LikertValue = 1 | 2 | 3 | 4 | 5;
-export type AgeRangeKey = "18_24" | "25_34" | "35_49" | "50_plus";
-export type SpiritualOrientationKey =
-  | "secular"
-  | "agnostic"
-  | "spiritual_non_religious"
-  | "believer_non_practicing"
-  | "religious_practicing"
-  | "naturalist"
-  | "buddhist"
-  | "exploring"
-  | "other"
-  | "prefer_not_to_say";
-export type EnergyProfileKey = "ecto" | "meso" | "endo" | "mixed";
+export type ObjectiveKey =
+  | "clarity_patterns"
+  | "emotional_blocks"
+  | "relationships"
+  | "purpose_direction"
+  | "stress_decisions"
+  | "self_esteem_identity"
+  | "shadow_integration"
+  | "life_transition";
 
 export type HookQuestionId =
   | "v1"
@@ -57,17 +53,14 @@ export type Question<TQuestionId extends string> = {
 };
 
 export type DemoInput = {
-  genero: "Hombre" | "Mujer" | "Otro";
-  rango_edad: AgeRangeKey;
-  orientacion_espiritual?: SpiritualOrientationKey;
-  energia_base: EnergyProfileKey;
+  nombre: string;
+  objetivo: ObjectiveKey;
 };
 
-export type DemoProfile = DemoInput & {
-  rango_edad_label: string;
-  orientacion_espiritual_label?: string;
-  energia_base_label: string;
-  energia_somatica_label: string;
+export type DemoProfile = {
+  nombre: string;
+  objetivo: ObjectiveKey;
+  objetivo_label: string;
 };
 
 export type HookAnswers = Record<HookQuestionId, LikertValue>;

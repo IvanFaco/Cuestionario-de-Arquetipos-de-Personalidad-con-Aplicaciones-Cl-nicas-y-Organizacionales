@@ -4,6 +4,7 @@ import express from "express";
 import session from "express-session";
 
 import { env } from "./config/env.js";
+import { getAppearanceSettings, getCurrentFontDescriptor } from "./modules/assessment/assessment.appearance.js";
 import { assessmentPlatformRouter } from "./modules/assessment/assessment.platform.routes.js";
 import { assessmentRouter } from "./modules/assessment/assessment.routes.js";
 
@@ -19,6 +20,8 @@ app.set("view engine", "ejs");
 app.set("views", viewsPath);
 app.locals.assetVersion = env.assetVersion;
 app.locals.siteUrl = env.siteUrl;
+app.locals.appearance = getAppearanceSettings();
+app.locals.appearanceFont = getCurrentFontDescriptor();
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());

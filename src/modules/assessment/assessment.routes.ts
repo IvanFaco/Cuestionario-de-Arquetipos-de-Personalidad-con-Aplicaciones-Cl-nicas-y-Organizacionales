@@ -1,6 +1,7 @@
 import { Router } from "express";
 
 import {
+  renderAdmin,
   downloadDashboardPdf,
   renderDashboard,
   renderHookQuestion,
@@ -8,21 +9,28 @@ import {
   renderMigrationStatus,
   renderOnboarding,
   renderPhaseZero,
+  renderPreOnboarding,
   renderPremiumQuestion,
   renderQuickTestIntro,
   renderTeaser,
   selectHookAnswer,
   selectPremiumAnswer,
+  startLeadCapture,
   startAssessment,
   startQuickTest,
   startPremium,
   submitHookQuestion,
-  submitPremiumQuestion
+  submitPremiumQuestion,
+  updateAdminAppearance
 } from "./assessment.controller.js";
 
 export const assessmentRouter = Router();
 
 assessmentRouter.get("/", renderLanding);
+assessmentRouter.get("/admin", renderAdmin);
+assessmentRouter.post("/admin/appearance", updateAdminAppearance);
+assessmentRouter.get("/empezar", renderPreOnboarding);
+assessmentRouter.post("/empezar", startLeadCapture);
 assessmentRouter.get("/onboarding", renderOnboarding);
 assessmentRouter.post("/onboarding/start", startAssessment);
 assessmentRouter.get("/quick-test", renderQuickTestIntro);

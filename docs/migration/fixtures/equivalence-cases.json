@@ -3,14 +3,8 @@
     {
       "id": "balanced",
       "demo": {
-        "genero": "Otro",
-        "rango_edad": "35_49",
-        "rango_edad_label": "35 a 49 anos | Transicion, revision y metanoia",
-        "orientacion_espiritual": "exploring",
-        "orientacion_espiritual_label": "En busqueda",
-        "energia_base": "mixed",
-        "energia_base_label": "Energia mixta o cambiante segun el contexto",
-        "energia_somatica_label": "Lectura somatica mixta"
+        "nombre": "Alex",
+        "objetivo": "clarity_patterns"
       },
       "hook_answers": {
         "v1": 3,
@@ -54,14 +48,8 @@
     {
       "id": "dominant_ruler",
       "demo": {
-        "genero": "Hombre",
-        "rango_edad": "35_49",
-        "rango_edad_label": "35 a 49 anos | Transicion, revision y metanoia",
-        "orientacion_espiritual": "religious_practicing",
-        "orientacion_espiritual_label": "Religioso/a practicante",
-        "energia_base": "meso",
-        "energia_base_label": "Energia activa, firme y orientada a la accion",
-        "energia_somatica_label": "Lectura somatica cercana al eje mesomorfico"
+        "nombre": "Javier",
+        "objetivo": "stress_decisions"
       },
       "hook_answers": {
         "v1": 5,
@@ -105,14 +93,8 @@
     {
       "id": "explorer_nt",
       "demo": {
-        "genero": "Mujer",
-        "rango_edad": "25_34",
-        "rango_edad_label": "25 a 34 anos | Construccion y afirmacion del yo",
-        "orientacion_espiritual": "naturalist",
-        "orientacion_espiritual_label": "Naturalista",
-        "energia_base": "ecto",
-        "energia_base_label": "Energia ligera, sensible y mas mental",
-        "energia_somatica_label": "Lectura somatica cercana al eje ectomorfico"
+        "nombre": "Lucia",
+        "objetivo": "purpose_direction"
       },
       "hook_answers": {
         "v1": 1,

@@ -6,6 +6,8 @@
   --ink-soft: #597083;
   --border-soft: rgba(43, 99, 140, 0.12);
   --shadow-soft: 0 18px 40px rgba(31, 68, 103, 0.12);
+  --app-font-family-body: "Manrope", sans-serif;
+  --app-font-family-heading: "Manrope", sans-serif;
 }
 
 html,
@@ -15,7 +17,7 @@ body {
 
 body {
   margin: 0;
-  font-family: "Manrope", sans-serif;
+  font-family: var(--app-font-family-body);
   background:
     radial-gradient(circle at top, rgba(111, 181, 214, 0.12), transparent 30%),
     linear-gradient(180deg, #f5fbff 0%, #eaf2f8 100%);
@@ -28,7 +30,7 @@ h3,
 h4,
 .btn,
 .eyebrow {
-  font-family: "Sora", sans-serif;
+  font-family: var(--app-font-family-heading);
 }
 
 .app-frame {
@@ -139,7 +141,7 @@ h4,
 }
 
 .mini-stat__value {
-  font-family: "Sora", sans-serif;
+  font-family: var(--app-font-family-heading);
   font-size: 1rem;
   font-weight: 700;
   color: var(--ink-strong);
@@ -292,13 +294,13 @@ h4,
 
 .question-progress__count {
   color: #232a31;
-  font-family: "Sora", sans-serif;
+  font-family: var(--app-font-family-heading);
   font-size: 0.86rem;
   font-weight: 700;
 }
 
 .question-title {
-  font-family: "Manrope", sans-serif;
+  font-family: var(--app-font-family-heading);
   font-size: clamp(1.25rem, 4vw, 1.65rem);
   font-weight: 700;
   line-height: 1.04;
@@ -350,7 +352,7 @@ h4,
 .question-card-panel__selection-value {
   margin-top: 0.25rem;
   color: #2f2f2f;
-  font-family: "Sora", sans-serif;
+  font-family: var(--app-font-family-heading);
   font-size: 1.08rem;
   font-weight: 700;
   line-height: 1.15;
@@ -358,7 +360,7 @@ h4,
 
 .question-text {
   color: #1f2328;
-  font-family: "Sora", sans-serif;
+  font-family: var(--app-font-family-heading);
   font-size: clamp(1.5rem, 5vw, 2.15rem);
   font-weight: 700;
   line-height: 1.02;
@@ -661,6 +663,26 @@ h4,
   justify-content: space-between;
 }
 
+.teaser-carousel {
+  gap: 0.9rem;
+}
+
+.teaser-carousel__viewport {
+  position: relative;
+}
+
+.teaser-carousel__track {
+  position: relative;
+}
+
+.teaser-carousel__slide {
+  display: none;
+}
+
+.teaser-carousel__slide.is-active {
+  display: block;
+}
+
 .teaser-card__body {
   min-height: 15.5rem;
   padding-inline: 0.5rem;
@@ -684,7 +706,7 @@ h4,
 
 .teaser-card__headline {
   color: #17344a;
-  font-family: "Sora", sans-serif;
+  font-family: var(--app-font-family-heading);
   font-size: clamp(2rem, 7vw, 3rem);
   line-height: 0.96;
   letter-spacing: -0.05em;
@@ -699,6 +721,97 @@ h4,
 
 .teaser-card__insight {
   background: linear-gradient(180deg, #f6f8fb 0%, #eef2f6 100%);
+}
+
+.teaser-carousel__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.teaser-carousel__dots {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.teaser-carousel__dot {
+  width: 0.7rem;
+  height: 0.7rem;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: rgba(23, 52, 74, 0.18);
+}
+
+.teaser-carousel__dot.is-active {
+  width: 1.8rem;
+  background: #17344a;
+}
+
+.teaser-carousel__controls {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.teaser-carousel__control {
+  width: 2.7rem;
+  height: 2.7rem;
+  border-radius: 999px;
+  border: 1px solid var(--border-soft);
+  background: #ffffff;
+  color: #17344a;
+  font-size: 1.2rem;
+  box-shadow: 0 10px 24px rgba(34, 76, 112, 0.08);
+}
+
+.teaser-metrics {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.teaser-metric {
+  width: 100%;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 0.65rem;
+  align-items: center;
+  padding: 0.8rem 0.9rem;
+  border-radius: 1rem;
+  background: linear-gradient(180deg, #ffffff 0%, #f4f8fc 100%);
+  border: 1px solid var(--border-soft);
+}
+
+.teaser-metric__rank {
+  color: #3f789a;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.teaser-metric__name {
+  color: #17344a;
+  font-size: 0.92rem;
+}
+
+.teaser-metric__score {
+  min-width: 3.2rem;
+  text-align: center;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  background: #edf5ff;
+  color: #17344a;
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.teaser-recommendations {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
 }
 
 .teaser-ranking {
@@ -723,7 +836,7 @@ h4,
 
 .teaser-ranking__position {
   color: #3f789a;
-  font-family: "Sora", sans-serif;
+  font-family: var(--app-font-family-heading);
   font-size: 0.82rem;
   font-weight: 700;
 }
@@ -817,7 +930,7 @@ h4,
 
 .dashboard-metric__value {
   color: #17344a;
-  font-family: "Sora", sans-serif;
+  font-family: var(--app-font-family-heading);
   font-size: 1.6rem;
   font-weight: 700;
   line-height: 1;
@@ -876,7 +989,7 @@ h4,
 
 .dashboard-ranking__title {
   color: #17344a;
-  font-family: "Sora", sans-serif;
+  font-family: var(--app-font-family-heading);
   font-size: 1.05rem;
   font-weight: 700;
 }
@@ -930,7 +1043,7 @@ h4,
   border-radius: 999px;
   background: white;
   border: 1px solid var(--border-soft);
-  font-family: "Sora", sans-serif;
+  font-family: var(--app-font-family-heading);
   font-size: 0.74rem;
 }
 

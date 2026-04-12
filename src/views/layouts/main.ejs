@@ -18,15 +18,18 @@
     <meta name="twitter:description" content="<%= seo.description %>" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&family=Sora:wght@600;700;800&display=swap"
-      rel="stylesheet"
-    />
+    <link href="<%= appearanceFont.href %>" rel="stylesheet" />
     <link
       rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/bootswatch@5.3.8/dist/flatly/bootstrap.min.css"
+      href="https://cdn.jsdelivr.net/npm/bootswatch@5.3.8/dist/<%= appearance.bootswatchTheme %>/bootstrap.min.css"
     />
     <link rel="stylesheet" href="/styles/migration.css?v=<%= assetVersion %>" />
+    <style>
+      :root {
+        --app-font-family-body: "<%= appearanceFont.family %>", sans-serif;
+        --app-font-family-heading: "<%= appearanceFont.family %>", sans-serif;
+      }
+    </style>
   </head>
   <body>
     <main class="app-frame">

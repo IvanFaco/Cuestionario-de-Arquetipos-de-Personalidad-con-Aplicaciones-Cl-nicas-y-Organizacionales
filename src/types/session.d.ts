@@ -11,6 +11,7 @@ import type {
 declare module "express-session" {
   interface SessionData {
     assessment?: {
+      leadName?: string;
       demo?: DemoProfile;
       hookAnswers: PartialHookAnswers;
       premiumAnswers: PartialPremiumAnswers;

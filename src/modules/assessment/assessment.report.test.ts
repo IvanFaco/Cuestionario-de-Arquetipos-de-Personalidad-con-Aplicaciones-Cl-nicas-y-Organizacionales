@@ -22,10 +22,8 @@ test("getShadowLabel matches dashboard messaging", () => {
 test("buildExecutiveReportPdf returns a valid pdf buffer", async () => {
   const pdf = await buildExecutiveReportPdf({
     demo: buildDemoProfile({
-      genero: "Otro",
-      rango_edad: "35_49",
-      orientacion_espiritual: "exploring",
-      energia_base: "mixed"
+      nombre: "Camila",
+      objetivo: "relationships"
     }),
     hook: buildHookOutcome({
       v1: 3,
