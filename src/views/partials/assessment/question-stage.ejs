@@ -1,12 +1,12 @@
 <section class="stage-page question-screen">
   <header class="question-header">
+    <p class="eyebrow mb-2"><%= pageData.stageLabel %></p>
     <div class="question-progress">
       <div class="progress soft-progress question-progress__bar" role="progressbar" aria-valuenow="<%= pageData.progressPercent %>" aria-valuemin="0" aria-valuemax="100">
         <div class="progress-bar" style="width: <%= pageData.progressPercent %>%"></div>
       </div>
       <span class="question-progress__count"><%= pageData.currentIndex %>/<%= pageData.totalQuestions %></span>
     </div>
-    <p class="eyebrow mb-2"><%= pageData.stageLabel %></p>
     <h1 class="question-title"><%= pageData.heading %></h1>
   </header>
 

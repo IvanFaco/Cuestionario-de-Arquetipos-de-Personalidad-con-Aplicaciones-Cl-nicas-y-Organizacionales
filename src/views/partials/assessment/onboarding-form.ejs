@@ -1,35 +1,37 @@
 <form action="/onboarding/start" method="post" id="onboarding-form" class="stage-page">
-  <section class="landing-form-panel">
-    <div class="compact-stack">
-      <div>
-        <p class="eyebrow mb-2">Un paso mas</p>
-        <h2 class="landing-form-title mb-1">Antes de mostrar tu lectura</h2>
-        <p class="hero-copy mb-0">Ya te conocemos como <strong><%= pageData.name %></strong>. Ahora cuentanos que buscas al conocerte mejor.</p>
-      </div>
-
-      <div class="row g-2">
-        <div class="col-12">
-          <label class="form-label form-label-sm fw-semibold" for="objetivo">
-            ¿Que esperas lograr o comprender al conocerte un poco mas a ti mism@?
-          </label>
-          <select class="form-select form-select-lg compact-control" id="objetivo" name="objetivo" required>
-            <option value="">Selecciona la opcion mas cercana</option>
-            <% pageData.objectiveOptions.forEach((option) => { %>
-              <option value="<%= option.value %>" <%= pageData.selectedObjective === option.value ? "selected" : "" %>>
-                <%= option.label %>
-              </option>
-            <% }) %>
-          </select>
+  <div class="d-flex flex-column align-items-center justify-content-center flex-grow-1 w-100">
+    <section class="landing-form-panel">
+      <div class="compact-stack">
+        <div>
+          <p class="eyebrow mb-2">Un paso más</p>
+          <h2 class="landing-form-title mb-1">Antes de mostrar tu lectura</h2>
+          <p class="hero-copy mb-0">Ya te conocemos como <strong><%= pageData.name %></strong>. Ahora cuéntanos qué buscas al conocerte mejor.</p>
         </div>
+
+        <div class="objective-chips">
+          <% pageData.objectiveOptions.forEach((option) => { %>
+            <label class="objective-chip <%= pageData.selectedObjective === option.value ? 'objective-chip--selected' : '' %>">
+              <input
+                type="radio"
+                name="objetivo"
+                value="<%= option.value %>"
+                <%= pageData.selectedObjective === option.value ? "checked" : "" %>
+                required
+              />
+              <span class="objective-chip__label"><%= option.label %></span>
+            </label>
+          <% }) %>
+        </div>
+
+        <div class="surface-note">
+          Tus respuestas del test siguen siendo la base del resultado. Este paso solo nos ayuda a entregarte una devolución más personal.
+        </div>
+        <% if (pageData.error) { %>
+          <div class="alert alert-danger compact-alert mb-0" role="alert"><%= pageData.error %></div>
+        <% } %>
       </div>
-      <div class="surface-note">
-        Tus respuestas del test siguen siendo la base del resultado. Este paso solo nos ayuda a entregarte una devolucion mas personal.
-      </div>
-      <% if (pageData.error) { %>
-        <div class="alert alert-danger compact-alert mb-0" role="alert"><%= pageData.error %></div>
-      <% } %>
-    </div>
-  </section>
+    </section>
+  </div>
 
   <footer class="question-actions">
     <a class="question-actions__back" href="/quick-test/10">

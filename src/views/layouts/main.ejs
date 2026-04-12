@@ -16,14 +16,17 @@
     <meta name="twitter:card" content="summary" />
     <meta name="twitter:title" content="<%= seo.title %>" />
     <meta name="twitter:description" content="<%= seo.description %>" />
+    <link rel="icon" type="image/png" href="/assets/logo-256.png" sizes="256x256" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Manrope:wght@600;700&family=Sora:wght@700;800&display=swap" rel="stylesheet" />
     <link href="<%= appearanceFont.href %>" rel="stylesheet" />
     <link
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/bootswatch@5.3.8/dist/<%= appearance.bootswatchTheme %>/bootstrap.min.css"
     />
     <link rel="stylesheet" href="/styles/migration.css?v=<%= assetVersion %>" />
+    <link rel="stylesheet" href="/styles/identity.css?v=<%= assetVersion %>" />
     <style>
       :root {
         --app-font-family-body: "<%= appearanceFont.family %>", sans-serif;
@@ -35,5 +38,8 @@
     <main class="app-frame">
       <%- include("../partials/app-stage", { page, pageData }) %>
     </main>
+    <footer class="app-footer">
+      <a href="/privacidad" class="app-footer__link">Políticas de Privacidad</a>
+    </footer>
   </body>
 </html>

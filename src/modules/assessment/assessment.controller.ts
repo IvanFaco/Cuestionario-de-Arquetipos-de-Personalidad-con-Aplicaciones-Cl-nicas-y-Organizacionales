@@ -122,7 +122,9 @@ function renderQuestionPage(
     prompt,
     selectedValue,
     selectedLabel,
-    backHref
+    backHref,
+    leadPronombres,
+    leadName
   }: {
     title: string;
     eyebrow: string;
@@ -136,8 +138,19 @@ function renderQuestionPage(
     selectedValue?: LikertValue;
     selectedLabel?: string;
     backHref?: string;
+    leadPronombres?: string;
+    leadName?: string;
   }
 ) {
+  const identificationText = leadPronombres === "ella" ? "identificada" 
+    : leadPronombres === "él" ? "identificado" 
+    : leadPronombres === "elle" ? "identificad@" 
+    : "identificad@";
+  
+  const genderHeading = leadName 
+    ? `${leadName}, ¿qué tan ${identificationText} te sientes con la siguiente afirmación?`
+    : `¿Qué tan ${identificationText} te sientes con la siguiente afirmación?`;
+
   res.render("layouts/main", {
     title,
     page: "../pages/quick-test/question",
@@ -153,7 +166,7 @@ function renderQuestionPage(
     pageData: {
       title,
       eyebrow,
-      heading,
+      heading: genderHeading,
       stageLabel,
       selectAction,
       nextAction,
@@ -193,6 +206,87 @@ export function renderLanding(req: Request, res: Response) {
       premiumCount: premiumQuestions.length
     }
   });
+}
+
+export function renderPrivacy(req: Request, res: Response) {
+  res.render("layouts/main", {
+    title: "MiRealYo | Políticas de Privacidad",
+    page: "../pages/privacy/index",
+    seo: buildSeoMeta(
+      {
+        title: "MiRealYo | Políticas de Privacidad",
+        description: "Política de privacidad de MiRealYo - Cómo protegemos tus datos.",
+        canonicalPath: "/privacidad"
+      },
+      res.app.locals.siteUrl
+    ),
+    pageData: {}
+  });
+}
+
+export function renderRegister(req: Request, res: Response) {
+  res.render("layouts/main", {
+    title: "MiRealYo | Crear cuenta",
+    page: "../pages/register/index",
+    seo: buildSeoMeta(
+      {
+        title: "MiRealYo | Crea tu cuenta",
+        description: "Crea tu cuenta para guardar tu lectura y acceder a tu informe completo.",
+        canonicalPath: "/registro"
+      },
+      res.app.locals.siteUrl
+    ),
+    pageData: {}
+  });
+}
+
+export function handleRegister(req: Request, res: Response) {
+  const email = String(req.body.email ?? "").trim().toLowerCase();
+  const password = String(req.body.password ?? "");
+
+  if (!email.includes("@")) {
+    return res.status(400).render("layouts/main", {
+      title: "MiRealYo | Crear cuenta",
+      page: "../pages/register/index",
+      seo: buildSeoMeta(
+        {
+          title: "MiRealYo | Crea tu cuenta",
+          description: "Crea tu cuenta para guardar tu lectura y acceder a tu informe completo.",
+          canonicalPath: "/registro"
+        },
+        res.app.locals.siteUrl
+      ),
+      pageData: {
+        email,
+        error: "Ingresa un correo electrónico válido."
+      }
+    });
+  }
+
+  if (password.length < 6) {
+    return res.status(400).render("layouts/main", {
+      title: "MiRealYo | Crear cuenta",
+      page: "../pages/register/index",
+      seo: buildSeoMeta(
+        {
+          title: "MiRealYo | Crea tu cuenta",
+          description: "Crea tu cuenta para guardar tu lectura y acceder a tu informe completo.",
+          canonicalPath: "/registro"
+        },
+        res.app.locals.siteUrl
+      ),
+      pageData: {
+        email,
+        error: "La contraseña debe tener al menos 6 caracteres."
+      }
+    });
+  }
+
+  // TODO: Save user to database
+  // TODO: Create session for user
+  // TODO: Save assessment results to user
+
+  return res.redirect("/full-results/pdf");
 }
 
 export function renderAdmin(req: Request, res: Response) {
@@ -259,6 +353,7 @@ export function renderPreOnboarding(req: Request, res: Response) {
 export function startLeadCapture(req: Request, res: Response) {
   const session = ensureAssessmentSession(req);
   const nombre = String(req.body.nombre ?? "").trim();
+  const pronombres = String(req.body.pronombres ?? "").trim();
 
   if (nombre.length < 2) {
     return res.status(400).render("layouts/main", {
@@ -275,12 +370,14 @@ export function startLeadCapture(req: Request, res: Response) {
       ),
       pageData: {
         name: nombre,
+        pronombres: pronombres,
         error: "Escribe tu nombre para continuar."
       }
     });
   }
 
   session.leadName = nombre;
+  session.leadPronombres = pronombres || undefined;
   session.hookAnswers = {};
   session.premiumAnswers = {};
   session.hookOutcome = undefined;
@@ -430,7 +527,9 @@ export function renderHookQuestion(req: Request, res: Response) {
     prompt: question.prompt,
     selectedValue,
     selectedLabel: likertOptions.find((option) => option.value === selectedValue)?.label,
-    backHref: index > 1 ? `/quick-test/${index - 1}` : "/quick-test"
+    backHref: index > 1 ? `/quick-test/${index - 1}` : "/quick-test",
+    leadPronombres: session.leadPronombres,
+    leadName: session.leadName
   });
 }
 

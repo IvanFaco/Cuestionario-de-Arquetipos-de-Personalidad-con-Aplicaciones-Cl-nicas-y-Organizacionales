@@ -11,6 +11,9 @@ import {
   renderPhaseZero,
   renderPreOnboarding,
   renderPremiumQuestion,
+  renderPrivacy,
+  renderRegister,
+  handleRegister,
   renderQuickTestIntro,
   renderTeaser,
   selectHookAnswer,
@@ -27,6 +30,9 @@ import {
 export const assessmentRouter = Router();
 
 assessmentRouter.get("/", renderLanding);
+assessmentRouter.get("/privacidad", renderPrivacy);
+assessmentRouter.get("/registro", renderRegister);
+assessmentRouter.post("/registro", handleRegister);
 assessmentRouter.get("/admin", renderAdmin);
 assessmentRouter.post("/admin/appearance", updateAdminAppearance);
 assessmentRouter.get("/empezar", renderPreOnboarding);

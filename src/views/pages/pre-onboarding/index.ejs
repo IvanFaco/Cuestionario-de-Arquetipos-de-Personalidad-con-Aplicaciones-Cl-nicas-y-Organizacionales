@@ -1,10 +1,10 @@
 <form action="/empezar" method="post" class="stage-page">
-  <section class="landing-form-panel">
+  <section class="landing-form-panel my-auto">
     <div class="compact-stack">
       <div>
         <p class="eyebrow mb-2">Antes de empezar</p>
-        <h2 class="landing-form-title mb-1">¿Como quieres que te llamemos?</h2>
-        <p class="hero-copy mb-0">Por ahora, este es el unico dato personal que te pediremos antes del quick test.</p>
+        <h2 class="landing-form-title mb-1">¿Cómo quieres que te llamemos?</h2>
+        <p class="hero-copy mb-0">Por ahora, este es el único dato personal que te pediremos antes del quick test.</p>
       </div>
 
       <div class="row g-2">
@@ -20,10 +20,24 @@
             value="<%= pageData.name ?? '' %>"
           />
         </div>
+        <div class="col-12">
+          <label class="form-label form-label-sm fw-semibold" for="pronombres">Tus pronombres</label>
+          <select
+            class="form-select form-select-lg compact-control"
+            id="pronombres"
+            name="pronombres"
+          >
+            <option value="">Opcional</option>
+            <option value="él" <%= pageData.pronombres === 'él' ? 'selected' : '' %>>Él / Him</option>
+            <option value="ella" <%= pageData.pronombres === 'ella' ? 'selected' : '' %>>Ella / She</option>
+            <option value="elle" <%= pageData.pronombres === 'elle' ? 'selected' : '' %>>Elle / They</option>
+            <option value="otro" <%= pageData.pronombres === 'otro' ? 'selected' : '' %>>Otro</option>
+          </select>
+        </div>
       </div>
 
       <div class="surface-note">
-        Lo usaremos para hacer la experiencia un poco mas cercana mientras exploras tu lectura.
+        Lo usaremos para hacer la experiencia un poco más cercana mientras exploras tu lectura.
       </div>
 
       <% if (pageData.error) { %>
