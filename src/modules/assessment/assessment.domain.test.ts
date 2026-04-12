@@ -7,13 +7,13 @@ import {
   buildAssessmentOutcome,
   buildPremiumOutcome,
   buildHookOutcome,
-  getAgeRange
+  getAgeRangeLabel
 } from "./assessment.domain.js";
 import type { DemoInput, HookAnswers, PremiumAnswers } from "./assessment.types.js";
 
 type FixtureCase = {
   id: string;
-  demo: DemoInput & { rango_edad: string };
+  demo: DemoInput & { rango_edad_label: string };
   hook_answers: HookAnswers;
   premium_answers: PremiumAnswers;
   expected: {
@@ -34,10 +34,11 @@ function loadFixtureCases(): FixtureCase[] {
   return (JSON.parse(raw) as { cases: FixtureCase[] }).cases;
 }
 
-test("getAgeRange keeps the current age buckets", () => {
-  assert.equal(getAgeRange(18), "18 - 34 anos (Construccion del Ego)");
-  assert.equal(getAgeRange(35), "35 - 50 anos (La Transicion / Metanoia)");
-  assert.equal(getAgeRange(51), "51+ anos (Integracion y Sabiduria)");
+test("getAgeRangeLabel keeps the current age buckets", () => {
+  assert.equal(getAgeRangeLabel("18_24"), "18 a 24 anos | Exploracion e identidad emergente");
+  assert.equal(getAgeRangeLabel("25_34"), "25 a 34 anos | Construccion y afirmacion del yo");
+  assert.equal(getAgeRangeLabel("35_49"), "35 a 49 anos | Transicion, revision y metanoia");
+  assert.equal(getAgeRangeLabel("50_plus"), "50 anos o mas | Integracion y sabiduria");
 });
 
 for (const fixtureCase of loadFixtureCases()) {
@@ -60,6 +61,6 @@ for (const fixtureCase of loadFixtureCases()) {
     assert.equal(premium.Sombra_Total, fixtureCase.expected.sombra_total);
     assert.equal(premium.Keirsey, fixtureCase.expected.keirsey);
     assert.equal(premium.Campbell, fixtureCase.expected.campbell);
-    assert.equal(assessment.demo.rango_edad, fixtureCase.demo.rango_edad);
+    assert.equal(assessment.demo.rango_edad_label, fixtureCase.demo.rango_edad_label);
   });
 }

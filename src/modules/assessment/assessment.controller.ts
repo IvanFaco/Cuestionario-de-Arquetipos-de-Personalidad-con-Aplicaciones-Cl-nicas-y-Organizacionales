@@ -12,14 +12,17 @@ import {
   getPhaseZeroViewModel
 } from "./assessment.service.js";
 import type {
+  AgeRangeKey,
   DemoInput,
+  EnergyProfileKey,
   HookAnswers,
   HookQuestionId,
   LikertValue,
   PartialHookAnswers,
   PartialPremiumAnswers,
   PremiumAnswers,
-  PremiumQuestionId
+  PremiumQuestionId,
+  SpiritualOrientationKey
 } from "./assessment.types.js";
 
 function ensureAssessmentSession(req: Request) {
@@ -94,6 +97,8 @@ function renderQuestionPage(
   {
     title,
     eyebrow,
+    heading,
+    stageLabel,
     selectAction,
     nextAction,
     index,
@@ -105,6 +110,8 @@ function renderQuestionPage(
   }: {
     title: string;
     eyebrow: string;
+    heading: string;
+    stageLabel: string;
     selectAction: string;
     nextAction: string;
     index: number;
@@ -117,10 +124,12 @@ function renderQuestionPage(
 ) {
   res.render("layouts/main", {
     title,
-    page: "../pages/question",
+    page: "../pages/quick-test/question",
     pageData: {
       title,
       eyebrow,
+      heading,
+      stageLabel,
       selectAction,
       nextAction,
       currentIndex: index,
@@ -144,51 +153,116 @@ export function renderLanding(req: Request, res: Response) {
 
   res.render("layouts/main", {
     title: "MiRealYo | Inicio",
-    page: "../pages/landing",
+    page: "../pages/splash/index",
     pageData: {
-      title: "MiRealYo.com",
-      subtitle:
-        "Descubre tu estructura psicológica, tu sombra y tu temperamento en un flujo guiado, móvil y server-render.",
       hookCount: hookQuestions.length,
       premiumCount: premiumQuestions.length
     }
   });
 }
 
+export function renderOnboarding(req: Request, res: Response) {
+  ensureAssessmentSession(req);
+
+  res.render("layouts/main", {
+    title: "MiRealYo | Onboarding",
+    page: "../pages/onboarding/index",
+    pageData: {
+      title: "Conocerte mejor empieza con un poco de contexto",
+      subtitle:
+        "Usamos unas pocas señales bio-psico-sociales para contextualizar la experiencia de forma sutil y respetuosa.",
+      hookCount: hookQuestions.length,
+      premiumCount: premiumQuestions.length
+    }
+  });
+}
+
+export function renderQuickTestIntro(req: Request, res: Response) {
+  const session = ensureAssessmentSession(req);
+
+  if (!session.demo) {
+    return res.redirect("/onboarding");
+  }
+
+  res.render("layouts/main", {
+    title: "MiRealYo | Quick Test",
+    page: "../pages/quick-test/intro",
+    pageData: {
+      hookCount: hookQuestions.length
+    }
+  });
+}
+
+export function startQuickTest(req: Request, res: Response) {
+  const session = ensureAssessmentSession(req);
+
+  if (!session.demo) {
+    return res.redirect("/onboarding");
+  }
+
+  const resumeIndex = getQuestionIndexToResume(hookQuestions, session.hookAnswers);
+  return res.redirect(`/quick-test/${resumeIndex}`);
+}
+
 export function startAssessment(req: Request, res: Response) {
   const gender = String(req.body.genero ?? "");
-  const age = Number.parseInt(String(req.body.edad_exacta ?? ""), 10);
+  const ageRange = String(req.body.rango_edad ?? "") as AgeRangeKey;
+  const spiritualOrientation = (String(req.body.orientacion_espiritual ?? "") ||
+    undefined) as SpiritualOrientationKey | undefined;
+  const energyProfile = String(req.body.energia_base ?? "") as EnergyProfileKey;
 
-  if (!["Hombre", "Mujer", "Otro"].includes(gender) || Number.isNaN(age) || age < 18 || age > 99) {
+  if (
+    !["Hombre", "Mujer", "Otro"].includes(gender) ||
+    !["18_24", "25_34", "35_49", "50_plus"].includes(ageRange) ||
+    !["ecto", "meso", "endo", "mixed"].includes(energyProfile) ||
+    (spiritualOrientation !== undefined &&
+      ![
+        "secular",
+        "agnostic",
+        "spiritual_non_religious",
+        "believer_non_practicing",
+        "religious_practicing",
+        "naturalist",
+        "buddhist",
+        "exploring",
+        "other",
+        "prefer_not_to_say"
+      ].includes(spiritualOrientation))
+  ) {
     return res.status(400).render("layouts/main", {
-      title: "MiRealYo | Inicio",
-      page: "../pages/landing",
+      title: "MiRealYo | Onboarding",
+      page: "../pages/onboarding/index",
       pageData: {
-        title: "MiRealYo.com",
+        title: "Conocerte mejor empieza con un poco de contexto",
         subtitle:
-          "Descubre tu estructura psicológica, tu sombra y tu temperamento en un flujo guiado, móvil y server-render.",
+          "Usamos unas pocas señales bio-psico-sociales para contextualizar la experiencia de forma sutil y respetuosa.",
         hookCount: hookQuestions.length,
         premiumCount: premiumQuestions.length,
-        error: "Debes completar genero y edad exacta con valores validos."
+        error: "Completa estos dos campos para continuar."
       }
     });
   }
 
   const session = ensureAssessmentSession(req);
-  session.demo = buildDemoProfile({ genero: gender as DemoInput["genero"], edad_exacta: age });
+  session.demo = buildDemoProfile({
+    genero: gender as DemoInput["genero"],
+    rango_edad: ageRange,
+    orientacion_espiritual: spiritualOrientation,
+    energia_base: energyProfile
+  });
   session.hookAnswers = {};
   session.premiumAnswers = {};
   session.hookOutcome = undefined;
   session.premiumOutcome = undefined;
 
-  return res.redirect("/hook/1");
+  return res.redirect("/quick-test");
 }
 
 export function renderHookQuestion(req: Request, res: Response) {
   const session = ensureAssessmentSession(req);
 
   if (!session.demo) {
-    return res.redirect("/");
+    return res.redirect("/onboarding");
   }
 
   const resumeIndex = getQuestionIndexToResume(hookQuestions, session.hookAnswers);
@@ -198,16 +272,18 @@ export function renderHookQuestion(req: Request, res: Response) {
   const selectedValue = session.hookAnswers[question.id];
 
   renderQuestionPage(res, {
-    title: "MiRealYo | Hook Quiz",
+    title: "MiRealYo | Quick Test",
     eyebrow: "Tus Instintos Primarios",
-    selectAction: `/hook/${index}/select`,
-    nextAction: `/hook/${index}/next`,
+    heading: "Quick test",
+    stageLabel: "Tus instintos primarios",
+    selectAction: `/quick-test/${index}/select`,
+    nextAction: `/quick-test/${index}/next`,
     index,
     total: hookQuestions.length,
     prompt: question.prompt,
     selectedValue,
     selectedLabel: likertOptions.find((option) => option.value === selectedValue)?.label,
-    backHref: index > 1 ? `/hook/${index - 1}` : undefined
+    backHref: index > 1 ? `/quick-test/${index - 1}` : "/quick-test"
   });
 }
 
@@ -215,7 +291,7 @@ export function selectHookAnswer(req: Request, res: Response) {
   const session = ensureAssessmentSession(req);
 
   if (!session.demo) {
-    return res.redirect("/");
+    return res.redirect("/onboarding");
   }
 
   const index = parseIndex(req.params.index, hookQuestions.length);
@@ -223,18 +299,18 @@ export function selectHookAnswer(req: Request, res: Response) {
   const answer = parseLikertValue(req.body.answer);
 
   if (!answer) {
-    return res.redirect(`/hook/${index}`);
+    return res.redirect(`/quick-test/${index}`);
   }
 
   session.hookAnswers[question.id] = answer;
-  return res.redirect(`/hook/${index}`);
+  return res.redirect(`/quick-test/${index}`);
 }
 
 export function submitHookQuestion(req: Request, res: Response) {
   const session = ensureAssessmentSession(req);
 
   if (!session.demo) {
-    return res.redirect("/");
+    return res.redirect("/onboarding");
   }
 
   const index = parseIndex(req.params.index, hookQuestions.length);
@@ -246,11 +322,11 @@ export function submitHookQuestion(req: Request, res: Response) {
   }
 
   if (session.hookAnswers[question.id] === undefined) {
-    return res.redirect(`/hook/${index}`);
+    return res.redirect(`/quick-test/${index}`);
   }
 
   if (index < hookQuestions.length) {
-    return res.redirect(`/hook/${index + 1}`);
+    return res.redirect(`/quick-test/${index + 1}`);
   }
 
   const completedAnswers = ensureCompleteAnswers<HookQuestionId>(
@@ -259,26 +335,28 @@ export function submitHookQuestion(req: Request, res: Response) {
   );
 
   if (!completedAnswers) {
-    return res.redirect(`/hook/${getQuestionIndexToResume(hookQuestions, session.hookAnswers)}`);
+    return res.redirect(
+      `/quick-test/${getQuestionIndexToResume(hookQuestions, session.hookAnswers)}`
+    );
   }
 
   session.hookOutcome = buildHookOutcome(completedAnswers as HookAnswers);
-  return res.redirect("/teaser");
+  return res.redirect("/quick-results");
 }
 
 export function renderTeaser(req: Request, res: Response) {
   const session = ensureAssessmentSession(req);
 
   if (!session.demo || !session.hookOutcome) {
-    return res.redirect("/");
+    return res.redirect("/onboarding");
   }
 
   res.render("layouts/main", {
-    title: "MiRealYo | Teaser",
-    page: "../pages/teaser",
+    title: "MiRealYo | Quick Results",
+    page: "../pages/quick-results/index",
     pageData: {
       dominantArchetype: session.hookOutcome.ranking[0].name,
-      age: session.demo.edad_exacta,
+      ageRangeLabel: session.demo.rango_edad_label,
       topThree: session.hookOutcome.ranking.slice(0, 3).map((item) => item.name)
     }
   });
@@ -288,20 +366,20 @@ export function startPremium(req: Request, res: Response) {
   const session = ensureAssessmentSession(req);
 
   if (!session.hookOutcome) {
-    return res.redirect("/");
+    return res.redirect("/onboarding");
   }
 
   session.premiumAnswers = {};
   session.premiumOutcome = undefined;
 
-  return res.redirect("/premium/1");
+  return res.redirect("/full-test/1");
 }
 
 export function renderPremiumQuestion(req: Request, res: Response) {
   const session = ensureAssessmentSession(req);
 
   if (!session.hookOutcome) {
-    return res.redirect("/");
+    return res.redirect("/onboarding");
   }
 
   const resumeIndex = getQuestionIndexToResume(premiumQuestions, session.premiumAnswers);
@@ -310,17 +388,29 @@ export function renderPremiumQuestion(req: Request, res: Response) {
   const question = premiumQuestions[index - 1];
   const selectedValue = session.premiumAnswers[question.id];
 
-  renderQuestionPage(res, {
-    title: "MiRealYo | Premium Quiz",
-    eyebrow: "Calibracion Profunda",
-    selectAction: `/premium/${index}/select`,
-    nextAction: `/premium/${index}/next`,
-    index,
-    total: premiumQuestions.length,
-    prompt: question.prompt,
-    selectedValue,
-    selectedLabel: likertOptions.find((option) => option.value === selectedValue)?.label,
-    backHref: index > 1 ? `/premium/${index - 1}` : undefined
+  res.render("layouts/main", {
+    title: "MiRealYo | Full Test",
+    page: "../pages/full-test/question",
+    pageData: {
+      title: "MiRealYo | Full Test",
+      eyebrow: "Calibracion Profunda",
+      heading: "Full test",
+      stageLabel: "Calibracion profunda",
+      selectAction: `/full-test/${index}/select`,
+      nextAction: `/full-test/${index}/next`,
+      currentIndex: index,
+      totalQuestions: premiumQuestions.length,
+      prompt: question.prompt,
+      selectedValue,
+      selectedLabel: likertOptions.find((option) => option.value === selectedValue)?.label,
+      selectedIndex:
+        selectedValue !== undefined
+          ? likertOptions.findIndex((option) => option.value === selectedValue)
+          : -1,
+      progressPercent: Math.round((index / premiumQuestions.length) * 100),
+      options: likertOptions,
+      backHref: index > 1 ? `/full-test/${index - 1}` : undefined
+    }
   });
 }
 
@@ -328,7 +418,7 @@ export function selectPremiumAnswer(req: Request, res: Response) {
   const session = ensureAssessmentSession(req);
 
   if (!session.hookOutcome) {
-    return res.redirect("/");
+    return res.redirect("/onboarding");
   }
 
   const index = parseIndex(req.params.index, premiumQuestions.length);
@@ -336,11 +426,11 @@ export function selectPremiumAnswer(req: Request, res: Response) {
   const answer = parseLikertValue(req.body.answer);
 
   if (!answer) {
-    return res.redirect(`/premium/${index}`);
+    return res.redirect(`/full-test/${index}`);
   }
 
   session.premiumAnswers[question.id] = answer;
-  return res.redirect(`/premium/${index}`);
+  return res.redirect(`/full-test/${index}`);
 }
 
 export function submitPremiumQuestion(req: Request, res: Response) {
@@ -359,11 +449,11 @@ export function submitPremiumQuestion(req: Request, res: Response) {
   }
 
   if (session.premiumAnswers[question.id] === undefined) {
-    return res.redirect(`/premium/${index}`);
+    return res.redirect(`/full-test/${index}`);
   }
 
   if (index < premiumQuestions.length) {
-    return res.redirect(`/premium/${index + 1}`);
+    return res.redirect(`/full-test/${index + 1}`);
   }
 
   const completedAnswers = ensureCompleteAnswers<PremiumQuestionId>(
@@ -373,25 +463,25 @@ export function submitPremiumQuestion(req: Request, res: Response) {
 
   if (!completedAnswers) {
     return res.redirect(
-      `/premium/${getQuestionIndexToResume(premiumQuestions, session.premiumAnswers)}`
+      `/full-test/${getQuestionIndexToResume(premiumQuestions, session.premiumAnswers)}`
     );
   }
 
   session.premiumOutcome = buildPremiumOutcome(completedAnswers as PremiumAnswers);
-  return res.redirect("/dashboard");
+  return res.redirect("/full-results");
 }
 
 export function renderDashboard(req: Request, res: Response) {
   const session = ensureAssessmentSession(req);
 
   if (!session.demo || !session.hookOutcome || !session.premiumOutcome) {
-    return res.redirect("/");
+    return res.redirect("/onboarding");
   }
 
   const ranking = session.hookOutcome.ranking;
   res.render("layouts/main", {
-    title: "MiRealYo | Dashboard",
-    page: "../pages/dashboard",
+    title: "MiRealYo | Full Results",
+    page: "../pages/full-results/index",
     pageData: {
       dominantArchetype: ranking[0].name,
       topThree: ranking.slice(0, 3).map((item) => item.name),
@@ -410,7 +500,7 @@ export async function downloadDashboardPdf(req: Request, res: Response) {
   const session = ensureAssessmentSession(req);
 
   if (!session.demo || !session.hookOutcome || !session.premiumOutcome) {
-    return res.redirect("/");
+    return res.redirect("/onboarding");
   }
 
   const pdfBuffer = await buildExecutiveReportPdf({

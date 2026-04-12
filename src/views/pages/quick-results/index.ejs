@@ -1,7 +1,7 @@
 <section class="stage-page teaser-screen">
   <header class="question-header teaser-screen__header">
-    <p class="eyebrow mb-0">Diagnostico preliminar</p>
-    <h1 class="question-title teaser-screen__title">Tu mapa visible ya asomó</h1>
+    <p class="eyebrow mb-0">Lectura inicial</p>
+    <h1 class="question-title teaser-screen__title">Tu mapa visible ya asomo</h1>
   </header>
 
   <article class="question-card-panel teaser-card">
@@ -10,7 +10,7 @@
         <p class="teaser-card__kicker mb-0">Arquetipo dominante</p>
         <h2 class="teaser-card__headline mb-0"><%= pageData.dominantArchetype %> al frente</h2>
         <p class="teaser-card__summary mb-0">
-          A tus <strong><%= pageData.age %></strong> anos, la triada visible se ordena como
+          En la etapa <strong><%= pageData.ageRangeLabel %></strong>, la triada visible se ordena como
           <strong><%= pageData.topThree.join(", ") %></strong>.
         </p>
       </div>
@@ -33,11 +33,11 @@
     <% }) %>
   </section>
 
-  <form action="/teaser" method="post" class="question-actions teaser-screen__actions">
+  <form action="/quick-results/continue" method="post" class="question-actions teaser-screen__actions">
     <span class="question-actions__back question-actions__back--ghost"></span>
     <div class="flex-grow-1">
-      <button class="btn btn-primary question-actions__next" type="submit">
-        Desbloquear mapa profundo
+      <button class="btn btn-primary app-cta question-actions__next" type="submit">
+        Seguir
       </button>
     </div>
   </form>
