@@ -1,6 +1,6 @@
 :root {
   /* Primary Base */
-  --color-primary: #F3E5FF;
+  --color-primary: #FFFFFF;
 
   /* Surfaces */
   --color-surface: #F8F6FC;
@@ -70,10 +70,10 @@ body {
   color: var(--color-text-primary);
   background-color: var(--color-primary);
   background-image: none;
-}
   line-height: 1.6;
   margin: 0;
   padding: 0;
+  padding-left: 24px;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -107,7 +107,7 @@ a:hover {
   font-family: var(--font-body);
   font-weight: 500;
   padding: var(--space-sm) var(--space-lg);
-  border-radius: var(--radius-md);
+  border-radius: 90px;
   border: none;
   cursor: pointer;
   transition: all var(--transition-fast);
@@ -343,6 +343,47 @@ a:hover {
   opacity: 0.7;
 }
 
+/* App Sidebar */
+.app-sidebar {
+  position: fixed;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 200;
+  padding: var(--space-sm) 0;
+}
+
+.app-sidebar__nav {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  padding-left: 2rem;
+}
+
+.app-sidebar__link,
+.app-sidebar__link[href] {
+  display: block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--color-border);
+  transition: all var(--transition-fast);
+  text-decoration: none;
+}
+
+.app-sidebar__link[href]:hover:not(.is-disabled) {
+  background: var(--color-cta);
+  transform: scale(1.2);
+}
+
+.app-sidebar__link.is-disabled,
+span.app-sidebar__link.is-disabled {
+  background: var(--color-border);
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
 /* Objective Chips */
 .objective-chips {
   display: flex;
@@ -367,22 +408,13 @@ a:hover {
   pointer-events: none;
 }
 
-.objective-chip__label {
-  font-size: 0.875rem;
-  color: var(--color-text-primary);
+.objective-chip input:checked + .objective-chip__label {
+  color: white;
 }
 
-.objective-chip:hover {
-  border-color: var(--color-cta);
-}
-
-.objective-chip--selected {
+.objective-chip:has(input:checked) {
   background: var(--color-cta);
   border-color: var(--color-cta);
-}
-
-.objective-chip--selected .objective-chip__label {
-  color: white;
 }
 
 /* Eyebrow */

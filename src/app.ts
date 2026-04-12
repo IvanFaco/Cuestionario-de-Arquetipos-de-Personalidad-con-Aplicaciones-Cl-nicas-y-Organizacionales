@@ -38,6 +38,10 @@ app.use(
   })
 );
 app.use(express.static(publicPath));
+app.use((req, res, next) => {
+  res.locals.session = req.session;
+  next();
+});
 app.use("/", assessmentPlatformRouter);
 app.use("/", assessmentRouter);
 

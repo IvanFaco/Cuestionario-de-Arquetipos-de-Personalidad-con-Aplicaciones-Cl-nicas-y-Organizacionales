@@ -35,6 +35,43 @@
     </style>
   </head>
   <body>
+    <% 
+    const currentPath = pageData?.currentPath || '';
+    const sessionData = session || {};
+    const assessmentSession = sessionData.assessment || {};
+    const sessionLead = assessmentSession.leadName;
+    const sessionQuickResult = assessmentSession.hookOutcome;
+    const sessionFullResult = assessmentSession.premiumOutcome;
+    const hasLeadName = sessionLead || currentPath === '/empezar' || currentPath.startsWith('/quick-test') || currentPath.startsWith('/quick-results') || currentPath.startsWith('/onboarding') || currentPath.startsWith('/full-test') || currentPath.startsWith('/full-results') || currentPath === '/registro';
+    const hasQuickResult = sessionQuickResult || currentPath.startsWith('/quick-results') || currentPath.startsWith('/onboarding') || currentPath.startsWith('/full-test') || currentPath.startsWith('/full-results') || currentPath === '/registro';
+    const hasFullResult = sessionFullResult || currentPath.startsWith('/full-results') || currentPath === '/registro';
+    %>
+    <aside class="app-sidebar">
+      <nav class="app-sidebar__nav">
+        <a href="/" class="app-sidebar__link" title="Splash"></a>
+        <% if (hasLeadName) { %>
+          <a href="/empezar" class="app-sidebar__link" title="Onboarding"></a>
+        <% } else { %>
+          <span class="app-sidebar__link is-disabled" title="Onboarding"></span>
+        <% } %>
+        <% if (hasLeadName) { %>
+          <a href="/quick-test" class="app-sidebar__link" title="Quick Test"></a>
+        <% } else { %>
+          <span class="app-sidebar__link is-disabled" title="Quick Test"></span>
+        <% } %>
+        <% if (hasQuickResult) { %>
+          <a href="/quick-results" class="app-sidebar__link" title="Quick Results"></a>
+        <% } else { %>
+          <span class="app-sidebar__link is-disabled" title="Quick Results"></span>
+        <% } %>
+        <% if (hasFullResult) { %>
+          <a href="/full-results" class="app-sidebar__link" title="Full Results"></a>
+        <% } else { %>
+          <span class="app-sidebar__link is-disabled" title="Full Results"></span>
+        <% } %>
+        <a href="/registro" class="app-sidebar__link" title="Registro"></a>
+      </nav>
+    </aside>
     <main class="app-frame">
       <%- include("../partials/app-stage", { page, pageData }) %>
     </main>

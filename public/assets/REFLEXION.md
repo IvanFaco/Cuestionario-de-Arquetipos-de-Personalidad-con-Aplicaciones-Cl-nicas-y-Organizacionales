@@ -21,3 +21,102 @@ En términos operativos, el mapa de conocimiento del usuario debe responder cinc
 El procedimiento no termina con la primera medición. Debe existir retroalimentación continua. Cada vez que el usuario acepta, ignora o descarta una recomendación, el sistema aprende. Si alguien con perfil explorador responde mejor a desafíos cortos que a planes largos, esa evidencia vale más que la teoría inicial. Con el tiempo, el mapa deja de ser inferido y pasa a ser validado por comportamiento real.
 
 En última instancia, usar estos cinco marcos de referencia no significa encerrar a la persona en categorías, sino construir una cartografía flexible de su funcionamiento. El objetivo no es decirle quién es de manera definitiva, sino ofrecerle una brújula. Cuando el sistema está bien diseñado, cada modelo aporta una pieza: los arquetipos revelan sentido, Jung y MBTI muestran estructura, Big Five aporta realismo conductual, las inteligencias múltiples indican vías de desarrollo y el estado diario introduce humanidad y contexto. Integrados correctamente, permiten conocer al usuario no como una etiqueta, sino como un organismo complejo en evolución.
+
+
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+Ya tienes
+12 Arquetipos de Jung / branding
+Sabio
+Explorador
+Rebelde
+Mago
+Amante
+Cuidador
+Inocente
+Gobernante
+Creador
+Bufón
+Héroe
+Persona
+común
+
+Las 16 personalidades, expresadas por nombre descriptivo (no por siglas), son:
+
+Arquitecto
+Lógico
+Comandante
+Innovador
+Abogado
+Mediador
+Protagonista
+Activista
+Logista
+Defensor
+Ejecutivo
+Cónsul
+Virtuoso
+Aventurero
+Emprendedor
+Animador
+
+Otros sets relevantes que podrías considerar
+1. Big Five (5 rasgos)
+
+Muy usado en psicología científica.
+
+Apertura
+Responsabilidad
+Extraversión
+Amabilidad
+Neuroticismo / Estabilidad emocional inversa
+
+Útil si buscas algo más serio y medible.
+
+2. Eneagrama (9 tipos)
+Reformador
+Ayudador
+Triunfador
+Individualista
+Investigador
+Leal
+Entusiasta
+Retador
+Pacificador
+
+Muy popular en desarrollo personal.
+
+3. Temperamentos clásicos (4)
+Colérico
+Sanguíneo
+Melancólico
+Flemático
+
+Simple y muy reconocible visualmente.
+
+4. Roles de equipo Belbin (9)
+Coordinador
+Impulsor
+Implementador
+Finalizador
+Cerebro
+Investigador de recursos
+Monitor evaluador
+Cohesionador
+Especialista
+
+Excelente para entorno corporativo.
+
+5. Valores motivacionales de Schwartz (10)
+Poder
+Logro
+Hedonismo
+Estimulación
+Autodirección
+Universalismo
+Benevolencia
+Tradición
+Conformidad
+Seguridad
+
+Bueno para branding o cultura organizacional.

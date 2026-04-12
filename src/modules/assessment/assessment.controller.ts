@@ -203,7 +203,8 @@ export function renderLanding(req: Request, res: Response) {
     ),
     pageData: {
       hookCount: hookQuestions.length,
-      premiumCount: premiumQuestions.length
+      premiumCount: premiumQuestions.length,
+      currentPath: "/"
     }
   });
 }
