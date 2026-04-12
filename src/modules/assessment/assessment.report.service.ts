@@ -65,6 +65,16 @@ function splitParagraph(text: string, maxLength = 88): string[] {
   return lines;
 }
 
+function getBaseProfileLine(demo: DemoProfile): string {
+  const segments = [demo.genero, demo.rango_edad_label, demo.energia_base_label];
+
+  if (demo.orientacion_espiritual_label && demo.orientacion_espiritual !== "prefer_not_to_say") {
+    segments.push(demo.orientacion_espiritual_label);
+  }
+
+  return `Perfil base: ${segments.join(" | ")}`;
+}
+
 export async function buildExecutiveReportPdf(input: {
   demo: DemoProfile;
   hook: HookOutcome;
@@ -95,8 +105,11 @@ export async function buildExecutiveReportPdf(input: {
 
   pageOne.setFont(regularFont);
   currentY = drawTextBlock(pageOne, splitParagraph(
-    `Perfil base: ${input.demo.genero} | ${input.demo.edad_exacta} anos | ${input.demo.rango_edad}`
+    getBaseProfileLine(input.demo)
   ), { x: marginX, y: currentY, size: 11, color: bodyColor });
+  currentY = drawTextBlock(pageOne, splitParagraph(
+    `Lectura contextual: ${input.demo.energia_somatica_label}`
+  ), { x: marginX, y: currentY - 6, size: 11, color: bodyColor });
   currentY = drawTextBlock(pageOne, splitParagraph(
     `Estructura dominante: ${dominant} | Triada principal: ${triad}`
   ), { x: marginX, y: currentY - 6, size: 11, color: bodyColor });

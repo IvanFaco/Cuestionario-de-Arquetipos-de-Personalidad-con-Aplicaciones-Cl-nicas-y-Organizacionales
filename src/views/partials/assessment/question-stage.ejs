@@ -6,7 +6,8 @@
       </div>
       <span class="question-progress__count"><%= pageData.currentIndex %>/<%= pageData.totalQuestions %></span>
     </div>
-    <h1 class="question-title">¿Te identificas con la siguiente afirmación?</h1>
+    <p class="eyebrow mb-2"><%= pageData.stageLabel %></p>
+    <h1 class="question-title"><%= pageData.heading %></h1>
   </header>
 
   <article class="question-card-panel">
@@ -90,8 +91,8 @@
         <span class="question-actions__back question-actions__back--ghost"></span>
       <% } %>
       <div class="flex-grow-1">
-        <button class="btn btn-primary question-actions__next" type="submit" data-next-button>
-          Siguiente
+        <button class="btn btn-primary app-cta question-actions__next" type="submit" data-next-button>
+          <%= pageData.nextLabel ?? 'Siguiente' %>
         </button>
       </div>
     </footer>

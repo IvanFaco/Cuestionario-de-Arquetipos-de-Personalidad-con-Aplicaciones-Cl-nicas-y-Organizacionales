@@ -30,14 +30,20 @@ El estado se mantiene en `st.session_state`.
 ### Datos demograficos
 
 - `genero`: `Hombre | Mujer | Otro`
-- `edad_exacta`: entero entre `18` y `99`
-- `rango_edad`: derivado por regla
+- `rango_edad`: `18_24 | 25_34 | 35_49 | 50_plus`
+- `rango_edad_label`: derivado por regla
+- `orientacion_espiritual`: opcional
+- `orientacion_espiritual_label`: derivado por regla
+- `energia_base`: `ecto | meso | endo | mixed`
+- `energia_base_label`: derivado por regla
+- `energia_somatica_label`: derivado por regla
 
 Regla de rango:
 
-- `<= 34`: `18 - 34 anos (Construccion del Ego)`
-- `<= 50`: `35 - 50 anos (La Transicion / Metanoia)`
-- `> 50`: `51+ anos (Integracion y Sabiduria)`
+- `18_24`: `18 a 24 anos | Exploracion e identidad emergente`
+- `25_34`: `25 a 34 anos | Construccion y afirmacion del yo`
+- `35_49`: `35 a 49 anos | Transicion, revision y metanoia`
+- `50_plus`: `50 anos o mas | Integracion y sabiduria`
 
 ### Hook quiz
 
@@ -110,7 +116,7 @@ Despues del premium quiz:
 Debe mostrar al menos:
 
 - arquetipo dominante
-- edad exacta del usuario
+- etapa de vida del usuario
 - advertencia sobre tension entre imagen publica e impulsos ocultos
 - CTA hacia la calibracion profunda
 
