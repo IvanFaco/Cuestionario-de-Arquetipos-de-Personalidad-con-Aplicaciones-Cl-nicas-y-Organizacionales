@@ -1,0 +1,69 @@
+<section class="stage-page daily-screen">
+  <header class="hero-card compact-stack">
+    <p class="eyebrow mb-0">Sesión activa</p>
+    <h1 class="hero-title mb-0">
+      <%= pageData.name ? `${pageData.name}, este es tu perfil` : 'Este es tu perfil' %>
+    </h1>
+    <p class="hero-copy mb-0">
+      Aquí puedes revisar la información base asociada a tu cuenta y el estado actual de tu proceso.
+    </p>
+  </header>
+
+  <% if (pageData.saved) { %>
+  <div class="alert alert-success mb-3">Perfil actualizado correctamente.</div>
+  <% } %>
+  <% if (pageData.error) { %>
+  <div class="alert alert-danger mb-3"><%= pageData.error %></div>
+  <% } %>
+
+  <section class="phase-card compact-stack">
+    <div class="daily-card__row">
+      <div>
+        <p class="eyebrow mb-2">Cuenta</p>
+        <h2 class="landing-form-title mb-1">Datos del usuario</h2>
+        <p class="hero-copy mb-0"><%= pageData.email %></p>
+      </div>
+      <span class="status-pill">Profile</span>
+    </div>
+
+    <form action="/profile" method="POST" class="profile-form">
+      <div class="daily-module-grid">
+        <article class="daily-module-card">
+          <strong>Correo</strong>
+          <span class="text-muted"><%= pageData.email %></span>
+        </article>
+        <article class="daily-module-card">
+          <label for="name" class="d-block"><strong>Nombre usado</strong></label>
+          <input type="text" id="name" name="name" value="<%= pageData.name %>" class="form-control" placeholder="Tu nombre">
+        </article>
+        <article class="daily-module-card">
+          <label for="pronombres" class="d-block"><strong>Pronombres</strong></label>
+          <select id="pronombres" name="pronombres" class="form-select">
+            <% pageData.pronounOptions.forEach(function(option) { %>
+              <option value="<%= option.value %>" <%= pageData.pronombres === option.value ? 'selected' : '' %>>
+                <%= option.label %>
+              </option>
+            <% }); %>
+          </select>
+        </article>
+        <article class="daily-module-card">
+          <strong>Quick result</strong>
+          <span><%= pageData.hasQuickResult ? 'Disponible' : 'Pendiente' %></span>
+        </article>
+        <article class="daily-module-card">
+          <strong>Reporte completo</strong>
+          <span><%= pageData.hasFullReport ? 'Disponible' : 'Pendiente' %></span>
+        </article>
+        <article class="daily-module-card">
+          <strong>Fecha de alta</strong>
+          <span><%= pageData.joinedAt ?? 'No disponible' %></span>
+        </article>
+      </div>
+
+      <div class="daily-actions">
+        <button type="submit" class="btn btn-primary app-cta app-cta--compact">Guardar cambios</button>
+        <a class="btn btn-outline app-cta--compact" href="/daily">Cancelar</a>
+      </div>
+    </form>
+  </section>
+</section>
