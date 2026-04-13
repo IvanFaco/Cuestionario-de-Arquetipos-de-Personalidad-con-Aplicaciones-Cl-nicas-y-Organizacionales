@@ -35,5 +35,21 @@ export const sqliteMigrations: SqliteMigration[] = [
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
       );
     `
+  },
+  {
+    id: "003_create_questions",
+    sql: `
+      CREATE TABLE IF NOT EXISTS questions (
+        id TEXT PRIMARY KEY,
+        type TEXT NOT NULL CHECK (type IN ('hook', 'premium')),
+        prompt TEXT NOT NULL,
+        sort_order INTEGER NOT NULL DEFAULT 0,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_questions_type ON questions(type);
+      CREATE INDEX IF NOT EXISTS idx_questions_sort ON questions(type, sort_order);
+    `
   }
 ];

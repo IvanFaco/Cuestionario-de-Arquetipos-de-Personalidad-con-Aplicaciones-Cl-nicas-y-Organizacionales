@@ -9,6 +9,8 @@ import { getAppearanceSettings, getCurrentFontDescriptor } from "./modules/asses
 import { assessmentPlatformRouter } from "./modules/assessment/assessment.platform.routes.js";
 import { assessmentRouter } from "./modules/assessment/assessment.routes.js";
 
+import { getQuestionsRepository } from "./modules/questions/questions.repository.js";
+
 const viewsPath = path.join(process.cwd(), "src/views");
 const publicPath = path.join(process.cwd(), "public");
 
@@ -16,6 +18,7 @@ const app = express();
 const databaseClient = getDatabaseClient();
 
 databaseClient.migrate();
+getQuestionsRepository().seedQuestions();
 
 // Coolify and similar platforms terminate TLS before the Node app.
 app.set("trust proxy", 1);

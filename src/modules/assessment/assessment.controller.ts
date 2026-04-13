@@ -15,7 +15,7 @@ import {
   buildHookOutcome,
   buildPremiumOutcome
 } from "./assessment.domain.js";
-import { hookQuestions, likertOptions, premiumQuestions } from "./assessment.data.js";
+import { getHookQuestions, getPremiumQuestions, likertOptions } from "./assessment.questions.js";
 import { buildExecutiveReportPdf, getShadowLabel } from "./assessment.report.service.js";
 import { buildSeoMeta } from "./assessment.seo.js";
 import {
@@ -396,8 +396,8 @@ export function renderLanding(req: Request, res: Response) {
       res.app.locals.siteUrl
     ),
     pageData: {
-      hookCount: hookQuestions.length,
-      premiumCount: premiumQuestions.length,
+      hookCount: getHookQuestions().length,
+      premiumCount: getPremiumQuestions().length,
       currentPath: "/"
     }
   });
@@ -901,7 +901,7 @@ export function renderQuickTestIntro(req: Request, res: Response) {
       res.app.locals.siteUrl
     ),
     pageData: {
-      hookCount: hookQuestions.length
+      hookCount: getHookQuestions().length
     }
   });
 }
@@ -927,7 +927,7 @@ export function renderFullTestIntro(req: Request, res: Response) {
       res.app.locals.siteUrl
     ),
     pageData: {
-      premiumCount: premiumQuestions.length
+      premiumCount: getPremiumQuestions().length
     }
   });
 }
@@ -939,7 +939,7 @@ export function startQuickTest(req: Request, res: Response) {
     return res.redirect("/empezar");
   }
 
-  const resumeIndex = getQuestionIndexToResume(hookQuestions, session.hookAnswers);
+  const resumeIndex = getQuestionIndexToResume(getHookQuestions(), session.hookAnswers);
   return res.redirect(`/quick-test/${resumeIndex}`);
 }
 
@@ -996,11 +996,12 @@ export function renderHookQuestion(req: Request, res: Response) {
     return res.redirect("/empezar");
   }
 
-  const resumeIndex = getQuestionIndexToResume(hookQuestions, session.hookAnswers);
-  const requestedIndex = parseIndex(req.params.index, hookQuestions.length);
+  const resumeIndex = getQuestionIndexToResume(getHookQuestions(), session.hookAnswers as Partial<Record<string, LikertValue>>);
+  const requestedIndex = parseIndex(req.params.index, getHookQuestions().length);
   const index = Math.min(requestedIndex, resumeIndex);
-  const question = hookQuestions[index - 1];
-  const selectedValue = session.hookAnswers[question.id];
+  const hookList = getHookQuestions();
+  const question = hookList[index - 1];
+  const selectedValue = session.hookAnswers[question.id as keyof typeof session.hookAnswers];
 
   renderQuestionPage(res, {
     title: "MiRealYo | Quick Test",
@@ -1010,7 +1011,7 @@ export function renderHookQuestion(req: Request, res: Response) {
     selectAction: `/quick-test/${index}/select`,
     nextAction: `/quick-test/${index}/next`,
     index,
-    total: hookQuestions.length,
+    total: getHookQuestions().length,
     prompt: question.prompt,
     selectedValue,
     selectedLabel: likertOptions.find((option) => option.value === selectedValue)?.label,
@@ -1027,15 +1028,16 @@ export function selectHookAnswer(req: Request, res: Response) {
     return res.redirect("/empezar");
   }
 
-  const index = parseIndex(req.params.index, hookQuestions.length);
-  const question = hookQuestions[index - 1];
+  const index = parseIndex(req.params.index, getHookQuestions().length);
+  const hookList = getHookQuestions();
+  const question = hookList[index - 1];
   const answer = parseLikertValue(req.body.answer);
 
   if (!answer) {
     return res.redirect(`/quick-test/${index}`);
   }
 
-  session.hookAnswers[question.id] = answer;
+  (session.hookAnswers as Record<string, LikertValue>)[question.id] = answer;
   persistAssessmentSession(req);
   return res.redirect(`/quick-test/${index}`);
 }
@@ -1047,31 +1049,32 @@ export function submitHookQuestion(req: Request, res: Response) {
     return res.redirect("/empezar");
   }
 
-  const index = parseIndex(req.params.index, hookQuestions.length);
-  const question = hookQuestions[index - 1];
+  const index = parseIndex(req.params.index, getHookQuestions().length);
+  const hookList = getHookQuestions();
+  const question = hookList[index - 1];
   const answer = parseLikertValue(req.body.answer);
 
   if (answer) {
-    session.hookAnswers[question.id] = answer;
+    (session.hookAnswers as Record<string, LikertValue>)[question.id] = answer;
     persistAssessmentSession(req);
   }
 
-  if (session.hookAnswers[question.id] === undefined) {
+  if ((session.hookAnswers as Record<string, LikertValue>)[question.id] === undefined) {
     return res.redirect(`/quick-test/${index}`);
   }
 
-  if (index < hookQuestions.length) {
+  if (index < getHookQuestions().length) {
     return res.redirect(`/quick-test/${index + 1}`);
   }
 
-  const completedAnswers = ensureCompleteAnswers<HookQuestionId>(
-    hookQuestions,
+  const completedAnswers = ensureCompleteAnswers(
+    getHookQuestions() as { id: HookQuestionId }[],
     session.hookAnswers as Partial<Record<HookQuestionId, LikertValue>>
   );
 
   if (!completedAnswers) {
     return res.redirect(
-      `/quick-test/${getQuestionIndexToResume(hookQuestions, session.hookAnswers)}`
+      `/quick-test/${getQuestionIndexToResume(getHookQuestions(), session.hookAnswers)}`
     );
   }
 
@@ -1123,7 +1126,7 @@ export function startPremium(req: Request, res: Response) {
   session.premiumOutcome = undefined;
   persistAssessmentSession(req);
 
-  const resumeIndex = getQuestionIndexToResume(premiumQuestions, session.premiumAnswers);
+  const resumeIndex = getQuestionIndexToResume(getPremiumQuestions(), session.premiumAnswers);
   return res.redirect(`/full-test/${resumeIndex}`);
 }
 
@@ -1134,11 +1137,12 @@ export function renderPremiumQuestion(req: Request, res: Response) {
     return res.redirect("/quick-test");
   }
 
-  const resumeIndex = getQuestionIndexToResume(premiumQuestions, session.premiumAnswers);
-  const requestedIndex = parseIndex(req.params.index, premiumQuestions.length);
+  const resumeIndex = getQuestionIndexToResume(getPremiumQuestions(), session.premiumAnswers);
+  const requestedIndex = parseIndex(req.params.index, getPremiumQuestions().length);
   const index = Math.min(requestedIndex, resumeIndex);
-  const question = premiumQuestions[index - 1];
-  const selectedValue = session.premiumAnswers[question.id];
+  const premiumList = getPremiumQuestions();
+  const question = premiumList[index - 1];
+  const selectedValue = session.premiumAnswers[question.id as keyof typeof session.premiumAnswers];
 
   const identificationText = session.leadPronombres === "ella" ? "identificada" 
     : session.leadPronombres === "él" ? "identificado" 
@@ -1170,7 +1174,7 @@ export function renderPremiumQuestion(req: Request, res: Response) {
       selectAction: `/full-test/${index}/select`,
       nextAction: `/full-test/${index}/next`,
       currentIndex: index,
-      totalQuestions: premiumQuestions.length,
+      totalQuestions: getPremiumQuestions().length,
       prompt: question.prompt,
       selectedValue,
       selectedLabel: likertOptions.find((option) => option.value === selectedValue)?.label,
@@ -1178,7 +1182,7 @@ export function renderPremiumQuestion(req: Request, res: Response) {
         selectedValue !== undefined
           ? likertOptions.findIndex((option) => option.value === selectedValue)
           : -1,
-      progressPercent: Math.round((index / premiumQuestions.length) * 100),
+      progressPercent: Math.round((index / getPremiumQuestions().length) * 100),
       options: likertOptions,
       backHref: index > 1 ? `/full-test/${index - 1}` : undefined
     }
@@ -1192,15 +1196,16 @@ export function selectPremiumAnswer(req: Request, res: Response) {
     return res.redirect("/quick-test");
   }
 
-  const index = parseIndex(req.params.index, premiumQuestions.length);
-  const question = premiumQuestions[index - 1];
+  const index = parseIndex(req.params.index, getPremiumQuestions().length);
+  const premiumList = getPremiumQuestions();
+  const question = premiumList[index - 1];
   const answer = parseLikertValue(req.body.answer);
 
   if (!answer) {
     return res.redirect(`/full-test/${index}`);
   }
 
-  session.premiumAnswers[question.id] = answer;
+  (session.premiumAnswers as Record<string, LikertValue>)[question.id] = answer;
   persistAssessmentSession(req);
   return res.redirect(`/full-test/${index}`);
 }
@@ -1212,31 +1217,32 @@ export function submitPremiumQuestion(req: Request, res: Response) {
     return res.redirect("/quick-test");
   }
 
-  const index = parseIndex(req.params.index, premiumQuestions.length);
-  const question = premiumQuestions[index - 1];
+  const index = parseIndex(req.params.index, getPremiumQuestions().length);
+  const premiumList = getPremiumQuestions();
+  const question = premiumList[index - 1];
   const answer = parseLikertValue(req.body.answer);
 
   if (answer) {
-    session.premiumAnswers[question.id] = answer;
+    (session.premiumAnswers as Record<string, LikertValue>)[question.id] = answer;
     persistAssessmentSession(req);
   }
 
-  if (session.premiumAnswers[question.id] === undefined) {
+  if ((session.premiumAnswers as Record<string, LikertValue>)[question.id] === undefined) {
     return res.redirect(`/full-test/${index}`);
   }
 
-  if (index < premiumQuestions.length) {
+  if (index < getPremiumQuestions().length) {
     return res.redirect(`/full-test/${index + 1}`);
   }
 
-  const completedAnswers = ensureCompleteAnswers<PremiumQuestionId>(
-    premiumQuestions,
+  const completedAnswers = ensureCompleteAnswers(
+    getPremiumQuestions() as { id: PremiumQuestionId }[],
     session.premiumAnswers as Partial<Record<PremiumQuestionId, LikertValue>>
   );
 
   if (!completedAnswers) {
     return res.redirect(
-      `/full-test/${getQuestionIndexToResume(premiumQuestions, session.premiumAnswers)}`
+      `/full-test/${getQuestionIndexToResume(getPremiumQuestions(), session.premiumAnswers)}`
     );
   }
 
