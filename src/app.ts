@@ -4,6 +4,7 @@ import express from "express";
 import session from "express-session";
 
 import { env } from "./config/env.js";
+import { getDatabaseClient } from "./shared/database/database.factory.js";
 import { getAppearanceSettings, getCurrentFontDescriptor } from "./modules/assessment/assessment.appearance.js";
 import { assessmentPlatformRouter } from "./modules/assessment/assessment.platform.routes.js";
 import { assessmentRouter } from "./modules/assessment/assessment.routes.js";
@@ -12,6 +13,9 @@ const viewsPath = path.join(process.cwd(), "src/views");
 const publicPath = path.join(process.cwd(), "public");
 
 const app = express();
+const databaseClient = getDatabaseClient();
+
+databaseClient.migrate();
 
 // Coolify and similar platforms terminate TLS before the Node app.
 app.set("trust proxy", 1);

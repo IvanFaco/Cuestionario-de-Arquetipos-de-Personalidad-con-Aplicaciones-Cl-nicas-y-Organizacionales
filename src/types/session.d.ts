@@ -10,6 +10,10 @@ import type {
 
 declare module "express-session" {
   interface SessionData {
+    auth?: {
+      userId: string;
+      email: string;
+    };
     assessment?: {
       leadName?: string;
       leadPronombres?: string;

@@ -10,12 +10,30 @@
         <section class="teaser-carousel__slide is-active" data-teaser-slide>
           <div class="question-card-panel__body teaser-card__body">
             <div class="teaser-card__copy">
+              <% 
+                const archetypeMap = {
+                  'Gobernante': 'gobernante',
+                  'Sabio': 'sabio',
+                  'Cuidador': 'cuidador',
+                  'Explorador': 'explorador',
+                  'Mago': 'mago',
+                  'Huerfano': 'huerfano',
+                  'Creador': 'creador',
+                  'Guerrero': 'guerrero',
+                  'Buscador': 'buscador',
+                  'Amante': 'amante',
+                  'Rebelde': 'rebelde',
+                  'Bufón': 'bufon'
+                };
+                const archetypeFile = archetypeMap[pageData.dominantArchetype] || pageData.dominantArchetype.toLowerCase();
+              %>
               <p class="teaser-card__kicker mb-0">Perfil parcial identificado</p>
               <h2 class="teaser-card__headline mb-0"><%= pageData.dominantArchetype %> al frente</h2>
               <p class="teaser-card__summary mb-0">
                 <strong><%= pageData.name %></strong>, la triada visible se ordena como
                 <strong><%= pageData.topThree.join(", ") %></strong>.
               </p>
+              <img src="/assets/<%= archetypeFile %>.png" alt="<%= pageData.dominantArchetype %>" class="teaser-archetype-img mb-3" />
             </div>
           </div>
         </section>
@@ -98,11 +116,11 @@
     <% }) %>
   </section>
 
-  <form action="/quick-results/continue" method="post" class="question-actions teaser-screen__actions">
+  <form action="/full-test" method="get" class="question-actions teaser-screen__actions">
     <span class="question-actions__back question-actions__back--ghost"></span>
     <div class="flex-grow-1">
       <button class="btn btn-primary app-cta question-actions__next" type="submit">
-        Seguir
+        Profundizar en mi auto-descubrimiento
       </button>
     </div>
   </form>

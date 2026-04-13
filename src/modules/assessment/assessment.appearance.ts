@@ -2,13 +2,32 @@ import fs from "node:fs";
 import path from "node:path";
 
 export type BootswatchTheme =
+  | "brite"
+  | "cerulean"
+  | "cosmo"
+  | "cyborg"
+  | "darkly"
   | "flatly"
+  | "journal"
+  | "litera"
+  | "lumen"
   | "lux"
+  | "materia"
   | "minty"
   | "morph"
+  | "pulse"
   | "quartz"
   | "sandstone"
-  | "yeti";
+  | "simplex"
+  | "sketchy"
+  | "slate"
+  | "solar"
+  | "spacelab"
+  | "superhero"
+  | "united"
+  | "vapor"
+  | "yeti"
+  | "zephyr";
 
 export type GoogleFontOption =
   | "manrope"
@@ -16,7 +35,8 @@ export type GoogleFontOption =
   | "outfit"
   | "plus-jakarta-sans"
   | "dm-sans"
-  | "merriweather";
+  | "merriweather"
+  | "roboto-slab";
 
 export type AppearanceSettings = {
   bootswatchTheme: BootswatchTheme;
@@ -29,13 +49,32 @@ const appearanceDataDir = path.join(process.cwd(), "data");
 const appearanceDataPath = path.join(appearanceDataDir, "appearance.json");
 
 const themeOptions = [
+  { value: "brite", label: "Brite" },
+  { value: "cerulean", label: "Cerulean" },
+  { value: "cosmo", label: "Cosmo" },
+  { value: "cyborg", label: "Cyborg" },
+  { value: "darkly", label: "Darkly" },
   { value: "flatly", label: "Flatly" },
+  { value: "journal", label: "Journal" },
+  { value: "litera", label: "Litera" },
+  { value: "lumen", label: "Lumen" },
   { value: "lux", label: "Lux" },
+  { value: "materia", label: "Materia" },
   { value: "minty", label: "Minty" },
   { value: "morph", label: "Morph" },
+  { value: "pulse", label: "Pulse" },
   { value: "quartz", label: "Quartz" },
   { value: "sandstone", label: "Sandstone" },
-  { value: "yeti", label: "Yeti" }
+  { value: "simplex", label: "Simplex" },
+  { value: "sketchy", label: "Sketchy" },
+  { value: "slate", label: "Slate" },
+  { value: "solar", label: "Solar" },
+  { value: "spacelab", label: "Spacelab" },
+  { value: "superhero", label: "Superhero" },
+  { value: "united", label: "United" },
+  { value: "vapor", label: "Vapor" },
+  { value: "yeti", label: "Yeti" },
+  { value: "zephyr", label: "Zephyr" }
 ] as const;
 
 const fontOptions = [
@@ -74,6 +113,12 @@ const fontOptions = [
     label: "Merriweather",
     family: "Merriweather",
     href: "https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700;900&display=swap"
+  },
+  {
+    value: "roboto-slab",
+    label: "Roboto Slab",
+    family: "Roboto Slab",
+    href: "https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@400;700&display=swap"
   }
 ] as const;
 

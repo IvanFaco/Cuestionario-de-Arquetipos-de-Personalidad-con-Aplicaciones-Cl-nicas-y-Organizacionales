@@ -10,12 +10,30 @@
         <section class="teaser-carousel__slide is-active" data-full-slide>
           <div class="question-card-panel__body teaser-card__body">
             <div class="teaser-card__copy">
+              <% 
+                const archetypeMap = {
+                  'Gobernante': 'gobernante',
+                  'Sabio': 'sabio',
+                  'Cuidador': 'cuidador',
+                  'Explorador': 'explorador',
+                  'Mago': 'mago',
+                  'Huerfano': 'huerfano',
+                  'Creador': 'creador',
+                  'Guerrero': 'guerrero',
+                  'Buscador': 'buscador',
+                  'Amante': 'amante',
+                  'Rebelde': 'rebelde',
+                  'Bufón': 'bufon'
+                };
+                const archetypeFile = archetypeMap[pageData.dominantArchetype] || pageData.dominantArchetype.toLowerCase();
+              %>
               <p class="teaser-card__kicker mb-0">Tu perfil principal</p>
               <h2 class="teaser-card__headline mb-0"><%= pageData.dominantArchetype %></h2>
               <p class="teaser-card__summary mb-0">
                 <strong><%= pageData.name %></strong>, tu triada se ordena como 
                 <strong><%= pageData.topThree.join(", ") %></strong>.
               </p>
+              <img src="/assets/<%= archetypeFile %>.png" alt="<%= pageData.dominantArchetype %>" class="teaser-archetype-img mb-3" />
             </div>
           </div>
         </section>
