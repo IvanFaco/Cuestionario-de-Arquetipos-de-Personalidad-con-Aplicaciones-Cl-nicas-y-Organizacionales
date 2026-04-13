@@ -13,5 +13,7 @@ export interface CreateUserInput {
 
 export interface AuthRepository {
   findUserByEmail(email: string): UserRecord | null;
+  findUserById(id: string): UserRecord | null;
   createUser(input: CreateUserInput): UserRecord;
+  updatePassword(userId: string, passwordHash: string): void;
 }

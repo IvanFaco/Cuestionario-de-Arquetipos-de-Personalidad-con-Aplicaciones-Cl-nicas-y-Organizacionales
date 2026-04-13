@@ -38,10 +38,13 @@
     <% 
     const currentPath = pageData?.currentPath || '';
     const sessionData = session || {};
+    const authSession = sessionData.auth || null;
     const assessmentSession = sessionData.assessment || {};
     const sessionLead = assessmentSession.leadName;
     const sessionQuickResult = assessmentSession.hookOutcome;
     const sessionFullResult = assessmentSession.premiumOutcome;
+    const sessionHomeHref = sessionFullResult ? '/full-results' : '/daily';
+    const sessionStatusLabel = sessionFullResult ? 'Sesion activa | lectura lista' : 'Sesion activa | daily';
     const hasLeadName = sessionLead || currentPath === '/empezar' || currentPath.startsWith('/quick-test') || currentPath.startsWith('/quick-results') || currentPath.startsWith('/onboarding') || currentPath.startsWith('/full-test') || currentPath.startsWith('/full-results') || currentPath === '/registro';
     const hasQuickResult = sessionQuickResult || currentPath.startsWith('/quick-results') || currentPath.startsWith('/onboarding') || currentPath.startsWith('/full-test') || currentPath.startsWith('/full-results') || currentPath === '/registro';
     const hasFullResult = sessionFullResult || currentPath.startsWith('/full-results') || currentPath === '/registro';
@@ -69,12 +72,28 @@
         <% } else { %>
           <span class="app-sidebar__link is-disabled" title="Full Results"></span>
         <% } %>
-        <a href="/registro" class="app-sidebar__link" title="Registro"></a>
+        <% if (authSession) { %>
+          <a href="<%= sessionHomeHref %>" class="app-sidebar__link" title="Sesion"></a>
+        <% } else { %>
+          <a href="/registro" class="app-sidebar__link" title="Registro"></a>
+        <% } %>
       </nav>
     </aside>
     <main class="app-frame">
       <%- include("../partials/app-stage", { page, pageData }) %>
     </main>
+    <% if (authSession) { %>
+      <div class="app-session-badge">
+        <span class="app-session-badge__dot" aria-hidden="true"></span>
+        <a href="<%= sessionHomeHref %>" class="app-session-badge__link">
+          <span><%= sessionStatusLabel %></span>
+          <strong><%= authSession.email %></strong>
+        </a>
+        <form action="/logout" method="post" class="app-session-badge__logout-form">
+          <button type="submit" class="app-session-badge__logout">Salir</button>
+        </form>
+      </div>
+    <% } %>
     <footer class="app-footer">
       <a href="/privacidad" class="app-footer__link">Políticas de Privacidad</a>
     </footer>

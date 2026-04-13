@@ -24,6 +24,20 @@ function mapUserRow(row: SqliteUserRow): UserRecord {
 export class SqliteAuthRepository implements AuthRepository {
   constructor(private readonly sqlite: SqliteClient) {}
 
+  findUserById(id: string): UserRecord | null {
+    const row = this.sqlite
+      .prepare<[string], SqliteUserRow | undefined>(
+        `
+          SELECT id, email, password_hash, created_at, updated_at
+          FROM users
+          WHERE id = ?
+        `
+      )
+      .get(id);
+
+    return row ? mapUserRow(row) : null;
+  }
+
   findUserByEmail(email: string): UserRecord | null {
     const row = this.sqlite
       .prepare<[string], SqliteUserRow | undefined>(
@@ -58,5 +72,17 @@ export class SqliteAuthRepository implements AuthRepository {
       .run(user.id, user.email, user.passwordHash, user.createdAt, user.updatedAt);
 
     return user;
+  }
+
+  updatePassword(userId: string, passwordHash: string): void {
+    this.sqlite
+      .prepare(
+        `
+          UPDATE users
+          SET password_hash = ?, updated_at = ?
+          WHERE id = ?
+        `
+      )
+      .run(passwordHash, new Date().toISOString(), userId);
   }
 }

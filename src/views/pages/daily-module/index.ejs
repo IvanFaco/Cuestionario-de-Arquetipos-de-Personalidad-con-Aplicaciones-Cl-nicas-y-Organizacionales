@@ -1,0 +1,36 @@
+<section class="stage-page daily-screen">
+  <header class="hero-card compact-stack">
+    <p class="eyebrow mb-0"><%= pageData.eyebrow %></p>
+    <h1 class="hero-title mb-0">
+      <%= pageData.name ? `${pageData.name}, ${pageData.heading}` : pageData.heading %>
+    </h1>
+    <p class="hero-copy mb-0"><%= pageData.copy %></p>
+  </header>
+
+  <section class="phase-card compact-stack">
+    <div class="daily-card__row">
+      <div>
+        <p class="eyebrow mb-2">Módulo</p>
+        <h2 class="landing-form-title mb-1"><%= pageData.heading %></h2>
+        <p class="hero-copy mb-0"><%= pageData.email %></p>
+      </div>
+      <span class="status-pill">Activo</span>
+    </div>
+
+    <div class="surface-note mb-0">
+      <% if (pageData.hasFullReport) { %>
+        Esta vista ya quedó registrada dentro del mapa de sesión activa. También puedes descargar el último PDF disponible de tu lectura.
+      <% } else { %>
+        Esta vista ya quedó registrada dentro del mapa de sesión activa. El siguiente paso será implementar su lógica funcional.
+      <% } %>
+    </div>
+
+    <div class="daily-actions">
+      <a class="btn btn-primary app-cta app-cta--compact" href="/daily">Volver a Daily</a>
+      <a class="btn btn-outline app-cta--compact" href="/full-results">Ir a la lectura</a>
+      <% if (pageData.hasFullReport) { %>
+        <a class="btn btn-outline app-cta--compact" href="/full-results/pdf">Descargar último PDF</a>
+      <% } %>
+    </div>
+  </section>
+</section>

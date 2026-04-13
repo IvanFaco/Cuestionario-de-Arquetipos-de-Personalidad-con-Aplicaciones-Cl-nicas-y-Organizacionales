@@ -4,7 +4,7 @@ import type { AuthRepository, UserRecord } from "./auth.types.js";
 export class AuthError extends Error {
   constructor(
     message: string,
-    readonly code: "EMAIL_ALREADY_EXISTS" | "INVALID_CREDENTIALS"
+    readonly code: "EMAIL_ALREADY_EXISTS" | "INVALID_CREDENTIALS" | "PASSWORD_TOO_SHORT"
   ) {
     super(message);
   }
@@ -12,6 +12,10 @@ export class AuthError extends Error {
 
 export class AuthService {
   constructor(private readonly authRepository: AuthRepository) {}
+
+  findUserById(id: string): UserRecord | null {
+    return this.authRepository.findUserById(id);
+  }
 
   async register(email: string, password: string): Promise<UserRecord> {
     const existingUser = this.authRepository.findUserByEmail(email);
@@ -38,5 +42,14 @@ export class AuthService {
     }
 
     return user;
+  }
+
+  async updatePassword(userId: string, password: string): Promise<void> {
+    if (password.length < 6) {
+      throw new AuthError("La contraseña debe tener al menos 6 caracteres.", "PASSWORD_TOO_SHORT");
+    }
+
+    const passwordHash = await hashPassword(password);
+    this.authRepository.updatePassword(userId, passwordHash);
   }
 }

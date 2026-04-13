@@ -1,11 +1,7 @@
 import "express-session";
 
 import type {
-  DemoProfile,
-  HookOutcome,
-  PartialHookAnswers,
-  PartialPremiumAnswers,
-  PremiumOutcome
+  AssessmentSessionState
 } from "../modules/assessment/assessment.types.js";
 
 declare module "express-session" {
@@ -14,14 +10,6 @@ declare module "express-session" {
       userId: string;
       email: string;
     };
-    assessment?: {
-      leadName?: string;
-      leadPronombres?: string;
-      demo?: DemoProfile;
-      hookAnswers: PartialHookAnswers;
-      premiumAnswers: PartialPremiumAnswers;
-      hookOutcome?: HookOutcome;
-      premiumOutcome?: PremiumOutcome;
-    };
+    assessment?: AssessmentSessionState;
   }
 }

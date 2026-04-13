@@ -94,3 +94,13 @@ export type AssessmentOutcome = {
   hook: HookOutcome;
   premium: PremiumOutcome;
 };
+
+export type AssessmentSessionState = {
+  leadName?: string;
+  leadPronombres?: string;
+  demo?: DemoProfile;
+  hookAnswers: PartialHookAnswers;
+  premiumAnswers: PartialPremiumAnswers;
+  hookOutcome?: HookOutcome;
+  premiumOutcome?: PremiumOutcome;
+};

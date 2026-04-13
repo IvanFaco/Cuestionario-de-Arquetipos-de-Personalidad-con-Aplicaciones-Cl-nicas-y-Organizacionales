@@ -1,74 +1,67 @@
 <section class="stage-page landing-page">
-  <section class="landing-form-panel my-auto">
-    <div class="compact-stack">
-      <div>
-        <p class="eyebrow mb-2">Informe completo</p>
-        <h2 class="landing-form-title mb-1">Crea tu cuenta</h2>
-        <p class="hero-copy mb-0">Guarda tu lectura y accede a tu informe completo cuando quieras.</p>
-      </div>
-
-      <div class="row g-2">
-        <div class="col-12">
-          <label class="form-label form-label-sm fw-semibold" for="email">Tu correo electrónico</label>
-          <input
-            class="form-control form-control-lg compact-control"
-            id="email"
-            name="email"
-            type="email"
-            required
-            value="<%= pageData.email ?? '' %>"
-          />
+  <form action="/registro" method="post" id="registro-form" class="stage-page">
+    <section class="landing-form-panel my-auto">
+      <div class="compact-stack">
+        <div>
+          <p class="eyebrow mb-2">Informe completo</p>
+          <h2 class="landing-form-title mb-1">Crea tu cuenta</h2>
+          <p class="hero-copy mb-0">Guarda tu lectura y accede a tu informe completo cuando quieras.</p>
         </div>
-        <div class="col-12">
-          <label class="form-label form-label-sm fw-semibold" for="password">Elige una contraseña</label>
-          <input
-            class="form-control form-control-lg compact-control"
-            id="password"
-            name="password"
-            type="password"
-            minlength="6"
-            required
-          />
+
+        <div class="row g-2">
+          <div class="col-12">
+            <label class="form-label form-label-sm fw-semibold" for="email">Tu correo electrónico</label>
+            <input
+              class="form-control form-control-lg compact-control"
+              id="email"
+              name="email"
+              type="email"
+              required
+              value="<%= pageData.email ?? '' %>"
+            />
+          </div>
+          <div class="col-12">
+            <label class="form-label form-label-sm fw-semibold" for="password">Elige una contraseña</label>
+            <input
+              class="form-control form-control-lg compact-control"
+              id="password"
+              name="password"
+              type="password"
+              minlength="6"
+              required
+            />
+          </div>
         </div>
+
+        <input type="hidden" name="registrationIntent" value="<%= pageData.intent ?? 'account' %>" />
+
+        <div class="surface-note">
+          <% if ((pageData.intent ?? 'account') === 'download') { %>
+            Al crear tu cuenta descargaremos tu informe completo en PDF inmediatamente.
+          <% } else { %>
+            Al crear tu cuenta entrarás a tu espacio Daily. Desde allí podrás retomar tu proceso y volver luego por tu informe.
+          <% } %>
+        </div>
+
+        <% if (pageData.error) { %>
+          <div class="alert alert-danger compact-alert mb-0" role="alert"><%= pageData.error %></div>
+        <% } %>
       </div>
+    </section>
 
-      <div class="surface-note">
-        Al crear tu cuenta también recibirás tu informe completo en PDF.
+    <footer class="question-actions">
+      <a class="question-actions__back" href="/full-results">
+        <span aria-hidden="true">←</span>
+      </a>
+      <div class="flex-grow-1">
+        <button
+          type="submit"
+          form="registro-form"
+          class="btn btn-primary app-cta question-actions__next"
+        >
+          <%= (pageData.intent ?? 'account') === 'download' ? 'Crear cuenta y descargar' : 'Crear cuenta' %>
+        </button>
       </div>
-
-      <% if (pageData.error) { %>
-        <div class="alert alert-danger compact-alert mb-0" role="alert"><%= pageData.error %></div>
-      <% } %>
-    </div>
-  </section>
-
-  <footer class="question-actions">
-    <a class="question-actions__back" href="/full-results">
-      <span aria-hidden="true">←</span>
-    </a>
-    <div class="flex-grow-1">
-      <button type="submit" form="registro-form" class="btn btn-primary app-cta question-actions__next" id="submit-btn" disabled>Crear cuenta y descargar</button>
-    </div>
-  </footer>
+    </footer>
+  </form>
 </section>
-
-<script>
-  document.querySelector('form[action="/registro"]').id = 'registro-form';
-  
-  (() => {
-    const form = document.getElementById('registro-form');
-    const emailInput = document.getElementById('email');
-    const passwordInput = document.getElementById('password');
-    const submitBtn = document.getElementById('submit-btn');
-
-    function validate() {
-      const emailValid = emailInput.validity.valid;
-      const passwordValid = passwordInput.validity.valid;
-      submitBtn.disabled = !(emailValid && passwordValid);
-    }
-
-    emailInput.addEventListener('input', validate);
-    passwordInput.addEventListener('input', validate);
-    validate();
-  })();
-</script>

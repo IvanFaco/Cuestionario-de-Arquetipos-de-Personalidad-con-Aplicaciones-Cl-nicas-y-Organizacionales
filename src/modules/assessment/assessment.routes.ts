@@ -4,18 +4,27 @@ import {
   renderAdmin,
   downloadDashboardPdf,
   renderDashboard,
+  renderDaily,
+  renderDailyCoaching,
+  renderDailyMood,
+  renderDailyMotto,
+  renderDailyRecord,
+  renderDatabaseExplorer,
   renderFullTestIntro,
   renderHookQuestion,
   renderLanding,
   renderLogin,
   handleLogin,
+  handleLogout,
   renderMigrationStatus,
   renderOnboarding,
   renderPhaseZero,
   renderPreOnboarding,
   renderPremiumQuestion,
   renderPrivacy,
+  renderProfile,
   renderRegister,
+  handleProfileUpdate,
   handleRegister,
   renderQuickTestIntro,
   renderTeaser,
@@ -38,7 +47,9 @@ assessmentRouter.get("/registro", renderRegister);
 assessmentRouter.post("/registro", handleRegister);
 assessmentRouter.get("/login", renderLogin);
 assessmentRouter.post("/login", handleLogin);
+assessmentRouter.post("/logout", handleLogout);
 assessmentRouter.get("/admin", renderAdmin);
+assessmentRouter.get("/db", renderDatabaseExplorer);
 assessmentRouter.post("/admin/appearance", updateAdminAppearance);
 assessmentRouter.get("/empezar", renderPreOnboarding);
 assessmentRouter.post("/empezar", startLeadCapture);
@@ -58,6 +69,13 @@ assessmentRouter.post("/full-test/:index/select", selectPremiumAnswer);
 assessmentRouter.post("/full-test/:index/next", submitPremiumQuestion);
 assessmentRouter.get("/full-results", renderDashboard);
 assessmentRouter.get("/full-results/pdf", downloadDashboardPdf);
+assessmentRouter.get("/daily", renderDaily);
+assessmentRouter.get("/daily-mood", renderDailyMood);
+assessmentRouter.get("/daily-record", renderDailyRecord);
+assessmentRouter.get("/daily-coaching", renderDailyCoaching);
+assessmentRouter.get("/daily-motto", renderDailyMotto);
+assessmentRouter.get("/profile", renderProfile);
+assessmentRouter.post("/profile", handleProfileUpdate);
 assessmentRouter.get("/migration", renderMigrationStatus);
 
 assessmentRouter.post("/start", (_req, res) => {

@@ -2,6 +2,8 @@ import type { Request, Response } from "express";
 
 import { AuthError } from "../auth/auth.service.js";
 import { getAuthService } from "../auth/auth.container.js";
+import { getAssessmentPersistenceService } from "./assessment.persistence.container.js";
+import { getDatabaseInspector } from "../../shared/database/database.inspector.factory.js";
 import {
   getAppearanceOptions,
   getAppearanceSettings,
@@ -32,13 +34,111 @@ import type {
   PremiumQuestionId
 } from "./assessment.types.js";
 
-function ensureAssessmentSession(req: Request) {
-  req.session.assessment ??= {
+function createEmptyAssessmentSession() {
+  return {
     hookAnswers: {},
     premiumAnswers: {}
   };
+}
+
+function ensureAssessmentSession(req: Request) {
+  if (req.session.assessment) {
+    return req.session.assessment;
+  }
+
+  const userId = req.session.auth?.userId;
+
+  if (userId) {
+    const persistedState = assessmentPersistenceService.load(userId);
+
+    if (persistedState) {
+      req.session.assessment = persistedState;
+      return req.session.assessment;
+    }
+  }
+
+  req.session.assessment = createEmptyAssessmentSession();
 
   return req.session.assessment;
+}
+
+function persistAssessmentSession(req: Request) {
+  const userId = req.session.auth?.userId;
+  const assessment = req.session.assessment;
+
+  if (!userId || !assessment) {
+    return;
+  }
+
+  assessmentPersistenceService.save(userId, assessment);
+}
+
+function getAuthenticatedHomePath(req: Request): string {
+  return "/daily";
+}
+
+function ensureAuthenticatedSession(req: Request) {
+  if (!req.session.auth) {
+    return null;
+  }
+
+  const authSession = req.session.auth;
+  const assessmentSession = ensureAssessmentSession(req);
+
+  return {
+    authSession,
+    assessmentSession
+  };
+}
+
+function renderDailyModulePage(
+  req: Request,
+  res: Response,
+  {
+    slug,
+    title,
+    eyebrow,
+    heading,
+    copy
+  }: {
+    slug: string;
+    title: string;
+    eyebrow: string;
+    heading: string;
+    copy: string;
+  }
+) {
+  const activeSession = ensureAuthenticatedSession(req);
+
+  if (!activeSession) {
+    return res.redirect("/login");
+  }
+
+  const { authSession, assessmentSession } = activeSession;
+
+  return res.render("layouts/main", {
+    title,
+    page: "../pages/daily-module/index",
+    seo: buildSeoMeta(
+      {
+        title,
+        description: copy,
+        canonicalPath: `/${slug}`,
+        robots: "noindex,nofollow"
+      },
+      res.app.locals.siteUrl
+    ),
+    pageData: {
+      currentPath: `/${slug}`,
+      moduleSlug: slug,
+      eyebrow,
+      heading,
+      copy,
+      email: authSession.email,
+      name: assessmentSession.demo?.nombre ?? assessmentSession.leadName,
+      hasFullReport: Boolean(assessmentSession.premiumOutcome)
+    }
+  });
 }
 
 function getSingleValue(value: string | string[] | undefined): string | undefined {
@@ -81,8 +181,98 @@ const objectiveOptions: { value: ObjectiveKey; label: string }[] = [
   { value: "shadow_integration", label: "Reconocer aspectos de mi sombra e integrarlos mejor" },
   { value: "life_transition", label: "Orientarme mejor en un momento de cambio o transicion" }
 ];
+const profilePronounOptions = [
+  { value: "", label: "Opcional" },
+  { value: "él", label: "Él / Him" },
+  { value: "ella", label: "Ella / She" },
+  { value: "elle", label: "Elle / They" },
+  { value: "otro", label: "Otro" }
+] as const;
 
 const authService = getAuthService();
+const assessmentPersistenceService = getAssessmentPersistenceService();
+const databaseInspector = getDatabaseInspector();
+const registerIntentOptions = ["account", "download"] as const;
+
+type RegisterIntent = (typeof registerIntentOptions)[number];
+
+function getRegisterIntent(value: unknown): RegisterIntent | null {
+  return typeof value === "string" && registerIntentOptions.includes(value as RegisterIntent)
+    ? (value as RegisterIntent)
+    : null;
+}
+
+function renderRegisterPage(
+  res: Response,
+  pageData: {
+    email?: string;
+    error?: string;
+    intent?: RegisterIntent;
+  } = {}
+) {
+  res.render("layouts/main", {
+    title: "MiRealYo | Crear cuenta",
+    page: "../pages/register/index",
+    seo: buildSeoMeta(
+      {
+        title: "MiRealYo | Crea tu cuenta",
+        description: "Crea tu cuenta para guardar tu lectura y acceder a tu informe completo.",
+        canonicalPath: "/registro"
+      },
+      res.app.locals.siteUrl
+    ),
+    pageData: {
+      intent: pageData.intent ?? "download",
+      ...pageData
+    }
+  });
+}
+
+function renderProfilePage(
+  req: Request,
+  res: Response,
+  pageData: {
+    name?: string;
+    pronombres?: string;
+    error?: string;
+    saved?: boolean;
+  } = {}
+) {
+  const activeSession = ensureAuthenticatedSession(req);
+
+  if (!activeSession) {
+    return res.redirect("/login");
+  }
+
+  const { authSession, assessmentSession } = activeSession;
+  const user = authService.findUserById(authSession.userId);
+
+  return res.render("layouts/main", {
+    title: "MiRealYo | Profile",
+    page: "../pages/profile/index",
+    seo: buildSeoMeta(
+      {
+        title: "MiRealYo | Profile",
+        description: "Gestiona la información base de tu perfil dentro de tu sesión activa.",
+        canonicalPath: "/profile",
+        robots: "noindex,nofollow"
+      },
+      res.app.locals.siteUrl
+    ),
+    pageData: {
+      currentPath: "/profile",
+      email: authSession.email,
+      name: pageData.name ?? assessmentSession.demo?.nombre ?? assessmentSession.leadName ?? "",
+      pronombres: pageData.pronombres ?? assessmentSession.leadPronombres ?? "",
+      pronounOptions: profilePronounOptions,
+      hasFullReport: Boolean(assessmentSession.premiumOutcome),
+      hasQuickResult: Boolean(assessmentSession.hookOutcome),
+      joinedAt: user?.createdAt,
+      error: pageData.error,
+      saved: pageData.saved ?? false
+    }
+  });
+}
 
 function getQuestionIndexToResume<TQuestionId extends string>(
   questions: { id: TQuestionId }[],
@@ -230,22 +420,162 @@ export function renderPrivacy(req: Request, res: Response) {
 }
 
 export function renderRegister(req: Request, res: Response) {
+  if (req.session.auth) {
+    return res.redirect(getAuthenticatedHomePath(req));
+  }
+
+  const intent = getRegisterIntent(req.query.intent) ?? "account";
+  renderRegisterPage(res, { intent });
+}
+
+export function renderDaily(req: Request, res: Response) {
+  const activeSession = ensureAuthenticatedSession(req);
+
+  if (!activeSession) {
+    return res.redirect("/login");
+  }
+
+  const { authSession, assessmentSession: session } = activeSession;
+
   res.render("layouts/main", {
-    title: "MiRealYo | Crear cuenta",
-    page: "../pages/register/index",
+    title: "MiRealYo | Daily",
+    page: "../pages/daily/index",
     seo: buildSeoMeta(
       {
-        title: "MiRealYo | Crea tu cuenta",
-        description: "Crea tu cuenta para guardar tu lectura y acceder a tu informe completo.",
-        canonicalPath: "/registro"
+        title: "MiRealYo | Daily",
+        description: "Tu espacio diario para retomar tu proceso y volver a tu lectura cuando lo necesites.",
+        canonicalPath: "/daily",
+        robots: "noindex,nofollow"
       },
       res.app.locals.siteUrl
     ),
-    pageData: {}
+    pageData: {
+      currentPath: "/daily",
+      email: authSession.email,
+      hasFullReport: Boolean(session.premiumOutcome),
+      name: session.demo?.nombre ?? session.leadName
+    }
   });
 }
 
+export function renderDailyMood(req: Request, res: Response) {
+  return renderDailyModulePage(req, res, {
+    slug: "daily-mood",
+    title: "MiRealYo | Daily Mood",
+    eyebrow: "Sesion activa",
+    heading: "Daily Mood",
+    copy: "Registra tu estado emocional y detecta cómo llegas hoy a tu proceso."
+  });
+}
+
+export function renderDailyRecord(req: Request, res: Response) {
+  return renderDailyModulePage(req, res, {
+    slug: "daily-record",
+    title: "MiRealYo | Daily Record",
+    eyebrow: "Sesion activa",
+    heading: "Daily Record",
+    copy: "Consulta y organiza tus registros diarios para no perder continuidad."
+  });
+}
+
+export function renderDailyCoaching(req: Request, res: Response) {
+  return renderDailyModulePage(req, res, {
+    slug: "daily-coaching",
+    title: "MiRealYo | Daily Coaching",
+    eyebrow: "Sesion activa",
+    heading: "Daily Coaching",
+    copy: "Recibe una guía breve y accionable alineada con el momento que atraviesas."
+  });
+}
+
+export function renderDailyMotto(req: Request, res: Response) {
+  return renderDailyModulePage(req, res, {
+    slug: "daily-motto",
+    title: "MiRealYo | Daily Motto",
+    eyebrow: "Sesion activa",
+    heading: "Daily Motto",
+    copy: "Encuentra la frase fuerza del día para enfocar tu intención y energía."
+  });
+}
+
+export function renderProfile(req: Request, res: Response) {
+  return renderProfilePage(req, res, {
+    saved: req.query.saved === "1"
+  });
+}
+
+export async function handleProfileUpdate(req: Request, res: Response) {
+  const activeSession = ensureAuthenticatedSession(req);
+
+  if (!activeSession) {
+    return res.redirect("/login");
+  }
+
+  const { authSession, assessmentSession } = activeSession;
+  const name = String(req.body.name ?? "").trim();
+  const pronombres = String(req.body.pronombres ?? "").trim();
+  const password = String(req.body.password ?? "");
+  const passwordConfirmation = String(req.body.passwordConfirmation ?? "");
+
+  if (!name) {
+    return renderProfilePage(req, res.status(400), {
+      name,
+      pronombres,
+      error: "Escribe un nombre para actualizar tu perfil."
+    });
+  }
+
+  if (!profilePronounOptions.some((option) => option.value === pronombres)) {
+    return renderProfilePage(req, res.status(400), {
+      name,
+      pronombres,
+      error: "Selecciona una opción válida para pronombres."
+    });
+  }
+
+  if (password || passwordConfirmation) {
+    if (password !== passwordConfirmation) {
+      return renderProfilePage(req, res.status(400), {
+        name,
+        pronombres,
+        error: "La confirmación de la contraseña no coincide."
+      });
+    }
+
+    try {
+      await authService.updatePassword(authSession.userId, password);
+    } catch (error) {
+      const message =
+        error instanceof AuthError ? error.message : "No fue posible actualizar la contraseña.";
+
+      return renderProfilePage(req, res.status(400), {
+        name,
+        pronombres,
+        error: message
+      });
+    }
+  }
+
+  assessmentSession.leadName = name;
+  assessmentSession.leadPronombres = pronombres || undefined;
+
+  if (assessmentSession.demo) {
+    assessmentSession.demo = {
+      ...assessmentSession.demo,
+      nombre: name
+    };
+  }
+
+  persistAssessmentSession(req);
+
+  return res.redirect("/profile?saved=1");
+}
+
 export function renderLogin(req: Request, res: Response) {
+  if (req.session.auth) {
+    return res.redirect(getAuthenticatedHomePath(req));
+  }
+
   res.render("layouts/main", {
     title: "MiRealYo | Iniciar sesión",
     page: "../pages/login/index",
@@ -296,8 +626,12 @@ export async function handleLogin(req: Request, res: Response) {
       userId: user.id,
       email: user.email
     };
+    req.session.assessment =
+      assessmentPersistenceService.load(user.id) ??
+      req.session.assessment ??
+      createEmptyAssessmentSession();
 
-    return res.redirect("/full-results");
+    return res.redirect("/daily");
   } catch (error) {
     const message =
       error instanceof AuthError ? error.message : "No fue posible iniciar sesión.";
@@ -323,45 +657,38 @@ export async function handleLogin(req: Request, res: Response) {
   }
 }
 
+export function handleLogout(req: Request, res: Response) {
+  req.session.destroy(() => {
+    res.clearCookie("connect.sid");
+    res.redirect("/");
+  });
+}
+
 export async function handleRegister(req: Request, res: Response) {
   const email = String(req.body.email ?? "").trim().toLowerCase();
   const password = String(req.body.password ?? "");
+  const intent = getRegisterIntent(req.body.registrationIntent);
+
+  if (!intent) {
+    return renderRegisterPage(res.status(400), {
+      email,
+      error: "Selecciona si quieres crear tu cuenta con descarga o sin descarga."
+    });
+  }
 
   if (!email.includes("@")) {
-    return res.status(400).render("layouts/main", {
-      title: "MiRealYo | Crear cuenta",
-      page: "../pages/register/index",
-      seo: buildSeoMeta(
-        {
-          title: "MiRealYo | Crea tu cuenta",
-          description: "Crea tu cuenta para guardar tu lectura y acceder a tu informe completo.",
-          canonicalPath: "/registro"
-        },
-        res.app.locals.siteUrl
-      ),
-      pageData: {
-        email,
-        error: "Ingresa un correo electrónico válido."
-      }
+    return renderRegisterPage(res.status(400), {
+      email,
+      intent,
+      error: "Ingresa un correo electrónico válido."
     });
   }
 
   if (password.length < 6) {
-    return res.status(400).render("layouts/main", {
-      title: "MiRealYo | Crear cuenta",
-      page: "../pages/register/index",
-      seo: buildSeoMeta(
-        {
-          title: "MiRealYo | Crea tu cuenta",
-          description: "Crea tu cuenta para guardar tu lectura y acceder a tu informe completo.",
-          canonicalPath: "/registro"
-        },
-        res.app.locals.siteUrl
-      ),
-      pageData: {
-        email,
-        error: "La contraseña debe tener al menos 6 caracteres."
-      }
+    return renderRegisterPage(res.status(400), {
+      email,
+      intent,
+      error: "La contraseña debe tener al menos 6 caracteres."
     });
   }
 
@@ -372,29 +699,20 @@ export async function handleRegister(req: Request, res: Response) {
       userId: user.id,
       email: user.email
     };
+    req.session.assessment ??= createEmptyAssessmentSession();
+    persistAssessmentSession(req);
   } catch (error) {
     const message =
       error instanceof AuthError ? error.message : "No fue posible crear la cuenta.";
 
-    return res.status(400).render("layouts/main", {
-      title: "MiRealYo | Crear cuenta",
-      page: "../pages/register/index",
-      seo: buildSeoMeta(
-        {
-          title: "MiRealYo | Crea tu cuenta",
-          description: "Crea tu cuenta para guardar tu lectura y acceder a tu informe completo.",
-          canonicalPath: "/registro"
-        },
-        res.app.locals.siteUrl
-      ),
-      pageData: {
-        email,
-        error: message
-      }
+    return renderRegisterPage(res.status(400), {
+      email,
+      intent,
+      error: message
     });
   }
 
-  return res.redirect("/full-results/pdf");
+  return res.redirect(intent === "download" ? "/full-results/pdf" : "/daily");
 }
 
 export function renderAdmin(req: Request, res: Response) {
@@ -420,6 +738,39 @@ export function renderAdmin(req: Request, res: Response) {
     },
     appearance: getAppearanceSettings(),
     appearanceFont: getCurrentFontDescriptor()
+  });
+}
+
+export function renderDatabaseExplorer(req: Request, res: Response) {
+  const limitQuery = Number.parseInt(String(req.query.limit ?? "50"), 10);
+  const limit = Number.isNaN(limitQuery) ? 50 : Math.max(1, Math.min(limitQuery, 200));
+  const tables = databaseInspector.listTables();
+  const selectedTable =
+    typeof req.query.table === "string" && req.query.table.trim()
+      ? req.query.table.trim()
+      : tables[0]?.name;
+  const selectedTableData = selectedTable
+    ? databaseInspector.getTableData(selectedTable, limit)
+    : null;
+
+  res.render("layouts/main", {
+    title: "MiRealYo | DB",
+    page: "../pages/db/index",
+    seo: buildSeoMeta(
+      {
+        title: "MiRealYo | DB",
+        description: "Vista interna para inspeccionar tablas y registros de la base de datos.",
+        canonicalPath: "/db",
+        robots: "noindex,nofollow"
+      },
+      res.app.locals.siteUrl
+    ),
+    pageData: {
+      tables,
+      selectedTable,
+      selectedTableData,
+      limit
+    }
   });
 }
 
@@ -491,6 +842,7 @@ export function startLeadCapture(req: Request, res: Response) {
   session.hookOutcome = undefined;
   session.premiumOutcome = undefined;
   session.demo = undefined;
+  persistAssessmentSession(req);
 
   return res.redirect("/quick-test");
 }
@@ -632,6 +984,7 @@ export function startAssessment(req: Request, res: Response) {
     nombre: session.leadName as DemoInput["nombre"],
     objetivo: objetivo as DemoInput["objetivo"]
   });
+  persistAssessmentSession(req);
 
   return res.redirect("/quick-results");
 }
@@ -683,6 +1036,7 @@ export function selectHookAnswer(req: Request, res: Response) {
   }
 
   session.hookAnswers[question.id] = answer;
+  persistAssessmentSession(req);
   return res.redirect(`/quick-test/${index}`);
 }
 
@@ -699,6 +1053,7 @@ export function submitHookQuestion(req: Request, res: Response) {
 
   if (answer) {
     session.hookAnswers[question.id] = answer;
+    persistAssessmentSession(req);
   }
 
   if (session.hookAnswers[question.id] === undefined) {
@@ -721,6 +1076,7 @@ export function submitHookQuestion(req: Request, res: Response) {
   }
 
   session.hookOutcome = buildHookOutcome(completedAnswers as HookAnswers);
+  persistAssessmentSession(req);
   return res.redirect("/onboarding");
 }
 
@@ -765,6 +1121,7 @@ export function startPremium(req: Request, res: Response) {
 
   session.premiumAnswers = {};
   session.premiumOutcome = undefined;
+  persistAssessmentSession(req);
 
   const resumeIndex = getQuestionIndexToResume(premiumQuestions, session.premiumAnswers);
   return res.redirect(`/full-test/${resumeIndex}`);
@@ -844,6 +1201,7 @@ export function selectPremiumAnswer(req: Request, res: Response) {
   }
 
   session.premiumAnswers[question.id] = answer;
+  persistAssessmentSession(req);
   return res.redirect(`/full-test/${index}`);
 }
 
@@ -860,6 +1218,7 @@ export function submitPremiumQuestion(req: Request, res: Response) {
 
   if (answer) {
     session.premiumAnswers[question.id] = answer;
+    persistAssessmentSession(req);
   }
 
   if (session.premiumAnswers[question.id] === undefined) {
@@ -882,6 +1241,7 @@ export function submitPremiumQuestion(req: Request, res: Response) {
   }
 
   session.premiumOutcome = buildPremiumOutcome(completedAnswers as PremiumAnswers);
+  persistAssessmentSession(req);
   return res.redirect("/full-results");
 }
 
