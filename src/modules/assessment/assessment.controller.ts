@@ -1,5 +1,7 @@
 import type { Request, Response } from "express";
 
+import { AuthError } from "../auth/auth.service.js";
+import { getAuthService } from "../auth/auth.container.js";
 import {
   getAppearanceOptions,
   getAppearanceSettings,
@@ -79,6 +81,8 @@ const objectiveOptions: { value: ObjectiveKey; label: string }[] = [
   { value: "shadow_integration", label: "Reconocer aspectos de mi sombra e integrarlos mejor" },
   { value: "life_transition", label: "Orientarme mejor en un momento de cambio o transicion" }
 ];
+
+const authService = getAuthService();
 
 function getQuestionIndexToResume<TQuestionId extends string>(
   questions: { id: TQuestionId }[],
@@ -241,7 +245,85 @@ export function renderRegister(req: Request, res: Response) {
   });
 }
 
-export function handleRegister(req: Request, res: Response) {
+export function renderLogin(req: Request, res: Response) {
+  res.render("layouts/main", {
+    title: "MiRealYo | Iniciar sesión",
+    page: "../pages/login/index",
+    seo: buildSeoMeta(
+      {
+        title: "MiRealYo | Iniciar sesión",
+        description: "Ingresa a tu cuenta para acceder a tu lectura.",
+        canonicalPath: "/login"
+      },
+      res.app.locals.siteUrl
+    ),
+    pageData: {
+      title: "Bienvenido de vuelta",
+      subtitle: "Ingresa a tu cuenta para retomar tu proceso y acceder a tu lectura."
+    }
+  });
+}
+
+export async function handleLogin(req: Request, res: Response) {
+  const email = String(req.body.email ?? "").trim().toLowerCase();
+  const password = String(req.body.password ?? "");
+
+  if (!email.includes("@") || !password) {
+    return res.status(400).render("layouts/main", {
+      title: "MiRealYo | Iniciar sesión",
+      page: "../pages/login/index",
+      seo: buildSeoMeta(
+        {
+          title: "MiRealYo | Iniciar sesión",
+          description: "Ingresa a tu cuenta para acceder a tu lectura.",
+          canonicalPath: "/login"
+        },
+        res.app.locals.siteUrl
+      ),
+      pageData: {
+        title: "Bienvenido de vuelta",
+        subtitle: "Ingresa a tu cuenta para retomar tu proceso y acceder a tu lectura.",
+        email,
+        error: "Credenciales inválidas."
+      }
+    });
+  }
+
+  try {
+    const user = await authService.authenticate(email, password);
+
+    req.session.auth = {
+      userId: user.id,
+      email: user.email
+    };
+
+    return res.redirect("/full-results");
+  } catch (error) {
+    const message =
+      error instanceof AuthError ? error.message : "No fue posible iniciar sesión.";
+
+    return res.status(400).render("layouts/main", {
+      title: "MiRealYo | Iniciar sesión",
+      page: "../pages/login/index",
+      seo: buildSeoMeta(
+        {
+          title: "MiRealYo | Iniciar sesión",
+          description: "Ingresa a tu cuenta para acceder a tu lectura.",
+          canonicalPath: "/login"
+        },
+        res.app.locals.siteUrl
+      ),
+      pageData: {
+        title: "Bienvenido de vuelta",
+        subtitle: "Ingresa a tu cuenta para retomar tu proceso y acceder a tu lectura.",
+        email,
+        error: message
+      }
+    });
+  }
+}
+
+export async function handleRegister(req: Request, res: Response) {
   const email = String(req.body.email ?? "").trim().toLowerCase();
   const password = String(req.body.password ?? "");
 
@@ -283,9 +365,34 @@ export function handleRegister(req: Request, res: Response) {
     });
   }
 
-  // TODO: Save user to database
-  // TODO: Create session for user
-  // TODO: Save assessment results to user
+  try {
+    const user = await authService.register(email, password);
+
+    req.session.auth = {
+      userId: user.id,
+      email: user.email
+    };
+  } catch (error) {
+    const message =
+      error instanceof AuthError ? error.message : "No fue posible crear la cuenta.";
+
+    return res.status(400).render("layouts/main", {
+      title: "MiRealYo | Crear cuenta",
+      page: "../pages/register/index",
+      seo: buildSeoMeta(
+        {
+          title: "MiRealYo | Crea tu cuenta",
+          description: "Crea tu cuenta para guardar tu lectura y acceder a tu informe completo.",
+          canonicalPath: "/registro"
+        },
+        res.app.locals.siteUrl
+      ),
+      pageData: {
+        email,
+        error: message
+      }
+    });
+  }
 
   return res.redirect("/full-results/pdf");
 }
@@ -443,6 +550,32 @@ export function renderQuickTestIntro(req: Request, res: Response) {
     ),
     pageData: {
       hookCount: hookQuestions.length
+    }
+  });
+}
+
+export function renderFullTestIntro(req: Request, res: Response) {
+  const session = ensureAssessmentSession(req);
+
+  if (!session.hookOutcome) {
+    return res.redirect("/quick-test");
+  }
+
+  res.render("layouts/main", {
+    title: "MiRealYo | Estudio ampliado",
+    page: "../pages/full-test/intro",
+    seo: buildSeoMeta(
+      {
+        title: "MiRealYo | Estudio ampliado de personalidad",
+        description:
+          "Profundiza en tu estructura interna con el estudio ampliado: tu Persona, tu Sombra y tu patrón arquetipal completo.",
+        canonicalPath: "/full-test",
+        robots: "noindex,nofollow"
+      },
+      res.app.locals.siteUrl
+    ),
+    pageData: {
+      premiumCount: premiumQuestions.length
     }
   });
 }
@@ -633,7 +766,8 @@ export function startPremium(req: Request, res: Response) {
   session.premiumAnswers = {};
   session.premiumOutcome = undefined;
 
-  return res.redirect("/full-test/1");
+  const resumeIndex = getQuestionIndexToResume(premiumQuestions, session.premiumAnswers);
+  return res.redirect(`/full-test/${resumeIndex}`);
 }
 
 export function renderPremiumQuestion(req: Request, res: Response) {
@@ -648,6 +782,15 @@ export function renderPremiumQuestion(req: Request, res: Response) {
   const index = Math.min(requestedIndex, resumeIndex);
   const question = premiumQuestions[index - 1];
   const selectedValue = session.premiumAnswers[question.id];
+
+  const identificationText = session.leadPronombres === "ella" ? "identificada" 
+    : session.leadPronombres === "él" ? "identificado" 
+    : session.leadPronombres === "elle" ? "identificad@" 
+    : "identificad@";
+  
+  const genderHeading = session.leadName 
+    ? `${session.leadName}, ¿qué tan ${identificationText} te sientes con la siguiente afirmación?`
+    : `¿Qué tan ${identificationText} te sientes con la siguiente afirmación?`;
 
   res.render("layouts/main", {
     title: "MiRealYo | Full Test",
@@ -665,7 +808,7 @@ export function renderPremiumQuestion(req: Request, res: Response) {
     pageData: {
       title: "MiRealYo | Full Test",
       eyebrow: "Calibracion Profunda",
-      heading: "Full test",
+      heading: genderHeading,
       stageLabel: "Calibracion profunda",
       selectAction: `/full-test/${index}/select`,
       nextAction: `/full-test/${index}/next`,

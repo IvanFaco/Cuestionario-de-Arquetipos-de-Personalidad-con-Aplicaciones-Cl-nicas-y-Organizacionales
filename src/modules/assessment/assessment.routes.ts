@@ -4,8 +4,11 @@ import {
   renderAdmin,
   downloadDashboardPdf,
   renderDashboard,
+  renderFullTestIntro,
   renderHookQuestion,
   renderLanding,
+  renderLogin,
+  handleLogin,
   renderMigrationStatus,
   renderOnboarding,
   renderPhaseZero,
@@ -33,6 +36,8 @@ assessmentRouter.get("/", renderLanding);
 assessmentRouter.get("/privacidad", renderPrivacy);
 assessmentRouter.get("/registro", renderRegister);
 assessmentRouter.post("/registro", handleRegister);
+assessmentRouter.get("/login", renderLogin);
+assessmentRouter.post("/login", handleLogin);
 assessmentRouter.get("/admin", renderAdmin);
 assessmentRouter.post("/admin/appearance", updateAdminAppearance);
 assessmentRouter.get("/empezar", renderPreOnboarding);
@@ -46,6 +51,8 @@ assessmentRouter.post("/quick-test/:index/select", selectHookAnswer);
 assessmentRouter.post("/quick-test/:index/next", submitHookQuestion);
 assessmentRouter.get("/quick-results", renderTeaser);
 assessmentRouter.post("/quick-results/continue", startPremium);
+assessmentRouter.get("/full-test", renderFullTestIntro);
+assessmentRouter.post("/full-test/start", startPremium);
 assessmentRouter.get("/full-test/:index", renderPremiumQuestion);
 assessmentRouter.post("/full-test/:index/select", selectPremiumAnswer);
 assessmentRouter.post("/full-test/:index/next", submitPremiumQuestion);

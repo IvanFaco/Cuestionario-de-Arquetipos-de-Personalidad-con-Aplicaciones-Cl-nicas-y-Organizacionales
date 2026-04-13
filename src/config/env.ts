@@ -12,5 +12,7 @@ export const env = {
   port: normalizedPort,
   sessionSecret: process.env.SESSION_SECRET ?? "dev-session-secret-change-me",
   assetVersion,
-  siteUrl: process.env.SITE_URL ?? `http://localhost:${normalizedPort}`
+  siteUrl: process.env.SITE_URL ?? `http://localhost:${normalizedPort}`,
+  databaseProvider: process.env.DATABASE_PROVIDER ?? "sqlite",
+  sqlitePath: process.env.SQLITE_PATH ?? "data/mirealyo.sqlite"
 };

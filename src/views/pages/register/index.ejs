@@ -47,11 +47,28 @@
       <span aria-hidden="true">←</span>
     </a>
     <div class="flex-grow-1">
-      <button type="submit" form="registro-form" class="btn btn-primary app-cta question-actions__next">Crear cuenta y descargar</button>
+      <button type="submit" form="registro-form" class="btn btn-primary app-cta question-actions__next" id="submit-btn" disabled>Crear cuenta y descargar</button>
     </div>
   </footer>
 </section>
 
 <script>
   document.querySelector('form[action="/registro"]').id = 'registro-form';
+  
+  (() => {
+    const form = document.getElementById('registro-form');
+    const emailInput = document.getElementById('email');
+    const passwordInput = document.getElementById('password');
+    const submitBtn = document.getElementById('submit-btn');
+
+    function validate() {
+      const emailValid = emailInput.validity.valid;
+      const passwordValid = passwordInput.validity.valid;
+      submitBtn.disabled = !(emailValid && passwordValid);
+    }
+
+    emailInput.addEventListener('input', validate);
+    passwordInput.addEventListener('input', validate);
+    validate();
+  })();
 </script>

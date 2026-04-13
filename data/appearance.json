@@ -1,6 +1,6 @@
 {
-  "bootswatchTheme": "sandstone",
-  "fontOption": "merriweather",
+  "bootswatchTheme": "minty",
+  "fontOption": "roboto-slab",
   "customFontCssHref": "",
   "customFontFamily": ""
 }
