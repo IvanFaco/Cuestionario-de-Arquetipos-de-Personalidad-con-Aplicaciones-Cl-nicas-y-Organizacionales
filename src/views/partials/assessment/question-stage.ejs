@@ -19,7 +19,7 @@
         <span class="question-card-panel__selection-label">Elegiste:</span>
         <strong class="question-card-panel__selection-value"><%= pageData.selectedLabel %></strong>
       <% } else { %>
-        <span class="question-card-panel__selection-label">Aun no eliges una opcion</span>
+        <span class="question-card-panel__selection-label">A&uacute;n no eliges una opci&oacute;n</span>
         <strong class="question-card-panel__selection-value">Selecciona una respuesta</strong>
       <% } %>
     </div>
@@ -85,7 +85,7 @@
     <footer class="question-actions">
       <% if (pageData.backHref) { %>
         <a class="question-actions__back" href="<%= pageData.backHref %>">
-          <span aria-hidden="true">←</span>
+          <span aria-hidden="true">&#8592;</span>
         </a>
       <% } else { %>
         <span class="question-actions__back question-actions__back--ghost"></span>

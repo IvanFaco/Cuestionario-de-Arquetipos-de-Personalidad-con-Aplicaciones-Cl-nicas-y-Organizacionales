@@ -804,7 +804,8 @@ export function renderPreOnboarding(req: Request, res: Response) {
       res.app.locals.siteUrl
     ),
     pageData: {
-      name: session.leadName
+      name: session.leadName,
+      privacyAccepted: false
     }
   });
 }
@@ -813,6 +814,7 @@ export function startLeadCapture(req: Request, res: Response) {
   const session = ensureAssessmentSession(req);
   const nombre = String(req.body.nombre ?? "").trim();
   const pronombres = String(req.body.pronombres ?? "").trim();
+  const privacyAccepted = String(req.body.privacyAccepted ?? "") === "yes";
 
   if (nombre.length < 2) {
     return res.status(400).render("layouts/main", {
@@ -830,7 +832,30 @@ export function startLeadCapture(req: Request, res: Response) {
       pageData: {
         name: nombre,
         pronombres: pronombres,
+        privacyAccepted,
         error: "Escribe tu nombre para continuar."
+      }
+    });
+  }
+
+  if (!privacyAccepted) {
+    return res.status(400).render("layouts/main", {
+      title: "MiRealYo | Empezar",
+      page: "../pages/pre-onboarding/index",
+      seo: buildSeoMeta(
+        {
+          title: "MiRealYo | Empezar tu lectura",
+          description:
+            "Comparte solo tu nombre para comenzar el quick test de personalidad con una experiencia mas personal.",
+          canonicalPath: "/empezar"
+        },
+        res.app.locals.siteUrl
+      ),
+      pageData: {
+        name: nombre,
+        pronombres,
+        privacyAccepted,
+        error: "Debes aceptar la Politica de Privacidad para continuar."
       }
     });
   }

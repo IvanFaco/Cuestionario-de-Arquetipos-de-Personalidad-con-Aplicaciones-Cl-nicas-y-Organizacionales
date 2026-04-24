@@ -3,8 +3,8 @@
     <div class="compact-stack">
       <div>
         <p class="eyebrow mb-2">Antes de empezar</p>
-        <h2 class="landing-form-title mb-1">¿Cómo quieres que te llamemos?</h2>
-        <p class="hero-copy mb-0">Por ahora, este es el único dato personal que te pediremos antes del quick test.</p>
+        <h2 class="landing-form-title mb-1">&iquest;C&oacute;mo quieres que te llamemos?</h2>
+        <p class="hero-copy mb-0">Solo te pediremos tu nombre y, si quieres, tus pronombres para personalizar la experiencia.</p>
       </div>
 
       <div class="row g-2">
@@ -28,7 +28,7 @@
             name="pronombres"
           >
             <option value="">Opcional</option>
-            <option value="él" <%= pageData.pronombres === 'él' ? 'selected' : '' %>>Él / Him</option>
+            <option value="&#233;l" <%= pageData.pronombres === 'él' ? 'selected' : '' %>>&Eacute;l / Him</option>
             <option value="ella" <%= pageData.pronombres === 'ella' ? 'selected' : '' %>>Ella / She</option>
             <option value="elle" <%= pageData.pronombres === 'elle' ? 'selected' : '' %>>Elle / They</option>
             <option value="otro" <%= pageData.pronombres === 'otro' ? 'selected' : '' %>>Otro</option>
@@ -37,8 +37,25 @@
       </div>
 
       <div class="surface-note">
-        Lo usaremos para hacer la experiencia un poco más cercana mientras exploras tu lectura.
+        Usaremos esta informaci&oacute;n &uacute;nicamente para presentarte tu lectura de forma m&aacute;s cercana. No la usamos con fines publicitarios.
       </div>
+
+      <label class="consent-check">
+        <input
+          class="consent-check__input"
+          id="privacyAccepted"
+          name="privacyAccepted"
+          type="checkbox"
+          value="yes"
+          <%= pageData.privacyAccepted ? "checked" : "" %>
+          required
+        />
+        <span class="consent-check__box" aria-hidden="true"></span>
+        <span class="consent-check__copy">
+          Acepto el tratamiento de mis datos conforme a la
+          <a href="/privacidad" target="_blank" rel="noopener noreferrer">Pol&iacute;tica de Privacidad</a>.
+        </span>
+      </label>
 
       <% if (pageData.error) { %>
         <div class="alert alert-danger compact-alert mb-0" role="alert"><%= pageData.error %></div>
