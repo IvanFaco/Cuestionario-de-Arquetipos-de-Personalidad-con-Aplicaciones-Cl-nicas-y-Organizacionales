@@ -1,0 +1,30 @@
+<section class="hero-shell">
+  <div class="hero-card">
+    <p class="eyebrow mb-2">Fase 0</p>
+    <h1 class="display-6 fw-bold mb-3">Punto de partida controlado</h1>
+    <p class="lead text-muted mb-0"><%= pageData.summary %></p>
+  </div>
+</section>
+
+<section class="row g-3 mt-1">
+  <div class="col-12 col-lg-6">
+    <article class="phase-card h-100">
+      <h2 class="h5 mb-3">Entregables</h2>
+      <ul class="mb-0">
+        <% pageData.deliverables.forEach((item) => { %>
+          <li class="mb-2"><%= item %></li>
+        <% }) %>
+      </ul>
+    </article>
+  </div>
+  <div class="col-12 col-lg-6">
+    <article class="phase-card h-100">
+      <h2 class="h5 mb-3">Criterios de salida</h2>
+      <ul class="mb-0">
+        <% pageData.exitCriteria.forEach((item) => { %>
+          <li class="mb-2"><%= item %></li>
+        <% }) %>
+      </ul>
+    </article>
+  </div>
+</section>

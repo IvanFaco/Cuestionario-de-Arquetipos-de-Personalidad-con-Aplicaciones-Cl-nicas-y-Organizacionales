@@ -3,6 +3,10 @@ __pycache__/
 *$py.class
 *.so
 .Python
+node_modules/
+coverage/
+*.tsbuildinfo
+.env
 env/
 venv/
 .venv
@@ -12,5 +16,8 @@ build/
 .streamlit/
 *.xlsx
 *.pdf
+data/*.sqlite
+data/*.sqlite-shm
+data/*.sqlite-wal
 .DS_Store
 AGENTS.md

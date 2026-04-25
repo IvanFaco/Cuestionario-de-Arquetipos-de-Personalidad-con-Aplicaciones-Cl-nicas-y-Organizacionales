@@ -1,0 +1,36 @@
+<section class="stage-page teaser-screen">
+  <header class="question-header teaser-screen__header">
+    <p class="eyebrow mb-0">Calibración profunda</p>
+    <h1 class="question-title teaser-screen__title">Antes de profundizar</h1>
+  </header>
+
+  <article class="question-card-panel teaser-card">
+    <div class="question-card-panel__body teaser-card__body">
+      <div class="teaser-card__copy">
+        <p class="teaser-card__kicker mb-0">Estudio ampliado</p>
+        <h2 class="teaser-card__headline mb-0">Tu estructura completa</h2>
+        <p class="teaser-card__summary mb-0">
+          Este estudio ampliado profundiza en tu estructura interna: tu Persona, tu Sombra y tu patrón arquetipal completo.
+        </p>
+      </div>
+    </div>
+
+    <div class="question-card-panel__selection teaser-card__insight">
+      <span class="question-card-panel__selection-label">Qué esperar</span>
+      <strong class="question-card-panel__selection-value">
+        Responderás <%= pageData.premiumCount %> afirmaciones sobre tus patrones profundos y luego recibirás tu lectura estructural completa.
+      </strong>
+    </div>
+  </article>
+
+  <form action="/full-test/start" method="post" class="question-actions teaser-screen__actions">
+    <a class="question-actions__back" href="/quick-results">
+      <span aria-hidden="true">←</span>
+    </a>
+    <div class="flex-grow-1">
+      <button class="btn btn-primary app-cta question-actions__next" type="submit">
+        Empezar
+      </button>
+    </div>
+  </form>
+</section>

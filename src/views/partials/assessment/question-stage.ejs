@@ -1,0 +1,102 @@
+<section class="stage-page question-screen">
+  <header class="question-header">
+    <p class="eyebrow mb-2"><%= pageData.stageLabel %></p>
+    <div class="question-progress">
+      <div class="progress soft-progress question-progress__bar" role="progressbar" aria-valuenow="<%= pageData.progressPercent %>" aria-valuemin="0" aria-valuemax="100">
+        <div class="progress-bar" style="width: <%= pageData.progressPercent %>%"></div>
+      </div>
+      <span class="question-progress__count"><%= pageData.currentIndex %>/<%= pageData.totalQuestions %></span>
+    </div>
+    <h1 class="question-title"><%= pageData.heading %></h1>
+  </header>
+
+  <article class="question-card-panel">
+    <div class="question-card-panel__body">
+      <p class="question-text question-text--center mb-0"><%= pageData.prompt %></p>
+    </div>
+    <div class="question-card-panel__selection">
+      <% if (pageData.selectedLabel) { %>
+        <span class="question-card-panel__selection-label">Elegiste:</span>
+        <strong class="question-card-panel__selection-value"><%= pageData.selectedLabel %></strong>
+      <% } else { %>
+        <span class="question-card-panel__selection-label">Aun no eliges una opcion</span>
+        <strong class="question-card-panel__selection-value">Selecciona una respuesta</strong>
+      <% } %>
+    </div>
+  </article>
+
+  <form
+    action="<%= pageData.nextAction %>"
+    method="post"
+    class="question-flow-form"
+    data-question-flow
+    data-selected-index="<%= pageData.selectedIndex %>"
+    data-selected-label="<%= pageData.selectedLabel ?? '' %>"
+  >
+    <section class="rating-bar-container">
+      <div class="bar-track">
+        <div class="bar-pill">
+          <% pageData.options.forEach((option, index) => { %>
+            <label
+              class="segment <%= index === 0 ? 'seg-x' : '' %><%= index === 1 ? ' seg-down' : '' %><%= index === 2 ? ' seg-neutral' : '' %><%= index === 3 ? ' seg-up' : '' %><%= index === 4 ? ' seg-fire' : '' %>"
+              aria-label="<%= option.label %>"
+            >
+              <input
+                class="segment-input visually-hidden"
+                type="radio"
+                name="answer"
+                value="<%= option.value %>"
+                <%= pageData.selectedValue === option.value ? "checked" : "" %>
+                <%= index === 0 ? "required" : "" %>
+                data-answer-input
+                data-answer-label="<%= option.label %>"
+                data-answer-index="<%= index %>"
+                data-answer-emoji="<%= option.emoji %>"
+                data-answer-icon="<%= option.iconPath %>"
+              />
+              <img class="seg-icon-image" src="<%= option.iconPath %>" alt="" />
+            </label>
+          <% }) %>
+        </div>
+        <div
+          class="selected-bubble <%= pageData.selectedValue ? '' : 'is-hidden' %><%= pageData.selectedIndex === 0 ? ' bubble-x' : '' %><%= pageData.selectedIndex === 1 ? ' bubble-down' : '' %><%= pageData.selectedIndex === 2 ? ' bubble-neutral' : '' %><%= pageData.selectedIndex === 3 ? ' bubble-up' : '' %><%= pageData.selectedIndex === 4 ? ' bubble-fire' : '' %>"
+          data-selected-bubble
+          style="<%= pageData.selectedValue ? `left: calc((${pageData.selectedIndex} * 20%) + 10%);` : '' %>"
+        >
+          <div class="bub-inner">
+            <img
+              class="seg-icon-image seg-icon-image--bubble"
+              data-selected-bubble-icon
+              src="<%= pageData.selectedValue ? pageData.options[pageData.selectedIndex].iconPath : '' %>"
+              alt=""
+            />
+          </div>
+        </div>
+      </div>
+      <div class="labels-row" data-labels-row>
+        <% pageData.options.forEach((option, index) => { %>
+          <div class="label-item <%= pageData.selectedIndex === index ? 'active' : '' %>" data-label-item data-label-index="<%= index %>">
+            <%- option.label.replace(' ', '<br>') %>
+          </div>
+        <% }) %>
+      </div>
+    </section>
+
+    <footer class="question-actions">
+      <% if (pageData.backHref) { %>
+        <a class="question-actions__back" href="<%= pageData.backHref %>">
+          <span aria-hidden="true">←</span>
+        </a>
+      <% } else { %>
+        <span class="question-actions__back question-actions__back--ghost"></span>
+      <% } %>
+      <div class="flex-grow-1">
+        <button class="btn btn-primary app-cta question-actions__next" type="submit" data-next-button>
+          <%= pageData.nextLabel ?? 'Siguiente' %>
+        </button>
+      </div>
+    </footer>
+  </form>
+</section>
+
+<script src="/scripts/question-flow.js?v=<%= assetVersion %>"></script>

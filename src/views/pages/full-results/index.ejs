@@ -1,0 +1,160 @@
+<section class="stage-page teaser-screen">
+  <header class="question-header teaser-screen__header">
+    <p class="eyebrow mb-0">Lectura profunda</p>
+    <h1 class="question-title teaser-screen__title">Tu estructura completa</h1>
+  </header>
+
+  <article class="question-card-panel teaser-card teaser-carousel" data-full-carousel>
+    <div class="teaser-carousel__viewport">
+      <div class="teaser-carousel__track">
+        <section class="teaser-carousel__slide is-active" data-full-slide>
+          <div class="question-card-panel__body teaser-card__body">
+            <div class="teaser-card__copy">
+              <% 
+                const archetypeMap = {
+                  'Gobernante': 'gobernante',
+                  'Sabio': 'sabio',
+                  'Cuidador': 'cuidador',
+                  'Explorador': 'explorador',
+                  'Mago': 'mago',
+                  'Huerfano': 'huerfano',
+                  'Creador': 'creador',
+                  'Guerrero': 'guerrero',
+                  'Buscador': 'buscador',
+                  'Amante': 'amante',
+                  'Rebelde': 'rebelde',
+                  'Bufón': 'bufon'
+                };
+                const archetypeFile = archetypeMap[pageData.dominantArchetype] || pageData.dominantArchetype.toLowerCase();
+              %>
+              <p class="teaser-card__kicker mb-0">Tu perfil principal</p>
+              <h2 class="teaser-card__headline mb-0"><%= pageData.dominantArchetype %></h2>
+              <p class="teaser-card__summary mb-0">
+                <strong><%= pageData.name %></strong>, tu triada se ordena como 
+                <strong><%= pageData.topThree.join(", ") %></strong>.
+              </p>
+              <img src="/assets/<%= archetypeFile %>.png" alt="<%= pageData.dominantArchetype %>" class="teaser-archetype-img mb-3" />
+            </div>
+          </div>
+        </section>
+
+        <section class="teaser-carousel__slide" data-full-slide>
+          <div class="question-card-panel__body teaser-card__body">
+            <div class="teaser-card__copy">
+              <p class="teaser-card__kicker mb-0">Estructura interna</p>
+              <div class="teaser-metrics">
+                <article class="teaser-metric">
+                  <span class="teaser-metric__rank">Persona</span>
+                  <strong class="teaser-metric__name"><%= pageData.persona %>/5</strong>
+                </article>
+                <article class="teaser-metric">
+                  <span class="teaser-metric__rank">Sombra base</span>
+                  <strong class="teaser-metric__name"><%= pageData.sombraBase %>/5</strong>
+                </article>
+                <article class="teaser-metric">
+                  <span class="teaser-metric__rank">Sombra total</span>
+                  <strong class="teaser-metric__name"><%= pageData.sombraTotal %>/5</strong>
+                </article>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="teaser-carousel__slide" data-full-slide>
+          <div class="question-card-panel__body teaser-card__body">
+            <div class="teaser-card__copy">
+              <p class="teaser-card__kicker mb-0">Lectura estructural</p>
+              <p class="teaser-card__summary mb-0">
+                <strong><%= pageData.shadowLabel %></strong>
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section class="teaser-carousel__slide" data-full-slide>
+          <div class="question-card-panel__body teaser-card__body">
+            <div class="teaser-card__copy">
+              <p class="teaser-card__kicker mb-0">Clasificaciones</p>
+              <div class="teaser-metrics">
+                <article class="teaser-metric">
+                  <span class="teaser-metric__rank">Keirsey</span>
+                  <strong class="teaser-metric__name"><%= pageData.keirsey %></strong>
+                </article>
+                <article class="teaser-metric">
+                  <span class="teaser-metric__rank">Campbell</span>
+                  <strong class="teaser-metric__name"><%= pageData.campbell %></strong>
+                </article>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <div class="teaser-carousel__footer">
+      <div class="teaser-carousel__dots" role="tablist" aria-label="Secciones del diagnóstico">
+        <button class="teaser-carousel__dot is-active" type="button" data-full-dot aria-label="Perfil"></button>
+        <button class="teaser-carousel__dot" type="button" data-full-dot aria-label="Estructura"></button>
+        <button class="teaser-carousel__dot" type="button" data-full-dot aria-label="Lectura"></button>
+        <button class="teaser-carousel__dot" type="button" data-full-dot aria-label="Clasificaciones"></button>
+      </div>
+
+      <div class="teaser-carousel__controls">
+        <button class="teaser-carousel__control" type="button" data-full-prev aria-label="Anterior">←</button>
+        <button class="teaser-carousel__control" type="button" data-full-next aria-label="Siguiente">→</button>
+      </div>
+    </div>
+  </article>
+
+  <section class="teaser-ranking" aria-label="Top 3">
+    <% pageData.topThree.forEach((item, index) => { %>
+      <article class="teaser-ranking__item">
+        <span class="teaser-ranking__position">#<%= index + 1 %></span>
+        <strong class="teaser-ranking__name"><%= item %></strong>
+      </article>
+    <% }) %>
+  </section>
+
+  <footer class="question-actions">
+    <a class="btn btn-primary app-cta" href="/registro?intent=download">Obtener informe completo</a>
+  </footer>
+</section>
+
+<script>
+  (() => {
+    const root = document.querySelector("[data-full-carousel]");
+    if (!root) return;
+
+    const slides = Array.from(root.querySelectorAll("[data-full-slide]"));
+    const dots = Array.from(root.querySelectorAll("[data-full-dot]"));
+    const prev = root.querySelector("[data-full-prev]");
+    const next = root.querySelector("[data-full-next]");
+    let currentIndex = 0;
+
+    const sync = () => {
+      slides.forEach((slide, index) => {
+        slide.classList.toggle("is-active", index === currentIndex);
+      });
+      dots.forEach((dot, index) => {
+        dot.classList.toggle("is-active", index === currentIndex);
+      });
+    };
+
+    prev?.addEventListener("click", () => {
+      currentIndex = (currentIndex - 1 + slides.length) % slides.length;
+      sync();
+    });
+
+    next?.addEventListener("click", () => {
+      currentIndex = (currentIndex + 1) % slides.length;
+      sync();
+    });
+
+    dots.forEach((dot, index) => {
+      dot.addEventListener("click", () => {
+        currentIndex = index;
+        sync();
+      });
+    });
+  })();
+</script>

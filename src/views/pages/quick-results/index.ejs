@@ -1,0 +1,166 @@
+<section class="stage-page teaser-screen">
+  <header class="question-header teaser-screen__header">
+    <p class="eyebrow mb-0">Lectura inicial</p>
+    <h1 class="question-title teaser-screen__title">Tu mapa visible ya asomó</h1>
+  </header>
+
+  <article class="question-card-panel teaser-card teaser-carousel" data-teaser-carousel>
+    <div class="teaser-carousel__viewport">
+      <div class="teaser-carousel__track">
+        <section class="teaser-carousel__slide is-active" data-teaser-slide>
+          <div class="question-card-panel__body teaser-card__body">
+            <div class="teaser-card__copy">
+              <% 
+                const archetypeMap = {
+                  'Gobernante': 'gobernante',
+                  'Sabio': 'sabio',
+                  'Cuidador': 'cuidador',
+                  'Explorador': 'explorador',
+                  'Mago': 'mago',
+                  'Huerfano': 'huerfano',
+                  'Creador': 'creador',
+                  'Guerrero': 'guerrero',
+                  'Buscador': 'buscador',
+                  'Amante': 'amante',
+                  'Rebelde': 'rebelde',
+                  'Bufón': 'bufon'
+                };
+                const archetypeFile = archetypeMap[pageData.dominantArchetype] || pageData.dominantArchetype.toLowerCase();
+              %>
+              <p class="teaser-card__kicker mb-0">Perfil parcial identificado</p>
+              <h2 class="teaser-card__headline mb-0"><%= pageData.dominantArchetype %> al frente</h2>
+              <p class="teaser-card__summary mb-0">
+                <strong><%= pageData.name %></strong>, la triada visible se ordena como
+                <strong><%= pageData.topThree.join(", ") %></strong>.
+              </p>
+              <img src="/assets/<%= archetypeFile %>.png" alt="<%= pageData.dominantArchetype %>" class="teaser-archetype-img mb-3" />
+            </div>
+          </div>
+        </section>
+
+        <section class="teaser-carousel__slide" data-teaser-slide>
+          <div class="question-card-panel__body teaser-card__body">
+            <div class="teaser-card__copy">
+              <p class="teaser-card__kicker mb-0">Valores del resultado</p>
+              <div class="teaser-metrics">
+                <% pageData.topScores.forEach((item, index) => { %>
+                  <article class="teaser-metric">
+                    <span class="teaser-metric__rank">#<%= index + 1 %></span>
+                    <strong class="teaser-metric__name"><%= item.name %></strong>
+                    <span class="teaser-metric__score"><%= item.score.toFixed(1) %></span>
+                  </article>
+                <% }) %>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="teaser-carousel__slide" data-teaser-slide>
+          <div class="question-card-panel__body teaser-card__body">
+            <div class="teaser-card__copy">
+              <p class="teaser-card__kicker mb-0">Interpretación por grupos de resultado</p>
+              <p class="teaser-card__summary mb-0">
+                Tu lectura parcial sugiere una personalidad que hoy se organiza principalmente desde
+                <strong> <%= pageData.dominantArchetype %> </strong> como eje visible.
+              </p>
+              <p class="teaser-card__summary mb-0">
+                En estructuras internas, tu <strong>Persona</strong> marca <strong><%= pageData.persona.toFixed(1) %>/5</strong>
+                y tu <strong>Sombra base</strong> marca <strong><%= pageData.sombraBase.toFixed(1) %>/5</strong>.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section class="teaser-carousel__slide" data-teaser-slide>
+          <div class="question-card-panel__body teaser-card__body">
+            <div class="teaser-card__copy">
+              <p class="teaser-card__kicker mb-0">Recomendaciones muy generales</p>
+              <div class="teaser-recommendations">
+              <p class="teaser-card__summary mb-0">
+                Observa cuándo tu arquetipo dominante se vuelve recurso y cuándo empieza a rigidizarse.
+              </p>
+              <p class="teaser-card__summary mb-0">
+                Toma tu objetivo actual como filtro de lectura: <strong><%= pageData.objective %></strong>.
+              </p>
+              <p class="teaser-card__summary mb-0">
+                La lectura profunda te ayudará a distinguir mejor entre imagen consciente, sombra y dirección vital.
+              </p>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <div class="teaser-carousel__footer">
+      <div class="teaser-carousel__dots" role="tablist" aria-label="Secciones del diagnostico parcial">
+        <button class="teaser-carousel__dot is-active" type="button" data-teaser-dot aria-label="Perfil parcial"></button>
+        <button class="teaser-carousel__dot" type="button" data-teaser-dot aria-label="Valores"></button>
+        <button class="teaser-carousel__dot" type="button" data-teaser-dot aria-label="Interpretacion"></button>
+        <button class="teaser-carousel__dot" type="button" data-teaser-dot aria-label="Recomendaciones"></button>
+      </div>
+
+      <div class="teaser-carousel__controls">
+        <button class="teaser-carousel__control" type="button" data-teaser-prev aria-label="Anterior">←</button>
+        <button class="teaser-carousel__control" type="button" data-teaser-next aria-label="Siguiente">→</button>
+      </div>
+    </div>
+  </article>
+
+  <section class="teaser-ranking" aria-label="Triada visible">
+    <% pageData.topThree.forEach((item, index) => { %>
+      <article class="teaser-ranking__item">
+        <span class="teaser-ranking__position">#<%= index + 1 %></span>
+        <strong class="teaser-ranking__name"><%= item %></strong>
+      </article>
+    <% }) %>
+  </section>
+
+  <form action="/full-test" method="get" class="question-actions teaser-screen__actions">
+    <span class="question-actions__back question-actions__back--ghost"></span>
+    <div class="flex-grow-1">
+      <button class="btn btn-primary app-cta question-actions__next" type="submit">
+        Profundizar en mi auto-descubrimiento
+      </button>
+    </div>
+  </form>
+</section>
+
+<script>
+  (() => {
+    const root = document.querySelector("[data-teaser-carousel]");
+    if (!root) return;
+
+    const slides = Array.from(root.querySelectorAll("[data-teaser-slide]"));
+    const dots = Array.from(root.querySelectorAll("[data-teaser-dot]"));
+    const prev = root.querySelector("[data-teaser-prev]");
+    const next = root.querySelector("[data-teaser-next]");
+    let currentIndex = 0;
+
+    const sync = () => {
+      slides.forEach((slide, index) => {
+        slide.classList.toggle("is-active", index === currentIndex);
+      });
+      dots.forEach((dot, index) => {
+        dot.classList.toggle("is-active", index === currentIndex);
+      });
+    };
+
+    prev?.addEventListener("click", () => {
+      currentIndex = (currentIndex - 1 + slides.length) % slides.length;
+      sync();
+    });
+
+    next?.addEventListener("click", () => {
+      currentIndex = (currentIndex + 1) % slides.length;
+      sync();
+    });
+
+    dots.forEach((dot, index) => {
+      dot.addEventListener("click", () => {
+        currentIndex = index;
+        sync();
+      });
+    });
+  })();
+</script>

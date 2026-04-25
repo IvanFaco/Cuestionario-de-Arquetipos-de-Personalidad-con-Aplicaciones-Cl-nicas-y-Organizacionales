@@ -1,0 +1,77 @@
+<section class="stage-page daily-screen">
+  <header class="hero-card compact-stack">
+    <p class="eyebrow mb-0">Daily</p>
+    <h1 class="hero-title mb-0">
+      <%= pageData.name ? `${pageData.name}, tu espacio ya está listo` : 'Tu espacio ya está listo' %>
+    </h1>
+    <p class="hero-copy mb-0">
+      Aquí podrás volver a tu proceso, revisar tu lectura y continuar con nuevos pasos cuando estén disponibles.
+    </p>
+  </header>
+
+  <section class="phase-card compact-stack">
+    <div class="daily-card__row">
+      <div>
+        <p class="eyebrow mb-2">Cuenta</p>
+        <h2 class="landing-form-title mb-1">Sesión activa</h2>
+        <p class="hero-copy mb-0"><%= pageData.email %></p>
+      </div>
+      <span class="status-pill">Activo</span>
+    </div>
+
+    <div class="surface-note mb-0">
+      <% if (pageData.hasFullReport) { %>
+        Tu lectura completa ya está disponible. Puedes volver al resultado o descargar tu PDF cuando quieras.
+      <% } else { %>
+        Aún no tienes un reporte descargable en esta cuenta. Tu siguiente punto de entrada será este espacio Daily.
+      <% } %>
+    </div>
+
+    <div class="daily-actions">
+      <% if (pageData.hasFullReport) { %>
+        <a class="btn btn-primary app-cta app-cta--compact" href="/full-results">Ver mi lectura</a>
+        <a class="btn btn-outline app-cta--compact" href="/full-results/pdf">Descargar PDF</a>
+      <% } else { %>
+        <a class="btn btn-primary app-cta app-cta--compact" href="/">Ir al inicio</a>
+        <a class="btn btn-outline app-cta--compact" href="/full-results">Ver estado actual</a>
+      <% } %>
+    </div>
+  </section>
+
+  <section class="phase-card compact-stack">
+    <div>
+      <p class="eyebrow mb-2">Módulos</p>
+      <h2 class="landing-form-title mb-1">Sesión activa</h2>
+      <p class="hero-copy mb-0">Estos son los módulos base disponibles para la experiencia diaria autenticada.</p>
+    </div>
+
+    <div class="daily-module-grid">
+      <a class="daily-module-card" href="/daily-mood">
+        <strong>Daily Mood</strong>
+        <span>Estado emocional del día</span>
+      </a>
+      <a class="daily-module-card" href="/daily-record">
+        <strong>Daily Record</strong>
+        <span>Historial y continuidad</span>
+      </a>
+      <a class="daily-module-card" href="/daily-coaching">
+        <strong>Daily Coaching</strong>
+        <span>Guía accionable breve</span>
+      </a>
+      <a class="daily-module-card" href="/daily-motto">
+        <strong>Daily Motto</strong>
+        <span>Frase fuerza del día</span>
+      </a>
+      <a class="daily-module-card" href="/profile">
+        <strong>Profile</strong>
+        <span>Gestión de datos del usuario</span>
+      </a>
+    </div>
+
+    <% if (pageData.hasFullReport) { %>
+    <div class="daily-actions">
+      <a class="btn btn-outline app-cta--compact" href="/full-results/pdf">Descargar reporte completo</a>
+    </div>
+    <% } %>
+  </section>
+</section>

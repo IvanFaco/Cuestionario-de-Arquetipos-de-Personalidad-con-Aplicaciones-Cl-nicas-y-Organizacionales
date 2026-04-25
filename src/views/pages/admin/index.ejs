@@ -1,0 +1,112 @@
+<section class="hero-shell">
+  <div class="hero-card compact-stack">
+    <div>
+      <p class="eyebrow mb-2">Panel interno</p>
+      <h1 class="display-6 fw-bold mb-2">Admin</h1>
+    </div>
+    <p class="lead text-muted mb-0">
+      Vista administrativa reservada para acceso directo por URL. Desde aqui puedes usar accesos
+      rapidos al estado del proyecto y al flujo principal.
+    </p>
+  </div>
+</section>
+
+<section class="row g-3 mt-1">
+  <div class="col-12">
+    <article class="phase-card h-100 compact-stack">
+      <div>
+        <p class="eyebrow mb-2">Apariencia</p>
+        <h2 class="h5 mb-0">Tema y tipografia</h2>
+      </div>
+
+      <% if (pageData.saved) { %>
+        <div class="alert alert-success mb-0" role="alert">Apariencia actualizada.</div>
+      <% } %>
+
+      <form action="/admin/appearance" method="post" class="compact-stack">
+        <div>
+          <label class="form-label form-label-sm fw-semibold" for="bootswatchTheme">Tema Bootswatch</label>
+          <select class="form-select form-select-lg compact-control" id="bootswatchTheme" name="bootswatchTheme">
+            <% pageData.themeOptions.forEach((option) => { %>
+              <option value="<%= option.value %>" <%= pageData.appearance.bootswatchTheme === option.value ? "selected" : "" %>>
+                <%= option.label %>
+              </option>
+            <% }) %>
+          </select>
+        </div>
+
+        <div>
+          <label class="form-label form-label-sm fw-semibold" for="fontOption">Google Font general</label>
+          <select class="form-select form-select-lg compact-control" id="fontOption" name="fontOption">
+            <% pageData.fontOptions.forEach((option) => { %>
+              <option value="<%= option.value %>" <%= pageData.appearance.fontOption === option.value ? "selected" : "" %>>
+                <%= option.label %>
+              </option>
+            <% }) %>
+          </select>
+        </div>
+
+        <div>
+          <label class="form-label form-label-sm fw-semibold" for="customFontCssHref">
+            O pega el link CSS de Google Fonts que quieras usar
+          </label>
+          <input
+            class="form-control form-control-lg compact-control"
+            id="customFontCssHref"
+            name="customFontCssHref"
+            type="url"
+            placeholder="https://fonts.googleapis.com/css2?family=..."
+            value="<%= pageData.appearance.customFontCssHref ?? '' %>"
+          />
+        </div>
+
+        <div>
+          <label class="form-label form-label-sm fw-semibold" for="customFontFamily">
+            Nombre de la font-family a aplicar
+          </label>
+          <input
+            class="form-control form-control-lg compact-control"
+            id="customFontFamily"
+            name="customFontFamily"
+            type="text"
+            placeholder="Ej: Space Grotesk"
+            value="<%= pageData.appearance.customFontFamily ?? '' %>"
+          />
+        </div>
+
+        <button class="btn btn-primary app-cta app-cta--compact" type="submit">Guardar cambios</button>
+      </form>
+    </article>
+  </div>
+
+  <div class="col-12">
+    <article class="phase-card h-100 compact-stack">
+      <div>
+        <p class="eyebrow mb-2">Estado</p>
+        <h2 class="h5 mb-0">Configuracion activa</h2>
+      </div>
+      <div class="surface-note">
+        URL: <strong>/admin</strong>
+      </div>
+      <div class="surface-note">
+        Tema activo: <strong><%= pageData.appearance.bootswatchTheme %></strong>
+      </div>
+      <div class="surface-note">
+        Fuente activa: <strong><%= pageData.fontOptions.find((option) => option.value === pageData.appearance.fontOption)?.label %></strong>
+      </div>
+      <% if (pageData.appearance.customFontCssHref && pageData.appearance.customFontFamily) { %>
+        <div class="surface-note">
+          Fuente custom: <strong><%= pageData.appearance.customFontFamily %></strong>
+        </div>
+      <% } %>
+      <div class="surface-note">
+        SEO: <strong>noindex, nofollow</strong>
+      </div>
+      <div class="d-grid gap-2">
+        <a class="btn btn-primary app-cta app-cta--compact" href="/">Ir a la splash</a>
+        <a class="btn btn-primary app-cta app-cta--compact" href="/migration">Ver estado de migracion</a>
+        <a class="btn btn-primary app-cta app-cta--compact" href="/health">Healthcheck</a>
+      </div>
+    </article>
+  </div>
+</section>
