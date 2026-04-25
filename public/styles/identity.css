@@ -63,6 +63,8 @@ html {
   font-size: 16px;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  min-height: 100%;
+  overflow-x: hidden;
 }
 
 body {
@@ -73,12 +75,17 @@ body {
   line-height: 1;
   margin: 0;
   padding: 0;
-  padding-left: 24px;
+  padding-left: max(16px, env(safe-area-inset-left));
+  padding-right: env(safe-area-inset-right);
+  overflow-x: hidden;
+  overscroll-behavior-y: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
 @media (max-width: 640px) {
   body {
-    padding-left: 16px;
+    padding-left: env(safe-area-inset-left);
   }
 }
 
@@ -301,7 +308,7 @@ a:hover {
   bottom: 0;
   left: 0;
   right: 0;
-  padding: var(--space-sm);
+  padding: var(--space-sm) var(--space-sm) calc(var(--space-sm) + env(safe-area-inset-bottom));
   text-align: center;
   background: transparent;
   z-index: 1000;
@@ -419,8 +426,9 @@ a:hover {
 
 @media (max-width: 640px) {
   .app-session-badge {
-    right: 0.75rem;
-    max-width: calc(100vw - 1.5rem);
+    top: calc(0.5rem + env(safe-area-inset-top));
+    right: calc(0.75rem + env(safe-area-inset-right));
+    max-width: calc(100vw - 1.5rem - env(safe-area-inset-left) - env(safe-area-inset-right));
   }
 
   .app-session-badge__link strong {
@@ -449,8 +457,26 @@ a:hover {
 }
 
 @media (max-width: 640px) {
+  .app-sidebar {
+    top: auto;
+    right: 0;
+    bottom: calc(0.5rem + env(safe-area-inset-bottom));
+    left: 0;
+    transform: none;
+    display: flex;
+    justify-content: center;
+    padding: 0;
+  }
+
   .app-sidebar__nav {
-    padding-left: 1rem;
+    flex-direction: row;
+    gap: 0.45rem;
+    padding: 0.45rem 0.55rem;
+    border: 1px solid rgba(224, 220, 235, 0.8);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.88);
+    box-shadow: var(--shadow-sm);
+    backdrop-filter: blur(14px);
   }
 }
 
@@ -463,6 +489,16 @@ a:hover {
   background: var(--color-border);
   transition: all var(--transition-fast);
   text-decoration: none;
+}
+
+@media (max-width: 640px) {
+  .app-sidebar__link,
+  .app-sidebar__link[href] {
+    width: 2.25rem;
+    height: 2.25rem;
+    border: 0.75rem solid transparent;
+    background-clip: padding-box;
+  }
 }
 
 .app-sidebar__link[href]:hover:not(.is-disabled) {
@@ -543,8 +579,8 @@ span.app-sidebar__link.is-disabled {
   flex: 1;
   display: flex;
   flex-direction: column;
-  padding-top: 48px;
-  padding-bottom: 40px;
+  padding-top: calc(48px + env(safe-area-inset-top));
+  padding-bottom: calc(40px + env(safe-area-inset-bottom));
 }
 
 .app-stage {
@@ -563,6 +599,7 @@ span.app-sidebar__link.is-disabled {
   flex-direction: column;
   padding: var(--space-md);
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .stage-page {
