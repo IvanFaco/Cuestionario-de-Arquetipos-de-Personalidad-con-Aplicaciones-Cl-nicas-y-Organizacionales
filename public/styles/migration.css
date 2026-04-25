@@ -1399,3 +1399,46 @@ h4,
     font-size: 0.82rem;
   }
 }
+
+@media (max-width: 640px) {
+  .app-frame,
+  .app-stage-shell {
+    min-height: 100svh;
+  }
+
+  .app-stage {
+    width: 100%;
+    max-width: 100vw;
+    height: auto;
+    min-height: calc(100svh - 88px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  }
+
+  .app-stage__inner {
+    padding: 0.85rem 0.85rem 4.5rem;
+  }
+
+  .stage-page {
+    gap: 0.75rem;
+  }
+
+  .hero-title {
+    font-size: clamp(1.75rem, 10vw, 2.35rem);
+  }
+
+  .question-card-panel {
+    border-radius: 1.5rem;
+  }
+
+  .question-card-panel__body {
+    min-height: 14rem;
+  }
+
+  .question-text {
+    font-size: clamp(1.35rem, 8vw, 1.9rem);
+  }
+
+  .selected-bubble {
+    width: 4.85rem;
+    height: 4.85rem;
+  }
+}

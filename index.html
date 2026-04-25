@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
+  >
+  <meta name="theme-color" content="#f7b267">
+  <title>MiRealYo.com</title>
+  <style>
+    :root {
+      --bg-top: #fff6dd;
+      --bg-bottom: #ffd7c2;
+      --ink: #1e1b18;
+      --muted: #5d5146;
+      --accent: #ff7a59;
+      --accent-soft: rgba(255, 122, 89, 0.14);
+      --card: rgba(255, 255, 255, 0.72);
+      --line: rgba(30, 27, 24, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+      overflow: hidden;
+      font-family: "Avenir Next", "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at top, rgba(255, 255, 255, 0.9), transparent 36%),
+        linear-gradient(180deg, var(--bg-top) 0%, var(--bg-bottom) 100%);
+      color: var(--ink);
+    }
+
+    body {
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 0;
+    }
+
+    .phone {
+      width: 100vw;
+      height: 100vh;
+      position: relative;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 20% 15%, rgba(255, 122, 89, 0.18), transparent 22%),
+        radial-gradient(circle at 82% 12%, rgba(255, 214, 102, 0.28), transparent 18%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.34), rgba(255, 255, 255, 0));
+    }
+
+    .glow {
+      position: absolute;
+      border-radius: 999px;
+      filter: blur(10px);
+      opacity: 0.6;
+    }
+
+    .glow.one {
+      width: 10rem;
+      height: 10rem;
+      background: rgba(255, 122, 89, 0.16);
+      top: 3rem;
+      right: -2rem;
+    }
+
+    .glow.two {
+      width: 8rem;
+      height: 8rem;
+      background: rgba(123, 214, 191, 0.22);
+      bottom: 7rem;
+      left: -2rem;
+    }
+
+    .content {
+      position: relative;
+      z-index: 1;
+      min-height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: calc(1.25rem + env(safe-area-inset-top)) 1.25rem calc(1.25rem + env(safe-area-inset-bottom));
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: center;
+      padding-top: 0.25rem;
+    }
+
+    .notch {
+      width: 6.25rem;
+      height: 0.4rem;
+      border-radius: 999px;
+      background: rgba(30, 27, 24, 0.16);
+    }
+
+    .hero {
+      margin-top: 1rem;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      padding: 0.45rem 0.75rem;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.5);
+      color: var(--muted);
+      font-size: 0.8rem;
+      letter-spacing: 0.02em;
+      backdrop-filter: blur(12px);
+    }
+
+    .dot {
+      width: 0.5rem;
+      height: 0.5rem;
+      border-radius: 50%;
+      background: linear-gradient(180deg, #ffd166, #ff7a59);
+      box-shadow: 0 0 0 0.18rem var(--accent-soft);
+    }
+
+    h1 {
+      margin: 1rem 0 0.85rem;
+      font-size: clamp(1.95rem, 9vw, 3.15rem);
+      line-height: 0.94;
+      letter-spacing: -0.05em;
+    }
+
+    p {
+      margin: 0;
+    }
+
+    .tagline {
+      max-width: 16ch;
+      font-size: 1.02rem;
+      line-height: 1.45;
+      color: var(--muted);
+    }
+
+    .card {
+      padding: 1rem;
+      border-radius: 1.4rem;
+      background: var(--card);
+      border: 1px solid rgba(255, 255, 255, 0.55);
+      backdrop-filter: blur(18px);
+      box-shadow: 0 1.25rem 3rem rgba(125, 80, 53, 0.12);
+    }
+
+    .traits {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.65rem;
+      margin-top: 1.1rem;
+    }
+
+    .trait {
+      padding: 0.8rem 0.55rem;
+      border-radius: 1rem;
+      background: rgba(255, 255, 255, 0.64);
+      text-align: center;
+      font-size: 0.82rem;
+      color: var(--ink);
+    }
+
+    .trait strong {
+      display: block;
+      margin-bottom: 0.18rem;
+      font-size: 1rem;
+    }
+
+    .footer {
+      display: grid;
+      gap: 0.85rem;
+    }
+
+    .status {
+      font-size: 0.9rem;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .cta {
+      display: block;
+      width: 100%;
+      padding: 0.95rem 1rem;
+      border: 0;
+      border-radius: 999px;
+      background: linear-gradient(180deg, #ff946f 0%, #ff6b57 100%);
+      color: #fff;
+      font: inherit;
+      font-weight: 700;
+      text-align: center;
+      text-decoration: none;
+      box-shadow: 0 1rem 2rem rgba(255, 107, 87, 0.28);
+    }
+
+    @media (min-width: 480px) {
+      body {
+        padding: 1.5rem;
+      }
+
+      .phone {
+        width: min(390px, 100vw);
+        height: min(844px, 100vh);
+        border-radius: 2.2rem;
+        border: 10px solid #1e1b18;
+        box-shadow: 0 1.5rem 4rem rgba(30, 27, 24, 0.22);
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="phone" aria-label="Vista inicial de MiRealYo.com">
+    <div class="glow one"></div>
+    <div class="glow two"></div>
+
+    <section class="content">
+      <header class="topbar">
+        <div class="notch" aria-hidden="true"></div>
+      </header>
+
+      <section class="hero">
+        <p class="eyebrow"><span class="dot" aria-hidden="true"></span> auto-descubrimiento con buena vibra</p>
+        <h1>MiRealYo<span style="color: var(--accent);">.com</span></h1>
+        <p class="tagline">Descubre quién eres, más allá de lo evidente.</p>
+      </section>
+
+      <section class="footer">
+        <div class="card">
+          <p style="font-size: 0.92rem; color: var(--muted);">Explora tu personalidad, reconoce patrones y conecta con tu mejor energía.</p>
+          <div class="traits" aria-label="Temas principales">
+            <div class="trait"><strong>Tu yo</strong> esencia</div>
+            <div class="trait"><strong>Mente</strong> claridad</div>
+            <div class="trait"><strong>Vibra</strong> balance</div>
+          </div>
+        </div>
+
+        <p class="status">Próximamente: una app para entenderte mejor y vivir con intención.</p>
+        <a class="cta" href="#" aria-label="MiRealYo.com próximamente">Muy pronto</a>
+      </section>
+    </section>
+  </main>
+</body>
+</html>
