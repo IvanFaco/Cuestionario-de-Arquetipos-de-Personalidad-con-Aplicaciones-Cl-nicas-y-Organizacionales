@@ -2,6 +2,9 @@
 
 ## Reglas de ramas
 
+- La rama de despliegue de esta app es `develop`.
+- `main` no es la rama de despliegue operativo para esta app.
+- En cierres finales de una rama `feat/*`, el merge productivo esperado es hacia `develop`, salvo instrucción explícita distinta del usuario.
 - Cada feature, fix o cambio técnico debe implementarse en su propia rama.
 - Nunca se debe implementar directamente sobre `main`.
 - Nunca se debe implementar directamente sobre `develop`.
