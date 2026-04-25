@@ -1,0 +1,75 @@
+<section class="stage-page teaser-screen">
+  <header class="question-header teaser-screen__header">
+    <p class="eyebrow mb-0">Pago seguro</p>
+    <h1 class="question-title teaser-screen__title">Activa tu estudio profundo</h1>
+  </header>
+
+  <article class="question-card-panel teaser-card">
+    <div class="question-card-panel__body teaser-card__body">
+      <div class="teaser-card__copy">
+        <p class="teaser-card__kicker mb-0">MiRealYo profundo</p>
+        <h2 class="teaser-card__headline mb-0">
+          $<%= (pageData.payment.amountInCents / 100).toLocaleString("es-CO") %> COP
+        </h2>
+        <p class="teaser-card__summary mb-0">
+          El pago desbloquea las preguntas complementarias y tu lectura estructural completa.
+        </p>
+      </div>
+    </div>
+
+    <div class="question-card-panel__selection teaser-card__insight">
+      <span class="question-card-panel__selection-label">Referencia</span>
+      <strong class="question-card-panel__selection-value"><%= pageData.payment.reference %></strong>
+    </div>
+  </article>
+
+  <% if (!pageData.isConfigured) { %>
+    <p class="surface-note text-error">
+      La pasarela no está configurada. Define las variables Wompi antes de probar el pago.
+    </p>
+  <% } else { %>
+    <div class="question-actions teaser-screen__actions">
+      <a class="question-actions__back" href="/quick-results">
+        <span aria-hidden="true">←</span>
+      </a>
+      <div class="flex-grow-1">
+        <button
+          class="btn btn-primary app-cta question-actions__next"
+          type="button"
+          data-wompi-open
+          data-public-key="<%= pageData.checkout.publicKey %>"
+          data-currency="<%= pageData.checkout.currency %>"
+          data-amount-in-cents="<%= pageData.checkout.amountInCents %>"
+          data-reference="<%= pageData.checkout.reference %>"
+          data-signature="<%= pageData.checkout.signature %>"
+          data-redirect-url="<%= pageData.checkout.redirectUrl %>"
+        >
+          Pagar con Wompi
+        </button>
+      </div>
+    </div>
+  <% } %>
+</section>
+
+<script src="https://checkout.wompi.co/widget.js"></script>
+<script>
+  (() => {
+    const button = document.querySelector("[data-wompi-open]");
+    if (!button || typeof WidgetCheckout === "undefined") return;
+
+    button.addEventListener("click", () => {
+      const checkout = new WidgetCheckout({
+        currency: button.dataset.currency,
+        amountInCents: Number(button.dataset.amountInCents),
+        reference: button.dataset.reference,
+        publicKey: button.dataset.publicKey,
+        signature: { integrity: button.dataset.signature },
+        redirectUrl: button.dataset.redirectUrl
+      });
+
+      checkout.open(() => {
+        window.location.href = button.dataset.redirectUrl;
+      });
+    });
+  })();
+</script>

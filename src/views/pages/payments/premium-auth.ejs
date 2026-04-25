@@ -1,0 +1,40 @@
+<section class="stage-page teaser-screen">
+  <header class="question-header teaser-screen__header">
+    <p class="eyebrow mb-0">Estudio profundo</p>
+    <h1 class="question-title teaser-screen__title">Guarda tu lectura antes de continuar</h1>
+  </header>
+
+  <article class="question-card-panel teaser-card">
+    <div class="question-card-panel__body teaser-card__body">
+      <div class="teaser-card__copy">
+        <p class="teaser-card__kicker mb-0">Acceso seguro</p>
+        <h2 class="teaser-card__headline mb-0">Crea tu cuenta</h2>
+        <p class="teaser-card__summary mb-0">
+          Asociaremos tu lectura inicial a tu correo para que el pago desbloquee el estudio profundo aunque cierres esta pantalla.
+        </p>
+      </div>
+    </div>
+
+    <div class="premium-auth-grid">
+      <form action="/pagos/estudio-profundo/registro" method="post" class="premium-auth-form">
+        <strong class="premium-auth-form__title">Crear cuenta</strong>
+        <% if (pageData.error) { %>
+          <p class="surface-note surface-note--tight text-error mb-0"><%= pageData.error %></p>
+        <% } %>
+        <input class="form-control compact-control" type="email" name="email" placeholder="Correo electrónico" value="<%= pageData.email || '' %>" autocomplete="email" required />
+        <input class="form-control compact-control" type="password" name="password" placeholder="Contraseña" autocomplete="new-password" minlength="6" required />
+        <button class="btn btn-primary app-cta app-cta--compact w-full" type="submit">Crear y pagar</button>
+      </form>
+
+      <form action="/pagos/estudio-profundo/login" method="post" class="premium-auth-form">
+        <strong class="premium-auth-form__title">Ya tengo cuenta</strong>
+        <% if (pageData.loginError) { %>
+          <p class="surface-note surface-note--tight text-error mb-0"><%= pageData.loginError %></p>
+        <% } %>
+        <input class="form-control compact-control" type="email" name="email" placeholder="Correo electrónico" value="<%= pageData.loginEmail || '' %>" autocomplete="email" required />
+        <input class="form-control compact-control" type="password" name="password" placeholder="Contraseña" autocomplete="current-password" required />
+        <button class="btn btn-outline w-full" type="submit">Entrar y pagar</button>
+      </form>
+    </div>
+  </article>
+</section>

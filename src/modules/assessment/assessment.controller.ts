@@ -2,6 +2,7 @@ import type { Request, Response } from "express";
 
 import { AuthError } from "../auth/auth.service.js";
 import { getAuthService } from "../auth/auth.container.js";
+import { getPaymentsService } from "../payments/payments.container.js";
 import { getAssessmentPersistenceService } from "./assessment.persistence.container.js";
 import { getDatabaseInspector } from "../../shared/database/database.inspector.factory.js";
 import {
@@ -71,6 +72,33 @@ function persistAssessmentSession(req: Request) {
   }
 
   assessmentPersistenceService.save(userId, assessment);
+}
+
+function ensurePremiumAccess(req: Request, res: Response): boolean {
+  const session = ensureAssessmentSession(req);
+
+  if (session.premiumOutcome) {
+    return true;
+  }
+
+  if (!session.hookOutcome) {
+    res.redirect("/quick-test");
+    return false;
+  }
+
+  const userId = req.session.auth?.userId;
+
+  if (!userId) {
+    res.redirect("/pagos/estudio-profundo/registro");
+    return false;
+  }
+
+  if (!paymentsService.hasApprovedPremiumAccess(userId)) {
+    res.redirect("/pagos/estudio-profundo");
+    return false;
+  }
+
+  return true;
 }
 
 function getAuthenticatedHomePath(req: Request): string {
@@ -191,6 +219,7 @@ const profilePronounOptions = [
 
 const authService = getAuthService();
 const assessmentPersistenceService = getAssessmentPersistenceService();
+const paymentsService = getPaymentsService();
 const databaseInspector = getDatabaseInspector();
 const registerIntentOptions = ["account", "download"] as const;
 
@@ -938,6 +967,10 @@ export function renderFullTestIntro(req: Request, res: Response) {
     return res.redirect("/quick-test");
   }
 
+  if (!ensurePremiumAccess(req, res)) {
+    return;
+  }
+
   res.render("layouts/main", {
     title: "MiRealYo | Estudio ampliado",
     page: "../pages/full-test/intro",
@@ -1147,6 +1180,10 @@ export function startPremium(req: Request, res: Response) {
     return res.redirect("/quick-test");
   }
 
+  if (!ensurePremiumAccess(req, res)) {
+    return;
+  }
+
   session.premiumAnswers = {};
   session.premiumOutcome = undefined;
   persistAssessmentSession(req);
@@ -1160,6 +1197,10 @@ export function renderPremiumQuestion(req: Request, res: Response) {
 
   if (!session.hookOutcome) {
     return res.redirect("/quick-test");
+  }
+
+  if (!ensurePremiumAccess(req, res)) {
+    return;
   }
 
   const resumeIndex = getQuestionIndexToResume(getPremiumQuestions(), session.premiumAnswers);
@@ -1221,6 +1262,10 @@ export function selectPremiumAnswer(req: Request, res: Response) {
     return res.redirect("/quick-test");
   }
 
+  if (!ensurePremiumAccess(req, res)) {
+    return;
+  }
+
   const index = parseIndex(req.params.index, getPremiumQuestions().length);
   const premiumList = getPremiumQuestions();
   const question = premiumList[index - 1];
@@ -1240,6 +1285,10 @@ export function submitPremiumQuestion(req: Request, res: Response) {
 
   if (!session.hookOutcome) {
     return res.redirect("/quick-test");
+  }
+
+  if (!ensurePremiumAccess(req, res)) {
+    return;
   }
 
   const index = parseIndex(req.params.index, getPremiumQuestions().length);

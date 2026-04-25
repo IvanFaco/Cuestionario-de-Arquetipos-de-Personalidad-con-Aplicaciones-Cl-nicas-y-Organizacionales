@@ -8,6 +8,7 @@ import { getDatabaseClient } from "./shared/database/database.factory.js";
 import { getAppearanceSettings, getCurrentFontDescriptor } from "./modules/assessment/assessment.appearance.js";
 import { assessmentPlatformRouter } from "./modules/assessment/assessment.platform.routes.js";
 import { assessmentRouter } from "./modules/assessment/assessment.routes.js";
+import { paymentsRouter } from "./modules/payments/payments.routes.js";
 
 import { getQuestionsRepository } from "./modules/questions/questions.repository.js";
 
@@ -50,6 +51,7 @@ app.use((req, res, next) => {
   next();
 });
 app.use("/", assessmentPlatformRouter);
+app.use("/", paymentsRouter);
 app.use("/", assessmentRouter);
 
 app.listen(env.port, () => {

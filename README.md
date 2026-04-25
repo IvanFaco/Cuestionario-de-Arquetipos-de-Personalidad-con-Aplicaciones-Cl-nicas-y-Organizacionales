@@ -76,6 +76,15 @@ La imagen expone `8501` y también soporta la variable de entorno `PORT`, útil 
 - Rama recomendada: `develop`
 - Comando de inicio adicional: no es necesario
 
+Variables para activar el checkout Wompi del estudio profundo:
+
+- `WOMPI_PUBLIC_KEY`
+- `WOMPI_INTEGRITY_SECRET`
+- `WOMPI_EVENTS_SECRET`
+- `WOMPI_ENV=sandbox`
+- `WOMPI_PREMIUM_AMOUNT_CENTS`
+- `WOMPI_CURRENCY=COP`
+
 ## Notas
 
 - El resultado es interpretativo y educativo.
