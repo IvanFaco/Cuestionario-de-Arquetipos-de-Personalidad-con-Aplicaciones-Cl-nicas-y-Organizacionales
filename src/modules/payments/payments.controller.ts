@@ -179,11 +179,8 @@ export async function loginForPremiumPayment(req: Request, res: Response) {
 
 export function renderPaymentResponse(req: Request, res: Response) {
   const reference = String(req.query.reference ?? "");
-  const paymentByReference = reference ? paymentsService.findPaymentByReference(reference) : null;
-  const payment =
-    paymentByReference && paymentByReference.userId === req.session.auth?.userId
-      ? paymentByReference
-      : null;
+  const payment = reference ? paymentsService.findPaymentByReference(reference) : null;
+  const isOwnPayment = Boolean(payment && payment.userId === req.session.auth?.userId);
 
   return res.render("layouts/main", {
     title: "MiRealYo | Estado del pago",
@@ -199,7 +196,8 @@ export function renderPaymentResponse(req: Request, res: Response) {
     ),
     pageData: {
       reference,
-      payment
+      payment,
+      isOwnPayment
     }
   });
 }
