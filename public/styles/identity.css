@@ -51,6 +51,12 @@
   --transition-fast: 150ms ease;
   --transition-base: 250ms ease;
   --transition-slow: 350ms ease;
+
+  /* Typographic bases */
+  --type-h1-base: 2.5rem;
+  --type-h2-base: 2rem;
+  --type-h3-base: 1.5rem;
+  --type-p-base: 1rem;
 }
 
 *,
@@ -84,6 +90,13 @@ body {
 }
 
 @media (max-width: 640px) {
+  :root {
+    --type-h1-base: 2.05rem;
+    --type-h2-base: 1.65rem;
+    --type-h3-base: 1.25rem;
+    --type-p-base: 0.95rem;
+  }
+
   body {
     padding-left: env(safe-area-inset-left);
   }
@@ -97,12 +110,13 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--color-text-primary);
 }
 
-h1 { font-size: 2.5rem; }
-h2 { font-size: 2rem; }
-h3 { font-size: 1.5rem; }
+h1 { font-size: calc(var(--type-h1-base) * var(--app-h1-scale, 1)); }
+h2 { font-size: calc(var(--type-h2-base) * var(--app-h2-scale, 1)); }
+h3 { font-size: calc(var(--type-h3-base) * var(--app-h3-scale, 1)); }
 h4 { font-size: 1.25rem; }
 
 p {
+  font-size: calc(var(--type-p-base) * var(--app-p-scale, 1));
   margin: 0 0 var(--space-md);
 }
 

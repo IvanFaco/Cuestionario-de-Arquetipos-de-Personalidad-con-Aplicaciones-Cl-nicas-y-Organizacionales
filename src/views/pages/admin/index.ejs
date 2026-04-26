@@ -1,27 +1,25 @@
-<section class="hero-shell">
-  <div class="hero-card compact-stack">
+<section class="admin-shell">
+  <article class="admin-card admin-card--hero">
     <div>
       <p class="eyebrow mb-2">Panel interno</p>
       <h1 class="display-6 fw-bold mb-2">Admin</h1>
     </div>
     <p class="lead text-muted mb-0">
-      Vista administrativa reservada para acceso directo por URL. Desde aqui puedes usar accesos
-      rapidos al estado del proyecto y al flujo principal.
+      Ajusta la apariencia global y revisa el contenido de las tablas de la base de datos desde un
+      solo lugar.
     </p>
-  </div>
-</section>
+  </article>
 
-<section class="row g-3 mt-1">
-  <div class="col-12">
-    <article class="phase-card h-100 compact-stack">
+  <% if (pageData.saved) { %>
+    <div class="alert alert-success mt-3 mb-0" role="alert">Apariencia actualizada.</div>
+  <% } %>
+
+  <section class="admin-grid mt-3">
+    <article class="admin-card compact-stack">
       <div>
         <p class="eyebrow mb-2">Apariencia</p>
-        <h2 class="h5 mb-0">Tema y tipografia</h2>
+        <h2 class="h5 mb-0">Tema, fuente y escala tipografica</h2>
       </div>
-
-      <% if (pageData.saved) { %>
-        <div class="alert alert-success mb-0" role="alert">Apariencia actualizada.</div>
-      <% } %>
 
       <form action="/admin/appearance" method="post" class="compact-stack">
         <div>
@@ -50,47 +48,107 @@
           <label class="form-label form-label-sm fw-semibold" for="customFontCssHref">
             O pega el link CSS de Google Fonts que quieras usar
           </label>
-          <input
-            class="form-control form-control-lg compact-control"
-            id="customFontCssHref"
-            name="customFontCssHref"
-            type="url"
-            placeholder="https://fonts.googleapis.com/css2?family=..."
-            value="<%= pageData.appearance.customFontCssHref ?? '' %>"
-          />
+          <input class="form-control form-control-lg compact-control" id="customFontCssHref" name="customFontCssHref" type="url" placeholder="https://fonts.googleapis.com/css2?family=..." value="<%= pageData.appearance.customFontCssHref ?? '' %>" />
         </div>
 
         <div>
-          <label class="form-label form-label-sm fw-semibold" for="customFontFamily">
-            Nombre de la font-family a aplicar
-          </label>
-          <input
-            class="form-control form-control-lg compact-control"
-            id="customFontFamily"
-            name="customFontFamily"
-            type="text"
-            placeholder="Ej: Space Grotesk"
-            value="<%= pageData.appearance.customFontFamily ?? '' %>"
-          />
+          <label class="form-label form-label-sm fw-semibold" for="customFontFamily">Nombre de la font-family a aplicar</label>
+          <input class="form-control form-control-lg compact-control" id="customFontFamily" name="customFontFamily" type="text" placeholder="Ej: Space Grotesk" value="<%= pageData.appearance.customFontFamily ?? '' %>" />
+        </div>
+
+        <div class="admin-scale-grid">
+          <div>
+            <label class="form-label form-label-sm fw-semibold" for="headingScale">Escala H1</label>
+            <input class="form-range" id="headingScale" name="headingScale" type="range" min="0.8" max="1.4" step="0.05" value="<%= pageData.appearance.headingScale ?? 1 %>" />
+            <div class="admin-scale-value"><%= pageData.appearance.headingScale ?? 1 %>x</div>
+          </div>
+          <div>
+            <label class="form-label form-label-sm fw-semibold" for="subheadingScale">Escala H2/H3</label>
+            <input class="form-range" id="subheadingScale" name="subheadingScale" type="range" min="0.8" max="1.4" step="0.05" value="<%= pageData.appearance.subheadingScale ?? 1 %>" />
+            <div class="admin-scale-value"><%= pageData.appearance.subheadingScale ?? 1 %>x</div>
+          </div>
+          <div>
+            <label class="form-label form-label-sm fw-semibold" for="bodyScale">Escala P</label>
+            <input class="form-range" id="bodyScale" name="bodyScale" type="range" min="0.85" max="1.25" step="0.05" value="<%= pageData.appearance.bodyScale ?? 1 %>" />
+            <div class="admin-scale-value"><%= pageData.appearance.bodyScale ?? 1 %>x</div>
+          </div>
         </div>
 
         <button class="btn btn-primary app-cta app-cta--compact" type="submit">Guardar cambios</button>
       </form>
     </article>
-  </div>
 
-  <div class="col-12">
-    <article class="phase-card h-100 compact-stack">
+    <article class="admin-card compact-stack">
+      <div>
+        <p class="eyebrow mb-2">Base de datos</p>
+        <h2 class="h5 mb-0">Tablas y contenido</h2>
+      </div>
+
+      <form method="get" action="/admin" class="admin-table-selector">
+        <div>
+          <label class="form-label form-label-sm fw-semibold" for="table">Tabla</label>
+          <select class="form-select form-select-lg compact-control" id="table" name="table">
+            <% pageData.tables.forEach((table) => { %>
+              <option value="<%= table.name %>" <%= pageData.selectedTable === table.name ? "selected" : "" %>>
+                <%= table.name %> (<%= table.rowCount %>)
+              </option>
+            <% }) %>
+          </select>
+        </div>
+        <div>
+          <label class="form-label form-label-sm fw-semibold" for="limit">Filas</label>
+          <input class="form-control form-control-lg compact-control" id="limit" name="limit" type="number" min="1" max="100" value="<%= pageData.limit %>" />
+        </div>
+        <button class="btn btn-outline w-full" type="submit">Ver tabla</button>
+      </form>
+
+      <% if (pageData.selectedTableData) { %>
+        <div class="admin-meta-grid">
+          <div class="surface-note">
+            Tabla: <strong><%= pageData.selectedTableData.table %></strong>
+          </div>
+          <div class="surface-note">
+            Columnas: <strong><%= pageData.selectedTableData.columns.length %></strong>
+          </div>
+          <div class="surface-note">
+            Filas visibles: <strong><%= pageData.selectedTableData.rows.length %></strong>
+          </div>
+        </div>
+
+        <div class="admin-table-wrap">
+          <table class="table table-sm align-middle mb-0">
+            <thead>
+              <tr>
+                <% pageData.selectedTableData.columns.forEach((column) => { %>
+                  <th scope="col"><%= column.name %></th>
+                <% }) %>
+              </tr>
+            </thead>
+            <tbody>
+              <% pageData.selectedTableData.rows.forEach((row) => { %>
+                <tr>
+                  <% pageData.selectedTableData.columns.forEach((column) => { %>
+                    <td><%= row[column.name] ?? "" %></td>
+                  <% }) %>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+      <% } else { %>
+        <div class="surface-note">No hay tablas disponibles para mostrar.</div>
+      <% } %>
+    </article>
+  </section>
+
+  <section class="admin-grid mt-3">
+    <article class="admin-card compact-stack">
       <div>
         <p class="eyebrow mb-2">Estado</p>
         <h2 class="h5 mb-0">Configuracion activa</h2>
       </div>
-      <div class="surface-note">
-        URL: <strong>/admin</strong>
-      </div>
-      <div class="surface-note">
-        Tema activo: <strong><%= pageData.appearance.bootswatchTheme %></strong>
-      </div>
+      <div class="surface-note">URL: <strong>/admin</strong></div>
+      <div class="surface-note">Tema activo: <strong><%= pageData.appearance.bootswatchTheme %></strong></div>
       <div class="surface-note">
         Fuente activa: <strong><%= pageData.fontOptions.find((option) => option.value === pageData.appearance.fontOption)?.label %></strong>
       </div>
@@ -108,5 +166,5 @@
         <a class="btn btn-primary app-cta app-cta--compact" href="/health">Healthcheck</a>
       </div>
     </article>
-  </div>
+  </section>
 </section>

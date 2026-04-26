@@ -746,6 +746,16 @@ export async function handleRegister(req: Request, res: Response) {
 
 export function renderAdmin(req: Request, res: Response) {
   const options = getAppearanceOptions();
+  const limitQuery = Number.parseInt(String(req.query.limit ?? "20"), 10);
+  const limit = Number.isNaN(limitQuery) ? 20 : Math.max(1, Math.min(limitQuery, 100));
+  const tables = databaseInspector.listTables();
+  const selectedTable =
+    typeof req.query.table === "string" && req.query.table.trim()
+      ? req.query.table.trim()
+      : tables[0]?.name;
+  const selectedTableData = selectedTable
+    ? databaseInspector.getTableData(selectedTable, limit)
+    : null;
 
   res.render("layouts/main", {
     title: "MiRealYo | Admin",
@@ -763,7 +773,11 @@ export function renderAdmin(req: Request, res: Response) {
       appearance: getAppearanceSettings(),
       themeOptions: options.themes,
       fontOptions: options.fonts,
-      saved: req.query.saved === "1"
+      saved: req.query.saved === "1",
+      tables,
+      selectedTable,
+      selectedTableData,
+      limit
     },
     appearance: getAppearanceSettings(),
     appearanceFont: getCurrentFontDescriptor()
@@ -808,7 +822,10 @@ export function updateAdminAppearance(req: Request, res: Response) {
     bootswatchTheme: String(req.body.bootswatchTheme ?? ""),
     fontOption: String(req.body.fontOption ?? ""),
     customFontCssHref: String(req.body.customFontCssHref ?? ""),
-    customFontFamily: String(req.body.customFontFamily ?? "")
+    customFontFamily: String(req.body.customFontFamily ?? ""),
+    headingScale: String(req.body.headingScale ?? ""),
+    subheadingScale: String(req.body.subheadingScale ?? ""),
+    bodyScale: String(req.body.bodyScale ?? "")
   });
 
   res.app.locals.appearance = getAppearanceSettings();

@@ -10,14 +10,24 @@
         <p class="teaser-card__kicker mb-0">Acceso seguro</p>
         <h2 class="teaser-card__headline mb-0">Crea tu cuenta</h2>
         <p class="teaser-card__summary mb-0">
-          Asociaremos tu lectura inicial a tu correo para que el pago desbloquee el estudio profundo aunque cierres esta pantalla.
+          Guardaremos tu lectura inicial en tu cuenta para que el pago desbloquee el estudio profundo aunque cierres esta pantalla.
         </p>
+      </div>
+    </div>
+
+    <div class="premium-auth-note">
+      <p class="premium-auth-note__title mb-0">Lo que pasa después</p>
+      <div class="premium-auth-note__items">
+        <span>Tu resultado básico queda guardado</span>
+        <span>Wompi valida el cobro</span>
+        <span>Se habilita el estudio full</span>
       </div>
     </div>
 
     <div class="premium-auth-grid">
       <form action="/pagos/estudio-profundo/registro" method="post" class="premium-auth-form">
         <strong class="premium-auth-form__title">Crear cuenta</strong>
+        <p class="premium-auth-form__copy mb-0">Si aún no tienes cuenta, este es el paso más corto para conservar tu progreso.</p>
         <% if (pageData.error) { %>
           <p class="surface-note surface-note--tight text-error mb-0"><%= pageData.error %></p>
         <% } %>
@@ -28,6 +38,7 @@
 
       <form action="/pagos/estudio-profundo/login" method="post" class="premium-auth-form">
         <strong class="premium-auth-form__title">Ya tengo cuenta</strong>
+        <p class="premium-auth-form__copy mb-0">Si ya estás registrado, entra con tu cuenta y continúa al pago.</p>
         <% if (pageData.loginError) { %>
           <p class="surface-note surface-note--tight text-error mb-0"><%= pageData.loginError %></p>
         <% } %>

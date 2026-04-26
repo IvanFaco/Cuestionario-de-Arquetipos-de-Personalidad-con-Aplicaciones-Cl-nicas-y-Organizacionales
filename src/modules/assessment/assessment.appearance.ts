@@ -43,6 +43,9 @@ export type AppearanceSettings = {
   fontOption: GoogleFontOption;
   customFontCssHref?: string;
   customFontFamily?: string;
+  headingScale?: number;
+  subheadingScale?: number;
+  bodyScale?: number;
 };
 
 const appearanceDataDir = path.join(process.cwd(), "data");
@@ -126,7 +129,10 @@ const defaultAppearance: AppearanceSettings = {
   bootswatchTheme: "flatly",
   fontOption: "manrope",
   customFontCssHref: "",
-  customFontFamily: ""
+  customFontFamily: "",
+  headingScale: 1,
+  subheadingScale: 1,
+  bodyScale: 1
 };
 
 function isValidTheme(value: string): value is BootswatchTheme {
@@ -151,6 +157,18 @@ function readAppearanceSettings(): AppearanceSettings {
       typeof parsed.customFontCssHref === "string" ? parsed.customFontCssHref : "";
     const parsedCustomFontFamily =
       typeof parsed.customFontFamily === "string" ? parsed.customFontFamily : "";
+    const parsedHeadingScale =
+      typeof parsed.headingScale === "number" && Number.isFinite(parsed.headingScale)
+        ? parsed.headingScale
+        : defaultAppearance.headingScale;
+    const parsedSubheadingScale =
+      typeof parsed.subheadingScale === "number" && Number.isFinite(parsed.subheadingScale)
+        ? parsed.subheadingScale
+        : defaultAppearance.subheadingScale;
+    const parsedBodyScale =
+      typeof parsed.bodyScale === "number" && Number.isFinite(parsed.bodyScale)
+        ? parsed.bodyScale
+        : defaultAppearance.bodyScale;
 
     return {
       bootswatchTheme: isValidTheme(String(parsedTheme))
@@ -160,7 +178,10 @@ function readAppearanceSettings(): AppearanceSettings {
         ? (parsedFont as GoogleFontOption)
         : defaultAppearance.fontOption,
       customFontCssHref: parsedCustomFontCssHref,
-      customFontFamily: parsedCustomFontFamily
+      customFontFamily: parsedCustomFontFamily,
+      headingScale: parsedHeadingScale,
+      subheadingScale: parsedSubheadingScale,
+      bodyScale: parsedBodyScale
     };
   } catch {
     return defaultAppearance;
@@ -203,6 +224,9 @@ export function updateAppearanceSettings(input: {
   fontOption: string;
   customFontCssHref?: string;
   customFontFamily?: string;
+  headingScale?: string;
+  subheadingScale?: string;
+  bodyScale?: string;
 }) {
   if (isValidTheme(input.bootswatchTheme)) {
     currentAppearance.bootswatchTheme = input.bootswatchTheme;
@@ -234,6 +258,18 @@ export function updateAppearanceSettings(input: {
     currentAppearance.customFontCssHref = "";
     currentAppearance.customFontFamily = "";
   }
+
+  const parseScale = (value: string | undefined, fallback: number) => {
+    const parsed = Number.parseFloat(String(value ?? ""));
+    return Number.isFinite(parsed) && parsed > 0.5 && parsed < 2 ? parsed : fallback;
+  };
+
+  currentAppearance.headingScale = parseScale(input.headingScale, currentAppearance.headingScale ?? 1);
+  currentAppearance.subheadingScale = parseScale(
+    input.subheadingScale,
+    currentAppearance.subheadingScale ?? 1
+  );
+  currentAppearance.bodyScale = parseScale(input.bodyScale, currentAppearance.bodyScale ?? 1);
 
   persistAppearanceSettings(currentAppearance);
 }
