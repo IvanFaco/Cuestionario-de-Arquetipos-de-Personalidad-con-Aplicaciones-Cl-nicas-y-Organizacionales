@@ -51,7 +51,7 @@
   <% } %>
 </section>
 
-<% const wompiWidgetUrl = pageData.checkout.environment === "production" ? "https://checkout.wompi.co/widget.js" : "https://checkout.wompi.co/widget.js?env=test"; %>
+<% const wompiWidgetUrl = pageData.checkout.environment === "production" ? "https://checkout.wompi.co/widget.js" : "https://sandbox.wompi.co/widget.js"; %>
 <script src="<%= wompiWidgetUrl %>"></script>
 <script>
   (() => {
