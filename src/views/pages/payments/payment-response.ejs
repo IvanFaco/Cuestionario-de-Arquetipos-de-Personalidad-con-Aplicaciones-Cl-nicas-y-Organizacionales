@@ -14,6 +14,9 @@
         <% } else if (pageData.payment && ["DECLINED", "ERROR", "VOIDED"].includes(pageData.payment.status)) { %>
           <h2 class="teaser-card__headline mb-0">No se aprobó el pago</h2>
           <p class="teaser-card__summary mb-0">Puedes volver a intentarlo con una nueva referencia.</p>
+        <% } else if (pageData.reference) { %>
+          <h2 class="teaser-card__headline mb-0">Referencia encontrada</h2>
+          <p class="teaser-card__summary mb-0">Estamos esperando la confirmación final del webhook.</p>
         <% } else { %>
           <h2 class="teaser-card__headline mb-0">Validación pendiente</h2>
           <p class="teaser-card__summary mb-0">La confirmación final llega desde Wompi. Si ya pagaste, espera unos segundos y vuelve a consultar.</p>
@@ -27,7 +30,7 @@
       <span aria-hidden="true">←</span>
     </a>
     <div class="flex-grow-1">
-      <% if (pageData.payment && pageData.payment.status === "APPROVED") { %>
+      <% if (pageData.payment && pageData.payment.status === "APPROVED" && pageData.isOwnPayment) { %>
         <a class="btn btn-primary app-cta question-actions__next" href="/full-test">Continuar estudio</a>
       <% } else { %>
         <a class="btn btn-primary app-cta question-actions__next" href="/pagos/estudio-profundo">Ver estado o reintentar</a>
