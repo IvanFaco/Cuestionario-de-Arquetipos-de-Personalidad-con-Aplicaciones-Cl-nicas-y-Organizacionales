@@ -1,6 +1,9 @@
 <section class="stage-page teaser-screen">
   <header class="question-header teaser-screen__header">
-    <p class="eyebrow mb-0">Calibración profunda</p>
+    <a class="back-button question-header__back question-actions__back" href="/quick-results" aria-label="Volver">
+      <span aria-hidden="true">‹</span>
+    </a>
+    <p class="eyebrow">Calibración profunda</p>
     <h3 class="question-title teaser-screen__title">Antes de profundizar</h3>
   </header>
 
@@ -24,13 +27,8 @@
   </article>
 
   <form action="/full-test/start" method="post" class="question-actions teaser-screen__actions">
-    <a class="question-actions__back" href="/quick-results">
-      <span aria-hidden="true">←</span>
-    </a>
-    <div class="flex-grow-1">
-      <button class="btn btn-primary app-cta question-actions__next" type="submit">
-        Empezar
-      </button>
-    </div>
+    <button class="btn btn-primary app-cta question-actions__next" type="submit">
+      Empezar
+    </button>
   </form>
 </section>

@@ -2,7 +2,7 @@
 
 ## Objetivo
 
-Preparar la migracion desde `Python + Streamlit` hacia
+Preparar la migracion desde el baseline anterior hacia
 `Node.js + TypeScript + Express + EJS + Bootstrap + Bootswatch`
 sin perder comportamiento de producto ni entrar en un rewrite ciego.
 
@@ -12,11 +12,11 @@ objetivo.
 
 ## Estado Actual
 
-- Runtime principal: `Streamlit`
-- UI, flujo, estado y logica de dominio mezclados en `app.py`
-- Reporte PDF generado en runtime con `fpdf2`
-- Graficas renderizadas con `plotly`
-- Despliegue actual: `Dockerfile` simple sobre Python
+- Runtime principal: `Node.js + Express`
+- UI, flujo, estado y logica de dominio separadas por modulo
+- Reporte PDF generado en el backend con `pdf-lib`
+- Graficas reemplazadas por salidas SSR equivalentes
+- Despliegue actual: `Dockerfile` multi-stage sobre Node
 
 ## Estado Objetivo
 
@@ -75,8 +75,8 @@ Complejidad: media-alta
 
 Objetivo:
 
-Recuperar funcionalidades que hoy dependen de librerias especificas
-de Streamlit y Python.
+Recuperar funcionalidades que hoy dependen de implementaciones
+especificas del baseline anterior.
 
 Entregables:
 
@@ -124,7 +124,7 @@ Se considera equivalente cuando se preservan:
 
 ## Mitigaciones
 
-- no tocar la app Python como baseline hasta pasar validacion cruzada
+- no tocar el baseline anterior hasta pasar validacion cruzada
 - migrar por paridad funcional antes de embellecer
 - usar fixtures cerrados para comparar salida vieja vs nueva
 - separar dominio, UI y artefactos desde el inicio

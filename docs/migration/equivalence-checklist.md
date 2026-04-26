@@ -21,9 +21,9 @@
 - recorrido completo del funnel con `curl` y sesion real
 - validacion de cabeceras `Content-Type` y `Content-Disposition` del PDF
 
-## Diferencias respecto a Streamlit
+## Diferencias respecto al baseline anterior
 
-- no se migraron graficas interactivas de Plotly
+- no se replicaron graficas interactivas del baseline anterior
 - el dashboard SSR usa ranking textual como reemplazo aceptable
 - el PDF recupera la estructura esencial, no una replica visual exacta
 

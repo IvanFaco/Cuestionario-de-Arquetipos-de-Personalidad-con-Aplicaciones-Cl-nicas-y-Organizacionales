@@ -206,8 +206,7 @@ const objectiveOptions: { value: ObjectiveKey; label: string }[] = [
   { value: "purpose_direction", label: "Ganar claridad sobre mi proposito o direccion vital" },
   { value: "stress_decisions", label: "Entender como reacciono bajo estres y al tomar decisiones" },
   { value: "self_esteem_identity", label: "Fortalecer mi autoestima y mi sentido de identidad" },
-  { value: "shadow_integration", label: "Reconocer aspectos de mi sombra e integrarlos mejor" },
-  { value: "life_transition", label: "Orientarme mejor en un momento de cambio o transicion" }
+  { value: "shadow_integration", label: "Reconocer aspectos de mi sombra e integrarlos mejor" }
 ];
 const profilePronounOptions = [
   { value: "", label: "Opcional" },

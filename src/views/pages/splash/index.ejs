@@ -3,9 +3,10 @@
     <header class="splash-page__hero">
       <img src="/assets/logo-512.png" alt="MiRealYo" class="splash-logo mb-3" />
       <h1 class="hero-title mb-2">MiRealYo</h1>
-      <p class="hero-copy mb-2">Descubre la parte de ti que más te representa,<br>aquello que sueles ocultar<br>y lo que realmente te mueve por dentro.</p>
+      <p class="hero-copy mb-2">Descubre la parte de ti que más te representa, aquello que sueles ocultar y lo que realmente te mueve por dentro.</p>
       <% if (!session?.auth) { %>
-        <a href="/login" class="splash-login-link">Ya soy usuario, Iniciar sesión</a>
+        <a href="/login" class="link-primary fw-semibold text-decoration-none">Ya soy usuario, Iniciar sesión</a>
+        <a href="/privacidad" class="link-secondary small text-decoration-underline">Política de privacidad</a>
       <% } %>
     </header>
   </div>

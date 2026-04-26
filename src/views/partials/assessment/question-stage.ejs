@@ -1,6 +1,6 @@
 <section class="stage-page question-screen">
   <header class="question-header">
-    <p class="eyebrow mb-2"><%= pageData.stageLabel %></p>
+    <p class="eyebrow mb-0"><%= pageData.stageLabel %></p>
     <div class="question-progress">
       <div class="progress soft-progress question-progress__bar" role="progressbar" aria-valuenow="<%= pageData.progressPercent %>" aria-valuemin="0" aria-valuemax="100">
         <div class="progress-bar" style="width: <%= pageData.progressPercent %>%"></div>
@@ -84,8 +84,8 @@
 
     <footer class="question-actions">
       <% if (pageData.backHref) { %>
-        <a class="question-actions__back" href="<%= pageData.backHref %>">
-          <span aria-hidden="true">&#8592;</span>
+        <a class="back-button question-actions__back" href="<%= pageData.backHref %>" aria-label="Volver">
+          <span aria-hidden="true">‹</span>
         </a>
       <% } else { %>
         <span class="question-actions__back question-actions__back--ghost"></span>

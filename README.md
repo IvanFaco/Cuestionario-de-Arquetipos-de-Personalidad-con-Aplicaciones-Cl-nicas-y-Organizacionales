@@ -1,6 +1,6 @@
 # Cuestionario de Arquetipos de Personalidad
 
-Aplicación Streamlit para descubrir un arquetipo dominante mediante un funnel breve y luego profundizar el resultado con capas interpretativas inspiradas en Jung, Keirsey y Campbell.
+Aplicación web SSR en Node.js + TypeScript + Express + EJS para descubrir un arquetipo dominante mediante un funnel breve y luego profundizar el resultado con capas interpretativas inspiradas en Jung, Keirsey y Campbell.
 
 ## Características
 
@@ -36,43 +36,43 @@ Aplicación Streamlit para descubrir un arquetipo dominante mediante un funnel b
 
 ## Requisitos
 
-- Python 3.8+
-- Dependencias definidas en `requirements.txt`
+- Node.js 20+
+- npm 10+
 
 ## Instalación
 
 ```bash
-pip install -r requirements.txt
+npm install
 ```
 
 ## Ejecutar la aplicación
 
 ```bash
-streamlit run app.py
+npm run dev
 ```
 
-La aplicación quedará disponible por defecto en `http://localhost:8501`.
+La aplicación quedará disponible por defecto en `http://localhost:3000`.
 
 ## Docker
 
 Build local:
 
 ```bash
-docker build -t arquetipos-app .
+docker build -t mi-real-yo .
 ```
 
 Run local:
 
 ```bash
-docker run --rm -p 8501:8501 arquetipos-app
+docker run --rm -p 3000:3000 mi-real-yo
 ```
 
-La imagen expone `8501` y también soporta la variable de entorno `PORT`, útil para Coolify.
+La imagen expone `3000` y también soporta la variable de entorno `PORT`, útil para Coolify.
 
 ## Coolify
 
 - Tipo de despliegue: `Dockerfile`
-- Puerto interno: `8501`
+- Puerto interno: `3000`
 - Rama recomendada: `develop`
 - Comando de inicio adicional: no es necesario
 

@@ -1,8 +1,10 @@
-<div class="app-stage-shell">
-  <header class="app-header">
-    <img src="/assets/logo-256.png" alt="MiRealYo" class="app-header__logo" />
-    <span class="app-header__brand">MiRealYo.com</span>
-  </header>
+  <div class="app-stage-shell">
+    <header class="app-header">
+      <div class="app-header__home" data-home-nav data-home-url="<%= siteRootUrl %>">
+        <img src="/assets/logo-256.png" alt="MiRealYo" class="app-header__logo" />
+        <span class="app-header__brand">MiRealYo.com</span>
+      </div>
+    </header>
   <section class="app-stage">
     <div class="app-stage__inner">
       <%- include(page, { pageData }) %>

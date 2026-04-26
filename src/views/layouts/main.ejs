@@ -47,6 +47,7 @@
   <body>
     <%
     const currentPath = pageData?.currentPath || '';
+    const siteRootUrl = new URL('/', seo.canonicalUrl).href;
     const sessionData = session || {};
     const authSession = sessionData.auth || null;
     const assessmentSession = sessionData.assessment || {};
@@ -90,7 +91,7 @@
       </nav>
     </aside>
     <main class="app-frame">
-      <%- include("../partials/app-stage", { page, pageData }) %>
+      <%- include("../partials/app-stage", { page, pageData, siteRootUrl }) %>
     </main>
     <% if (authSession) { %>
       <div class="app-session-badge">

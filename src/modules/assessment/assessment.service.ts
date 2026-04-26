@@ -26,7 +26,7 @@ export function getLandingViewModel(): LandingViewModel {
     eyebrow: "Migracion de Stack",
     headline: "Baseline congelado. Reemplazo controlado en marcha.",
     description:
-      "Este scaffold no reemplaza todavia la app Python. Define la estructura base de Express, EJS y TypeScript para migrar por fases con equivalencia funcional.",
+      "Este scaffold define la estructura base de Express, EJS y TypeScript para mantener la app con equivalencia funcional y una base SSR estable.",
     phases: [
       {
         id: "fase-0",
@@ -77,7 +77,7 @@ export function getPhaseZeroViewModel(): PhaseZeroViewModel {
       "Build de TypeScript en verde",
       "Servidor Express levantando y respondiendo healthcheck",
       "Documentacion versionada dentro del repo",
-      "Sin reemplazar todavia el runtime Python de produccion"
+      "Sin perder equivalencia funcional del funnel actual"
     ]
   };
 }

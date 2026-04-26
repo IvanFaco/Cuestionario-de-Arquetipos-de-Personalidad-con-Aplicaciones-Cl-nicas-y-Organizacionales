@@ -1,16 +1,17 @@
 <section class="stage-page teaser-screen">
   <header class="question-header teaser-screen__header">
-    <p class="eyebrow mb-0">Tus instintos primarios</p>
-    <h3 class="question-title teaser-screen__title">Antes de empezar</h3>
+    <a class="back-button question-header__back question-actions__back" href="/" aria-label="Volver">
+      <span aria-hidden="true">‹</span>
+    </a>
+    <p class="eyebrow">Tus instintos primarios</p>
   </header>
 
   <article class="question-card-panel teaser-card">
     <div class="question-card-panel__body teaser-card__body">
       <div class="teaser-card__copy">
-        <p class="teaser-card__kicker mb-0">Lectura breve</p>
         <h2 class="teaser-card__headline mb-0">Una primera aproximaci&oacute;n a tu mapa interno</h2>
         <p class="teaser-card__summary mb-0">
-          Este quick test recoge se&ntilde;ales iniciales sobre tus impulsos, estilo de respuesta y energ&iacute;a
+          Este test b&aacute;sico recoge se&ntilde;ales iniciales sobre tus impulsos, estilo de respuesta y energ&iacute;a
           predominante. No busca etiquetarte de forma definitiva, sino abrir una lectura inicial con
           sentido.
         </p>
@@ -26,13 +27,8 @@
   </article>
 
   <form action="/quick-test/start" method="post" class="question-actions teaser-screen__actions">
-    <a class="question-actions__back" href="/">
-      <span aria-hidden="true">&#8592;</span>
-    </a>
-    <div class="flex-grow-1">
-      <button class="btn btn-primary app-cta question-actions__next" type="submit">
-        Empezar
-      </button>
-    </div>
+    <button class="btn btn-primary app-cta question-actions__next" type="submit">
+      Empezar
+    </button>
   </form>
 </section>

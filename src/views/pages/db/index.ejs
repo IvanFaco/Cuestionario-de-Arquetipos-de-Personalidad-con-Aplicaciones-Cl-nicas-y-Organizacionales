@@ -1,7 +1,7 @@
 <section class="hero-shell">
   <div class="hero-card compact-stack">
     <div>
-      <p class="eyebrow mb-2">Panel interno</p>
+      <p class="eyebrow mb-0">Panel interno</p>
       <h1 class="display-6 fw-bold mb-2">DB</h1>
     </div>
     <p class="lead text-muted mb-0">
@@ -14,7 +14,7 @@
   <div class="col-12">
     <article class="phase-card h-100 compact-stack">
       <div>
-        <p class="eyebrow mb-2">Tablas</p>
+        <p class="eyebrow mb-0">Tablas</p>
         <h2 class="h5 mb-0">Explorador</h2>
       </div>
 
@@ -56,7 +56,7 @@
     <article class="phase-card h-100 compact-stack">
       <% if (!pageData.selectedTableData) { %>
         <div>
-          <p class="eyebrow mb-2">Consulta</p>
+          <p class="eyebrow mb-0">Consulta</p>
           <h2 class="h5 mb-0">Sin datos</h2>
         </div>
         <div class="surface-note mb-0">
@@ -65,7 +65,7 @@
       <% } else { %>
         <div class="db-panel__header">
           <div>
-            <p class="eyebrow mb-2">Consulta</p>
+            <p class="eyebrow mb-0">Consulta</p>
             <h2 class="h5 mb-0"><%= pageData.selectedTableData.table %></h2>
           </div>
           <span class="status-pill"><%= pageData.selectedTableData.rows.length %> filas</span>
