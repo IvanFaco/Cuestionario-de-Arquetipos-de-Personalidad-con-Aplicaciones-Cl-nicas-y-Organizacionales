@@ -458,25 +458,11 @@ a:hover {
 
 @media (max-width: 640px) {
   .app-sidebar {
-    top: auto;
-    right: 0;
-    bottom: calc(0.5rem + env(safe-area-inset-bottom));
-    left: 0;
-    transform: none;
-    display: flex;
-    justify-content: center;
-    padding: 0;
+    display: none;
   }
 
   .app-sidebar__nav {
-    flex-direction: row;
-    gap: 0.45rem;
-    padding: 0.45rem 0.55rem;
-    border: 1px solid rgba(224, 220, 235, 0.8);
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.88);
-    box-shadow: var(--shadow-sm);
-    backdrop-filter: blur(14px);
+    display: none;
   }
 }
 
@@ -494,10 +480,13 @@ a:hover {
 @media (max-width: 640px) {
   .app-sidebar__link,
   .app-sidebar__link[href] {
-    width: 2.25rem;
-    height: 2.25rem;
-    border: 0.75rem solid transparent;
-    background-clip: padding-box;
+    width: 0;
+    height: 0;
+    border: 0;
+  }
+
+  .app-sidebar__link[href]:hover:not(.is-disabled) {
+    transform: none;
   }
 }
 
