@@ -51,7 +51,8 @@
   <% } %>
 </section>
 
-<script src="https://checkout.wompi.co/widget.js"></script>
+<% const wompiWidgetUrl = pageData.checkout.environment === "production" ? "https://checkout.wompi.co/widget.js" : "https://checkout.wompi.co/widget.js?env=test"; %>
+<script src="<%= wompiWidgetUrl %>"></script>
 <script>
   (() => {
     const button = document.querySelector("[data-wompi-open]");
