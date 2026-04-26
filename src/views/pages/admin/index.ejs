@@ -58,19 +58,19 @@
 
         <div class="admin-scale-grid">
           <div>
-            <label class="form-label form-label-sm fw-semibold" for="headingScale">Escala H1</label>
-            <input class="form-range" id="headingScale" name="headingScale" type="range" min="0.8" max="1.4" step="0.05" value="<%= pageData.appearance.headingScale ?? 1 %>" />
-            <div class="admin-scale-value"><%= pageData.appearance.headingScale ?? 1 %>x</div>
+            <label class="form-label form-label-sm fw-semibold" for="headingScale">H1 (%)</label>
+            <input class="form-range" id="headingScale" name="headingScale" type="range" min="80" max="140" step="1" value="<%= Math.round((pageData.appearance.headingScale ?? 1) * 100) %>" />
+            <div class="admin-scale-value"><%= Math.round((pageData.appearance.headingScale ?? 1) * 100) %>%</div>
           </div>
           <div>
-            <label class="form-label form-label-sm fw-semibold" for="subheadingScale">Escala H2/H3</label>
-            <input class="form-range" id="subheadingScale" name="subheadingScale" type="range" min="0.8" max="1.4" step="0.05" value="<%= pageData.appearance.subheadingScale ?? 1 %>" />
-            <div class="admin-scale-value"><%= pageData.appearance.subheadingScale ?? 1 %>x</div>
+            <label class="form-label form-label-sm fw-semibold" for="subheadingScale">H2/H3 (%)</label>
+            <input class="form-range" id="subheadingScale" name="subheadingScale" type="range" min="80" max="140" step="1" value="<%= Math.round((pageData.appearance.subheadingScale ?? 1) * 100) %>" />
+            <div class="admin-scale-value"><%= Math.round((pageData.appearance.subheadingScale ?? 1) * 100) %>%</div>
           </div>
           <div>
-            <label class="form-label form-label-sm fw-semibold" for="bodyScale">Escala P</label>
-            <input class="form-range" id="bodyScale" name="bodyScale" type="range" min="0.85" max="1.25" step="0.05" value="<%= pageData.appearance.bodyScale ?? 1 %>" />
-            <div class="admin-scale-value"><%= pageData.appearance.bodyScale ?? 1 %>x</div>
+            <label class="form-label form-label-sm fw-semibold" for="bodyScale">P (%)</label>
+            <input class="form-range" id="bodyScale" name="bodyScale" type="range" min="85" max="125" step="1" value="<%= Math.round((pageData.appearance.bodyScale ?? 1) * 100) %>" />
+            <div class="admin-scale-value"><%= Math.round((pageData.appearance.bodyScale ?? 1) * 100) %>%</div>
           </div>
         </div>
 

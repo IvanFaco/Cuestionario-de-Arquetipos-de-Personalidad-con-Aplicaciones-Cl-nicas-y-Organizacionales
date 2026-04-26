@@ -261,7 +261,16 @@ export function updateAppearanceSettings(input: {
 
   const parseScale = (value: string | undefined, fallback: number) => {
     const parsed = Number.parseFloat(String(value ?? ""));
-    return Number.isFinite(parsed) && parsed > 0.5 && parsed < 2 ? parsed : fallback;
+
+    if (!Number.isFinite(parsed) || parsed <= 0) {
+      return fallback;
+    }
+
+    if (parsed > 2) {
+      return parsed / 100;
+    }
+
+    return parsed;
   };
 
   currentAppearance.headingScale = parseScale(input.headingScale, currentAppearance.headingScale ?? 1);

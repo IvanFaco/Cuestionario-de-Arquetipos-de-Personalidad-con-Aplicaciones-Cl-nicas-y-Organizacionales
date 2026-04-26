@@ -1,6 +1,9 @@
 {
-  "bootswatchTheme": "minty",
+  "bootswatchTheme": "brite",
   "fontOption": "roboto-slab",
   "customFontCssHref": "",
-  "customFontFamily": ""
+  "customFontFamily": "",
+  "headingScale": 0.95,
+  "subheadingScale": 0.95,
+  "bodyScale": 0.95
 }
