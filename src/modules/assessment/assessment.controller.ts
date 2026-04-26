@@ -18,6 +18,7 @@ import {
 } from "./assessment.domain.js";
 import { getHookQuestions, getPremiumQuestions, likertOptions } from "./assessment.questions.js";
 import { buildExecutiveReportPdf, getShadowLabel } from "./assessment.report.service.js";
+import { resolveAssessmentJourneyPath } from "./assessment.journey.js";
 import { buildSeoMeta } from "./assessment.seo.js";
 import {
   getLandingViewModel,
@@ -40,6 +41,24 @@ function createEmptyAssessmentSession() {
     hookAnswers: {},
     premiumAnswers: {}
   };
+}
+
+function getAuthenticatedJourneyPath(
+  req: Request,
+  options: {
+    preferDownload?: boolean;
+  } = {}
+): string {
+  const session = ensureAssessmentSession(req);
+  const userId = req.session.auth?.userId;
+
+  return resolveAssessmentJourneyPath({
+    hasLeadName: Boolean(session.leadName),
+    hasBasicResult: Boolean(session.hookOutcome),
+    hasPremiumResult: Boolean(session.premiumOutcome),
+    hasApprovedPremiumAccess: Boolean(userId && paymentsService.hasApprovedPremiumAccess(userId)),
+    preferDownload: options.preferDownload
+  });
 }
 
 function ensureAssessmentSession(req: Request) {
@@ -99,10 +118,6 @@ function ensurePremiumAccess(req: Request, res: Response): boolean {
   }
 
   return true;
-}
-
-function getAuthenticatedHomePath(req: Request): string {
-  return "/daily";
 }
 
 function ensureAuthenticatedSession(req: Request) {
@@ -449,7 +464,11 @@ export function renderPrivacy(req: Request, res: Response) {
 
 export function renderRegister(req: Request, res: Response) {
   if (req.session.auth) {
-    return res.redirect(getAuthenticatedHomePath(req));
+    return res.redirect(
+      getAuthenticatedJourneyPath(req, {
+        preferDownload: getRegisterIntent(req.query.intent) === "download"
+      })
+    );
   }
 
   const intent = getRegisterIntent(req.query.intent) ?? "account";
@@ -601,7 +620,7 @@ export async function handleProfileUpdate(req: Request, res: Response) {
 
 export function renderLogin(req: Request, res: Response) {
   if (req.session.auth) {
-    return res.redirect(getAuthenticatedHomePath(req));
+    return res.redirect(getAuthenticatedJourneyPath(req));
   }
 
   res.render("layouts/main", {
@@ -659,7 +678,7 @@ export async function handleLogin(req: Request, res: Response) {
       req.session.assessment ??
       createEmptyAssessmentSession();
 
-    return res.redirect("/daily");
+    return res.redirect(getAuthenticatedJourneyPath(req));
   } catch (error) {
     const message =
       error instanceof AuthError ? error.message : "No fue posible iniciar sesión.";
@@ -740,7 +759,7 @@ export async function handleRegister(req: Request, res: Response) {
     });
   }
 
-  return res.redirect(intent === "download" ? "/full-results/pdf" : "/daily");
+  return res.redirect(getAuthenticatedJourneyPath(req, { preferDownload: intent === "download" }));
 }
 
 export function renderAdmin(req: Request, res: Response) {
@@ -924,6 +943,10 @@ export function renderOnboarding(req: Request, res: Response) {
     return res.redirect("/empezar");
   }
 
+  if (session.premiumOutcome) {
+    return res.redirect(getAuthenticatedJourneyPath(req));
+  }
+
   if (!session.hookOutcome) {
     return res.redirect("/quick-test");
   }
@@ -957,6 +980,10 @@ export function renderQuickTestIntro(req: Request, res: Response) {
     return res.redirect("/empezar");
   }
 
+  if (session.premiumOutcome) {
+    return res.redirect(getAuthenticatedJourneyPath(req));
+  }
+
   res.render("layouts/main", {
     title: "MiRealYo | Quick Test",
     page: "../pages/quick-test/intro",
@@ -981,6 +1008,10 @@ export function renderFullTestIntro(req: Request, res: Response) {
 
   if (!session.hookOutcome) {
     return res.redirect("/quick-test");
+  }
+
+  if (session.premiumOutcome) {
+    return res.redirect(getAuthenticatedJourneyPath(req));
   }
 
   if (!ensurePremiumAccess(req, res)) {
@@ -1013,6 +1044,10 @@ export function startQuickTest(req: Request, res: Response) {
     return res.redirect("/empezar");
   }
 
+  if (session.premiumOutcome) {
+    return res.redirect(getAuthenticatedJourneyPath(req));
+  }
+
   const resumeIndex = getQuestionIndexToResume(getHookQuestions(), session.hookAnswers);
   return res.redirect(`/quick-test/${resumeIndex}`);
 }
@@ -1023,6 +1058,10 @@ export function startAssessment(req: Request, res: Response) {
 
   if (!session.leadName) {
     return res.redirect("/empezar");
+  }
+
+  if (session.premiumOutcome) {
+    return res.redirect(getAuthenticatedJourneyPath(req));
   }
 
   if (!session.hookOutcome) {
@@ -1070,6 +1109,10 @@ export function renderHookQuestion(req: Request, res: Response) {
     return res.redirect("/empezar");
   }
 
+  if (session.premiumOutcome) {
+    return res.redirect(getAuthenticatedJourneyPath(req));
+  }
+
   const resumeIndex = getQuestionIndexToResume(getHookQuestions(), session.hookAnswers as Partial<Record<string, LikertValue>>);
   const requestedIndex = parseIndex(req.params.index, getHookQuestions().length);
   const index = Math.min(requestedIndex, resumeIndex);
@@ -1102,6 +1145,10 @@ export function selectHookAnswer(req: Request, res: Response) {
     return res.redirect("/empezar");
   }
 
+  if (session.premiumOutcome) {
+    return res.redirect(getAuthenticatedJourneyPath(req));
+  }
+
   const index = parseIndex(req.params.index, getHookQuestions().length);
   const hookList = getHookQuestions();
   const question = hookList[index - 1];
@@ -1121,6 +1168,10 @@ export function submitHookQuestion(req: Request, res: Response) {
 
   if (!session.leadName) {
     return res.redirect("/empezar");
+  }
+
+  if (session.premiumOutcome) {
+    return res.redirect(getAuthenticatedJourneyPath(req));
   }
 
   const index = parseIndex(req.params.index, getHookQuestions().length);
@@ -1164,6 +1215,10 @@ export function renderTeaser(req: Request, res: Response) {
     return res.redirect(session.hookOutcome ? "/onboarding" : "/quick-test");
   }
 
+  if (session.premiumOutcome) {
+    return res.redirect(getAuthenticatedJourneyPath(req));
+  }
+
   res.render("layouts/main", {
     title: "MiRealYo | Quick Results",
     page: "../pages/quick-results/index",
@@ -1196,6 +1251,10 @@ export function startPremium(req: Request, res: Response) {
     return res.redirect("/quick-test");
   }
 
+  if (session.premiumOutcome) {
+    return res.redirect(getAuthenticatedJourneyPath(req));
+  }
+
   if (!ensurePremiumAccess(req, res)) {
     return;
   }
@@ -1213,6 +1272,10 @@ export function renderPremiumQuestion(req: Request, res: Response) {
 
   if (!session.hookOutcome) {
     return res.redirect("/quick-test");
+  }
+
+  if (session.premiumOutcome) {
+    return res.redirect(getAuthenticatedJourneyPath(req));
   }
 
   if (!ensurePremiumAccess(req, res)) {
@@ -1278,6 +1341,10 @@ export function selectPremiumAnswer(req: Request, res: Response) {
     return res.redirect("/quick-test");
   }
 
+  if (session.premiumOutcome) {
+    return res.redirect(getAuthenticatedJourneyPath(req));
+  }
+
   if (!ensurePremiumAccess(req, res)) {
     return;
   }
@@ -1301,6 +1368,10 @@ export function submitPremiumQuestion(req: Request, res: Response) {
 
   if (!session.hookOutcome) {
     return res.redirect("/quick-test");
+  }
+
+  if (session.premiumOutcome) {
+    return res.redirect(getAuthenticatedJourneyPath(req));
   }
 
   if (!ensurePremiumAccess(req, res)) {

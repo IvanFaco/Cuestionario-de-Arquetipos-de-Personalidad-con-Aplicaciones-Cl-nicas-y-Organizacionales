@@ -2,6 +2,7 @@ import type { Request, Response } from "express";
 
 import { AuthError } from "../auth/auth.service.js";
 import { getAuthService } from "../auth/auth.container.js";
+import { resolveAssessmentJourneyPath } from "../assessment/assessment.journey.js";
 import { getAssessmentPersistenceService } from "../assessment/assessment.persistence.container.js";
 import { buildSeoMeta } from "../assessment/assessment.seo.js";
 import { getPaymentsService, getWompiService } from "./payments.container.js";
@@ -13,6 +14,19 @@ const wompiService = getWompiService();
 
 function hasBasicResult(req: Request): boolean {
   return Boolean(req.session.assessment?.hookOutcome);
+}
+
+function getJourneyPath(req: Request, options: { preferDownload?: boolean } = {}): string {
+  const assessment = req.session.assessment;
+  const userId = req.session.auth?.userId;
+
+  return resolveAssessmentJourneyPath({
+    hasLeadName: Boolean(assessment?.leadName),
+    hasBasicResult: Boolean(assessment?.hookOutcome),
+    hasPremiumResult: Boolean(assessment?.premiumOutcome),
+    hasApprovedPremiumAccess: Boolean(userId && paymentsService.hasApprovedPremiumAccess(userId)),
+    preferDownload: options.preferDownload
+  });
 }
 
 function persistCurrentAssessment(req: Request): void {
@@ -54,12 +68,16 @@ function renderPremiumAuthGate(
 }
 
 function renderPremiumCheckout(req: Request, res: Response) {
+  if (req.session.assessment?.premiumOutcome) {
+    return res.redirect(getJourneyPath(req));
+  }
+
   if (!req.session.auth) {
     return res.redirect("/pagos/estudio-profundo/registro");
   }
 
   if (!hasBasicResult(req)) {
-    return res.redirect("/quick-test");
+    return res.redirect(getJourneyPath(req));
   }
 
   persistCurrentAssessment(req);
@@ -92,8 +110,12 @@ function renderPremiumCheckout(req: Request, res: Response) {
 }
 
 export function renderPremiumPaymentEntry(req: Request, res: Response) {
+  if (req.session.assessment?.premiumOutcome) {
+    return res.redirect(getJourneyPath(req));
+  }
+
   if (!hasBasicResult(req)) {
-    return res.redirect("/quick-test");
+    return res.redirect(getJourneyPath(req));
   }
 
   if (!req.session.auth) {
@@ -104,20 +126,28 @@ export function renderPremiumPaymentEntry(req: Request, res: Response) {
 }
 
 export function renderPremiumPaymentAuth(req: Request, res: Response) {
+  if (req.session.assessment?.premiumOutcome) {
+    return res.redirect(getJourneyPath(req));
+  }
+
   if (!hasBasicResult(req)) {
-    return res.redirect("/quick-test");
+    return res.redirect(getJourneyPath(req));
   }
 
   if (req.session.auth) {
-    return res.redirect("/pagos/estudio-profundo");
+    return res.redirect(getJourneyPath(req));
   }
 
   return renderPremiumAuthGate(req, res);
 }
 
 export async function registerForPremiumPayment(req: Request, res: Response) {
+  if (req.session.assessment?.premiumOutcome) {
+    return res.redirect(getJourneyPath(req));
+  }
+
   if (!hasBasicResult(req)) {
-    return res.redirect("/quick-test");
+    return res.redirect(getJourneyPath(req));
   }
 
   const email = String(req.body.email ?? "").trim().toLowerCase();
@@ -146,7 +176,7 @@ export async function registerForPremiumPayment(req: Request, res: Response) {
       email: user.email
     };
     persistCurrentAssessment(req);
-    return res.redirect("/pagos/estudio-profundo");
+    return res.redirect(getJourneyPath(req));
   } catch (error) {
     const message =
       error instanceof AuthError ? error.message : "No fue posible crear la cuenta.";
@@ -160,8 +190,12 @@ export async function registerForPremiumPayment(req: Request, res: Response) {
 }
 
 export async function loginForPremiumPayment(req: Request, res: Response) {
+  if (req.session.assessment?.premiumOutcome) {
+    return res.redirect(getJourneyPath(req));
+  }
+
   if (!hasBasicResult(req)) {
-    return res.redirect("/quick-test");
+    return res.redirect(getJourneyPath(req));
   }
 
   const email = String(req.body.email ?? "").trim().toLowerCase();
@@ -174,7 +208,7 @@ export async function loginForPremiumPayment(req: Request, res: Response) {
       email: user.email
     };
     persistCurrentAssessment(req);
-    return res.redirect("/pagos/estudio-profundo");
+    return res.redirect(getJourneyPath(req));
   } catch (error) {
     const message =
       error instanceof AuthError ? error.message : "No fue posible iniciar sesión.";
