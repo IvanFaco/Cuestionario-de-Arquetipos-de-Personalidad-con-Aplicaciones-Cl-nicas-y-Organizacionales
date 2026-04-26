@@ -29,7 +29,13 @@ function persistCurrentAssessment(req: Request): void {
 function renderPremiumAuthGate(
   req: Request,
   res: Response,
-  pageData: { email?: string; loginEmail?: string; error?: string; loginError?: string } = {}
+  pageData: {
+    email?: string;
+    loginEmail?: string;
+    error?: string;
+    loginError?: string;
+    activeMode?: "register" | "login";
+  } = {}
 ) {
   return res.render("layouts/main", {
     title: "MiRealYo | Guardar lectura",
@@ -120,14 +126,16 @@ export async function registerForPremiumPayment(req: Request, res: Response) {
   if (!email.includes("@")) {
     return renderPremiumAuthGate(req, res.status(400), {
       email,
-      error: "Ingresa un correo electrónico válido."
+      error: "Ingresa un correo electrónico válido.",
+      activeMode: "register"
     });
   }
 
   if (password.length < 6) {
     return renderPremiumAuthGate(req, res.status(400), {
       email,
-      error: "La contraseña debe tener al menos 6 caracteres."
+      error: "La contraseña debe tener al menos 6 caracteres.",
+      activeMode: "register"
     });
   }
 
@@ -145,7 +153,8 @@ export async function registerForPremiumPayment(req: Request, res: Response) {
 
     return renderPremiumAuthGate(req, res.status(400), {
       email,
-      error: message
+      error: message,
+      activeMode: "register"
     });
   }
 }
@@ -172,7 +181,8 @@ export async function loginForPremiumPayment(req: Request, res: Response) {
 
     return renderPremiumAuthGate(req, res.status(400), {
       loginEmail: email,
-      loginError: message
+      loginError: message,
+      activeMode: "login"
     });
   }
 }

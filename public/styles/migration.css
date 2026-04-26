@@ -8,6 +8,10 @@
   --shadow-soft: 0 18px 40px rgba(31, 68, 103, 0.12);
   --app-font-family-body: "Manrope", sans-serif;
   --app-font-family-heading: "Manrope", sans-serif;
+  --type-xs: 0.75rem;
+  --type-sm: 0.875rem;
+  --type-md: 1rem;
+  --type-lg: 1.25rem;
 }
 
 html,
@@ -17,20 +21,10 @@ body {
 
 body {
   margin: 0;
-  font-family: var(--app-font-family-body);
   background:
     radial-gradient(circle at top, rgba(111, 181, 214, 0.12), transparent 30%),
     linear-gradient(180deg, #f5fbff 0%, #eaf2f8 100%);
   color: var(--ink-strong);
-}
-
-h1,
-h2,
-h3,
-h4,
-.btn,
-.eyebrow {
-  font-family: var(--app-font-family-heading);
 }
 
 .app-frame {
@@ -95,19 +89,19 @@ h4,
 
 .hero-title {
   color: var(--ink-strong);
-  font-size: clamp(1.8rem, 5vw, 2.6rem);
+  font-size: clamp(1.5rem, 5vw, 1.75rem);
   line-height: 1;
 }
 
 .hero-copy {
   color: var(--ink-soft);
-  font-size: 0.98rem;
+  font-size: var(--type-md);
   line-height: 1.45;
 }
 
 .eyebrow {
   color: #3f789a;
-  font-size: 0.72rem;
+  font-size: var(--type-xs);
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -122,7 +116,7 @@ h4,
   border-radius: 999px;
   background: #153b52;
   color: white;
-  font-size: 0.73rem;
+  font-size: var(--type-xs);
   font-weight: 700;
 }
 
@@ -146,14 +140,13 @@ h4,
 }
 
 .mini-stat__value {
-  font-family: var(--app-font-family-heading);
-  font-size: 1rem;
+  font-size: var(--type-md);
   font-weight: 700;
   color: var(--ink-strong);
 }
 
 .mini-stat__label {
-  font-size: 0.72rem;
+  font-size: var(--type-xs);
   color: var(--ink-soft);
 }
 
@@ -202,12 +195,12 @@ h4,
   background: rgba(255, 255, 255, 0.74);
   border: 1px solid var(--border-soft);
   color: var(--ink-strong);
-  font-size: 0.74rem;
+  font-size: var(--type-xs);
   font-weight: 700;
 }
 
 .landing-form-title {
-  font-size: 1.35rem;
+  font-size: calc(var(--type-lg) * 1.08);
   font-weight: 700;
   color: var(--ink-strong);
 }
@@ -223,13 +216,13 @@ h4,
   background: linear-gradient(180deg, #f8fbfe 0%, #eef5fa 100%);
   border: 1px solid var(--border-soft);
   color: var(--ink-soft);
-  font-size: 0.84rem;
+  font-size: var(--type-sm);
   line-height: 1.35;
 }
 
 .surface-note--tight {
   padding: 0.7rem 0.85rem;
-  font-size: 0.78rem;
+  font-size: var(--type-xs);
 }
 
 .consent-check {
@@ -263,7 +256,7 @@ h4,
 
 .consent-check__copy {
   color: var(--ink-soft);
-  font-size: 0.84rem;
+  font-size: var(--type-sm);
   line-height: 1.4;
 }
 
@@ -321,7 +314,7 @@ h4,
 
 .privacy-intro {
   color: var(--ink-strong);
-  font-size: 0.95rem;
+  font-size: var(--type-md);
   line-height: 1.4;
 }
 
@@ -340,23 +333,23 @@ h4,
 .privacy-item__title {
   margin: 0 0 0.35rem;
   color: var(--ink-strong);
-  font-family: var(--app-font-family-heading);
-  font-size: 0.98rem;
+  font-size: var(--type-md);
   font-weight: 700;
   line-height: 1.15;
 }
 
 .privacy-item__copy {
   color: var(--ink-soft);
-  font-size: 0.88rem;
+  font-size: var(--type-sm);
   line-height: 1.35;
 }
 
 .privacy-meta {
   color: var(--ink-soft);
-  font-size: 0.76rem;
+  font-size: var(--type-xs);
 }
 
+/* Temporarily defer interaction color/size styling to Bootstrap defaults.
 .app-cta,
 .question-actions__next {
   width: 100%;
@@ -365,7 +358,7 @@ h4,
   align-items: center;
   justify-content: center;
   border-radius: 999px;
-  font-size: 1.05rem;
+  font-size: calc(var(--type-md) * 1.05);
   font-weight: 800;
   border: none;
   background: linear-gradient(135deg, #7658C4 0%, #9B7BD4 100%);
@@ -377,9 +370,10 @@ h4,
   min-width: 5.5rem;
   min-height: 2.8rem;
   padding-inline: 1rem;
-  font-size: 0.92rem;
+  font-size: var(--type-md);
   box-shadow: 0 10px 24px rgba(27, 110, 235, 0.22);
 }
+*/
 
 .question-screen {
   min-height: 100%;
@@ -416,14 +410,12 @@ h4,
 
 .question-progress__count {
   color: #232a31;
-  font-family: var(--app-font-family-heading);
-  font-size: 0.86rem;
+  font-size: var(--type-sm);
   font-weight: 700;
 }
 
 .question-title {
-  font-family: var(--app-font-family-heading);
-  font-size: clamp(1.25rem, 4vw, 1.65rem);
+  font-size: clamp(0.95rem, 2.8vw, 1.05rem);
   font-weight: 700;
   line-height: 1;
   text-align: center;
@@ -466,25 +458,23 @@ h4,
 
 .question-card-panel__selection-label {
   display: block;
-  font-size: 0.9rem;
+  font-size: var(--type-sm);
   color: #282d32;
 }
 
 .question-card-panel__selection-value {
   margin-top: 0.25rem;
   color: #2f2f2f;
-  font-family: var(--app-font-family-heading);
-  font-size: 1.08rem;
+  font-size: calc(var(--type-md) * 1.08);
   font-weight: 700;
   line-height: 1.15;
 }
 
 .question-text {
   color: #1f2328;
-  font-family: var(--app-font-family-heading);
-  font-size: clamp(1.22rem, 3.6vw, 1.75rem);
-  font-weight: 700;
-  line-height: 1.08;
+  font-size: clamp(1rem, 2.6vw, 1.25rem);
+  font-weight: 600;
+  line-height: 1.15;
   animation: question-text-entry 350ms ease-out forwards;
   text-wrap: balance;
   overflow-wrap: anywhere;
@@ -581,7 +571,7 @@ h4,
 }
 
 .seg-icon {
-  font-size: 1.625rem;
+  font-size: min(calc(var(--type-lg) * 1.3), 1.75rem);
   line-height: 1;
   pointer-events: none;
 }
@@ -656,7 +646,7 @@ h4,
 
 .bubble-x {
   box-shadow:
-    0 0 0 7px rgba(232, 112, 90, 0.22),
+    0 0 0 4px rgba(232, 112, 90, 0.22),
     0 4px 16px rgba(0, 0, 0, 0.13);
 }
 
@@ -667,7 +657,7 @@ h4,
 
 .bubble-down {
   box-shadow:
-    0 0 0 7px rgba(242, 181, 173, 0.35),
+    0 0 0 4px rgba(242, 181, 173, 0.35),
     0 4px 16px rgba(0, 0, 0, 0.1);
 }
 
@@ -678,7 +668,7 @@ h4,
 
 .bubble-neutral {
   box-shadow:
-    0 0 0 7px rgba(210, 205, 198, 0.4),
+    0 0 0 4px rgba(210, 205, 198, 0.4),
     0 4px 16px rgba(0, 0, 0, 0.1);
 }
 
@@ -689,7 +679,7 @@ h4,
 
 .bubble-up {
   box-shadow:
-    0 0 0 7px rgba(120, 200, 110, 0.3),
+    0 0 0 4px rgba(120, 200, 110, 0.3),
     0 4px 16px rgba(0, 0, 0, 0.1);
 }
 
@@ -700,7 +690,7 @@ h4,
 
 .bubble-fire {
   box-shadow:
-    0 0 0 7px rgba(76, 175, 80, 0.25),
+    0 0 0 4px rgba(76, 175, 80, 0.25),
     0 4px 16px rgba(0, 0, 0, 0.12);
 }
 
@@ -718,7 +708,7 @@ h4,
 .label-item {
   text-align: center;
   color: #a09990;
-  font-size: 0.78rem;
+  font-size: var(--type-xs);
   line-height: 1.15;
   transition: color 0.15s ease, font-weight 0.15s ease;
 }
@@ -735,6 +725,7 @@ h4,
   margin-top: 0.2rem;
 }
 
+/* Temporarily defer interaction color/size styling to Bootstrap defaults.
 .question-actions__back {
   width: 3.7rem;
   height: 3.7rem;
@@ -748,8 +739,9 @@ h4,
   box-shadow: 0 10px 24px rgba(34, 76, 112, 0.10);
   color: #8c98a3;
   text-decoration: none;
-  font-size: 1.8rem;
+  font-size: min(calc(var(--type-lg) * 1.44), 1.75rem);
 }
+*/
 
 .question-actions__back--ghost {
   width: 0;
@@ -816,7 +808,7 @@ h4,
 
 .teaser-card__kicker {
   color: #3f789a;
-  font-size: 0.82rem;
+  font-size: var(--type-sm);
   font-weight: 800;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -824,14 +816,13 @@ h4,
 
 .teaser-card__headline {
   color: #17344a;
-  font-family: var(--app-font-family-heading);
-  font-size: clamp(2rem, 7vw, 3rem);
+  font-size: clamp(1.5rem, 7vw, 1.75rem);
   line-height: 1;
 }
 
 .teaser-card__summary {
   color: #597083;
-  font-size: 0.98rem;
+  font-size: var(--type-md);
   line-height: 1.45;
 }
 
@@ -879,7 +870,7 @@ h4,
   border: 1px solid var(--border-soft);
   background: #ffffff;
   color: #17344a;
-  font-size: 1.2rem;
+  font-size: min(calc(var(--type-md) * 1.2), 1.75rem);
   box-shadow: 0 10px 24px rgba(34, 76, 112, 0.08);
 }
 
@@ -904,13 +895,13 @@ h4,
 
 .teaser-metric__rank {
   color: #3f789a;
-  font-size: 0.78rem;
+  font-size: var(--type-xs);
   font-weight: 800;
 }
 
 .teaser-metric__name {
   color: #17344a;
-  font-size: 0.92rem;
+  font-size: var(--type-md);
 }
 
 .teaser-metric__score {
@@ -920,7 +911,7 @@ h4,
   border-radius: 999px;
   background: #edf5ff;
   color: #17344a;
-  font-size: 0.8rem;
+  font-size: var(--type-sm);
   font-weight: 800;
 }
 
@@ -952,14 +943,13 @@ h4,
 
 .teaser-ranking__position {
   color: #3f789a;
-  font-family: var(--app-font-family-heading);
-  font-size: 0.82rem;
+  font-size: var(--type-sm);
   font-weight: 700;
 }
 
 .teaser-ranking__name {
   color: #17344a;
-  font-size: 0.88rem;
+  font-size: var(--type-sm);
   line-height: 1.15;
 }
 
@@ -974,6 +964,41 @@ h4,
   margin-top: 0.35rem;
 }
 
+.premium-auth-switch {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+  margin-top: 0.45rem;
+}
+
+/* Temporarily defer interaction color/size styling to Bootstrap defaults.
+.premium-auth-switch__button {
+  min-height: 2.7rem;
+  padding: 0.45rem 0.8rem;
+  border: 1px solid var(--border-soft);
+  border-radius: 999px;
+  background: #ffffff;
+  color: #597083;
+  font-size: var(--type-sm);
+  font-weight: 700;
+}
+
+.premium-auth-switch__button.is-active {
+  background: #17344a;
+  border-color: #17344a;
+  color: #ffffff;
+}
+*/
+
+.premium-auth-panels {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.premium-auth-form.is-hidden {
+  display: none;
+}
+
 .premium-auth-note {
   padding: 0.85rem 0.95rem;
   border-radius: 1rem;
@@ -983,8 +1008,7 @@ h4,
 
 .premium-auth-note__title {
   color: #17344a;
-  font-family: var(--app-font-family-heading);
-  font-size: 0.85rem;
+  font-size: var(--type-sm);
   font-weight: 700;
 }
 
@@ -1003,7 +1027,7 @@ h4,
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.7);
   color: #17344a;
-  font-size: 0.75rem;
+  font-size: var(--type-xs);
   line-height: 1;
 }
 
@@ -1019,13 +1043,12 @@ h4,
 
 .premium-auth-form__title {
   color: #17344a;
-  font-family: var(--app-font-family-heading);
-  font-size: 0.95rem;
+  font-size: var(--type-md);
 }
 
 .premium-auth-form__copy {
   color: #597083;
-  font-size: 0.84rem;
+  font-size: var(--type-sm);
   line-height: 1.35;
 }
 
@@ -1067,7 +1090,7 @@ h4,
 .admin-scale-value {
   margin-top: 0.25rem;
   color: #597083;
-  font-size: 0.8rem;
+  font-size: var(--type-sm);
 }
 
 .admin-table-selector {
@@ -1116,7 +1139,7 @@ h4,
   min-height: 3rem;
   border-radius: 1.1rem;
   padding-inline: 1rem;
-  font-size: 1rem;
+  font-size: var(--type-md);
   font-weight: 800;
   display: inline-flex;
   align-items: center;
@@ -1160,7 +1183,7 @@ h4,
 
 .dashboard-metric__label {
   color: #597083;
-  font-size: 0.68rem;
+  font-size: var(--type-xs);
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -1168,8 +1191,7 @@ h4,
 
 .dashboard-metric__value {
   color: #17344a;
-  font-family: var(--app-font-family-heading);
-  font-size: 1.6rem;
+  font-size: min(calc(var(--type-lg) * 1.28), 1.75rem);
   font-weight: 700;
   line-height: 1;
 }
@@ -1198,7 +1220,7 @@ h4,
 
 .dashboard-meta__label {
   color: #597083;
-  font-size: 0.72rem;
+  font-size: var(--type-xs);
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -1206,7 +1228,7 @@ h4,
 
 .dashboard-meta__value {
   color: #17344a;
-  font-size: 0.92rem;
+  font-size: var(--type-md);
   line-height: 1.2;
 }
 
@@ -1227,8 +1249,7 @@ h4,
 
 .dashboard-ranking__title {
   color: #17344a;
-  font-family: var(--app-font-family-heading);
-  font-size: 1.05rem;
+  font-size: calc(var(--type-md) * 1.05);
   font-weight: 700;
 }
 
@@ -1276,7 +1297,7 @@ h4,
 
 .daily-module-card span {
   color: #597083;
-  font-size: 0.82rem;
+  font-size: var(--type-sm);
   line-height: 1.3;
 }
 
@@ -1301,11 +1322,11 @@ h4,
   display: flex;
   flex-direction: column;
   gap: 0.15rem;
-  font-size: 0.78rem;
+  font-size: var(--type-xs);
 }
 
 .db-table {
-  font-size: 0.8rem;
+  font-size: var(--type-sm);
 }
 
 .db-table code {
@@ -1316,7 +1337,7 @@ h4,
 
 .dashboard-ranking__meta {
   color: #597083;
-  font-size: 0.84rem;
+  font-size: var(--type-sm);
 }
 
 .ranking-summary {
@@ -1353,7 +1374,7 @@ h4,
   min-width: 0;
   flex: 1 1 auto;
   color: var(--ink-strong);
-  font-size: 0.85rem;
+  font-size: var(--type-sm);
 }
 
 .summary-ranking-item__score {
@@ -1363,8 +1384,7 @@ h4,
   border-radius: 999px;
   background: white;
   border: 1px solid var(--border-soft);
-  font-family: var(--app-font-family-heading);
-  font-size: 0.74rem;
+  font-size: var(--type-xs);
 }
 
 .ranking-details {
@@ -1374,7 +1394,7 @@ h4,
 .ranking-details summary {
   cursor: pointer;
   color: #1a5d84;
-  font-size: 0.82rem;
+  font-size: var(--type-sm);
   font-weight: 700;
 }
 
@@ -1401,7 +1421,7 @@ h4,
   }
 
   .hero-title {
-    font-size: clamp(2rem, 4vw, 3rem);
+    font-size: clamp(1.5rem, 4vw, 1.75rem);
   }
 
   .question-card-panel__body {
@@ -1419,11 +1439,11 @@ h4,
   }
 
   .question-progress__count {
-    font-size: 0.8rem;
+    font-size: var(--type-sm);
   }
 
   .question-title {
-    font-size: clamp(1.05rem, 4.6vw, 1.3rem);
+    font-size: clamp(0.9rem, 3.8vw, 1rem);
   }
 
   .question-card-panel {
@@ -1441,16 +1461,16 @@ h4,
   }
 
   .question-card-panel__selection-label {
-    font-size: 0.82rem;
+    font-size: var(--type-sm);
   }
 
   .question-card-panel__selection-value {
-    font-size: 0.98rem;
+    font-size: var(--type-md);
   }
 
   .question-text {
-    font-size: clamp(0.96rem, 3.9vw, 1.22rem);
-    line-height: 1.12;
+    font-size: clamp(0.95rem, 3.8vw, 1.05rem);
+    line-height: 1.15;
   }
 
   .question-text--center {
@@ -1475,7 +1495,7 @@ h4,
   }
 
   .label-item {
-    font-size: 0.72rem;
+    font-size: var(--type-xs);
   }
 
   .question-actions {
@@ -1486,13 +1506,13 @@ h4,
   .question-actions__back {
     width: 3.2rem;
     height: 3.2rem;
-    font-size: 1.55rem;
+    font-size: min(calc(var(--type-lg) * 1.24), 1.75rem);
   }
 
   .app-cta,
   .question-actions__next {
     min-height: 3.25rem;
-    font-size: 0.98rem;
+    font-size: var(--type-md);
   }
 
   .consent-check {
@@ -1501,7 +1521,7 @@ h4,
   }
 
   .consent-check__copy {
-    font-size: 0.8rem;
+    font-size: var(--type-sm);
   }
 
   .privacy-page {
@@ -1518,7 +1538,7 @@ h4,
   }
 
   .privacy-intro {
-    font-size: 0.86rem;
+    font-size: var(--type-sm);
   }
 
   .privacy-item {
@@ -1526,11 +1546,11 @@ h4,
   }
 
   .privacy-item__title {
-    font-size: 0.9rem;
+    font-size: var(--type-sm);
   }
 
   .privacy-item__copy {
-    font-size: 0.82rem;
+    font-size: var(--type-sm);
   }
 }
 
@@ -1555,7 +1575,7 @@ h4,
   }
 
   .hero-title {
-    font-size: clamp(1.75rem, 10vw, 2.35rem);
+    font-size: clamp(1.5rem, 10vw, 1.75rem);
   }
 
   .question-card-panel {
@@ -1567,7 +1587,8 @@ h4,
   }
 
   .question-text {
-    font-size: clamp(1.35rem, 8vw, 1.9rem);
+    font-size: clamp(0.95rem, 4.8vw, 1.1rem);
+    line-height: 1.2;
   }
 
   .selected-bubble {

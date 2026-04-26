@@ -24,7 +24,7 @@
       <form action="/admin/appearance" method="post" class="compact-stack">
         <div>
           <label class="form-label form-label-sm fw-semibold" for="bootswatchTheme">Tema Bootswatch</label>
-          <select class="form-select form-select-lg compact-control" id="bootswatchTheme" name="bootswatchTheme">
+          <select class="form-select compact-control" id="bootswatchTheme" name="bootswatchTheme">
             <% pageData.themeOptions.forEach((option) => { %>
               <option value="<%= option.value %>" <%= pageData.appearance.bootswatchTheme === option.value ? "selected" : "" %>>
                 <%= option.label %>
@@ -35,7 +35,7 @@
 
         <div>
           <label class="form-label form-label-sm fw-semibold" for="fontOption">Google Font general</label>
-          <select class="form-select form-select-lg compact-control" id="fontOption" name="fontOption">
+          <select class="form-select compact-control" id="fontOption" name="fontOption">
             <% pageData.fontOptions.forEach((option) => { %>
               <option value="<%= option.value %>" <%= pageData.appearance.fontOption === option.value ? "selected" : "" %>>
                 <%= option.label %>
@@ -48,12 +48,12 @@
           <label class="form-label form-label-sm fw-semibold" for="customFontCssHref">
             O pega el link CSS de Google Fonts que quieras usar
           </label>
-          <input class="form-control form-control-lg compact-control" id="customFontCssHref" name="customFontCssHref" type="url" placeholder="https://fonts.googleapis.com/css2?family=..." value="<%= pageData.appearance.customFontCssHref ?? '' %>" />
+          <input class="form-control compact-control" id="customFontCssHref" name="customFontCssHref" type="url" placeholder="https://fonts.googleapis.com/css2?family=..." value="<%= pageData.appearance.customFontCssHref ?? '' %>" />
         </div>
 
         <div>
           <label class="form-label form-label-sm fw-semibold" for="customFontFamily">Nombre de la font-family a aplicar</label>
-          <input class="form-control form-control-lg compact-control" id="customFontFamily" name="customFontFamily" type="text" placeholder="Ej: Space Grotesk" value="<%= pageData.appearance.customFontFamily ?? '' %>" />
+          <input class="form-control compact-control" id="customFontFamily" name="customFontFamily" type="text" placeholder="Ej: Space Grotesk" value="<%= pageData.appearance.customFontFamily ?? '' %>" />
         </div>
 
         <div class="admin-scale-grid">
@@ -87,7 +87,7 @@
       <form method="get" action="/admin" class="admin-table-selector">
         <div>
           <label class="form-label form-label-sm fw-semibold" for="table">Tabla</label>
-          <select class="form-select form-select-lg compact-control" id="table" name="table">
+          <select class="form-select compact-control" id="table" name="table">
             <% pageData.tables.forEach((table) => { %>
               <option value="<%= table.name %>" <%= pageData.selectedTable === table.name ? "selected" : "" %>>
                 <%= table.name %> (<%= table.rowCount %>)
@@ -97,7 +97,7 @@
         </div>
         <div>
           <label class="form-label form-label-sm fw-semibold" for="limit">Filas</label>
-          <input class="form-control form-control-lg compact-control" id="limit" name="limit" type="number" min="1" max="100" value="<%= pageData.limit %>" />
+          <input class="form-control compact-control" id="limit" name="limit" type="number" min="1" max="100" value="<%= pageData.limit %>" />
         </div>
         <button class="btn btn-outline w-full" type="submit">Ver tabla</button>
       </form>
@@ -164,6 +164,7 @@
         <a class="btn btn-primary app-cta app-cta--compact" href="/">Ir a la splash</a>
         <a class="btn btn-primary app-cta app-cta--compact" href="/migration">Ver estado de migracion</a>
         <a class="btn btn-primary app-cta app-cta--compact" href="/health">Healthcheck</a>
+        <button class="btn btn-outline w-full" type="button" data-reset-pwa-cache>Resetear cache PWA</button>
       </div>
     </article>
   </section>

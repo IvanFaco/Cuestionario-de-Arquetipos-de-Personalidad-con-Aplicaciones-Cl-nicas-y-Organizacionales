@@ -21,7 +21,7 @@
       <form action="/db" method="get" class="compact-stack">
         <div>
           <label class="form-label form-label-sm fw-semibold" for="table">Tabla</label>
-          <select class="form-select form-select-lg compact-control" id="table" name="table">
+          <select class="form-select compact-control" id="table" name="table">
             <% pageData.tables.forEach((table) => { %>
               <option value="<%= table.name %>" <%= pageData.selectedTable === table.name ? "selected" : "" %>>
                 <%= table.name %> (<%= table.rowCount %>)
@@ -33,7 +33,7 @@
         <div>
           <label class="form-label form-label-sm fw-semibold" for="limit">Límite de filas</label>
           <input
-            class="form-control form-control-lg compact-control"
+            class="form-control compact-control"
             id="limit"
             name="limit"
             type="number"

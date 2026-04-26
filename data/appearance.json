@@ -1,9 +1,9 @@
 {
-  "bootswatchTheme": "brite",
+  "bootswatchTheme": "pulse",
   "fontOption": "roboto-slab",
   "customFontCssHref": "",
   "customFontFamily": "",
   "headingScale": 0.95,
-  "subheadingScale": 0.95,
+  "subheadingScale": 1.32,
   "bodyScale": 0.95
 }
