@@ -1,67 +1,163 @@
-<section class="stage-page landing-page">
-  <form action="/registro" method="post" id="registro-form" class="stage-page">
+<%
+  const activeMode = pageData.activeMode === "login" ? "login" : "register";
+  const intent = pageData.intent ?? "account";
+%>
+
+<section class="stage-page landing-page auth-access-page">
+  <div class="d-flex flex-column align-items-center justify-content-center flex-grow-1 w-100">
     <section class="landing-form-panel my-auto">
       <div class="compact-stack">
         <div>
           <p class="eyebrow mb-2">Informe completo</p>
-          <h2 class="landing-form-title mb-1">Crea tu cuenta</h2>
-          <p class="hero-copy mb-0">Guarda tu lectura y accede a tu informe completo cuando quieras.</p>
+          <h2 class="landing-form-title mb-1">Accede a tu cuenta</h2>
+          <p class="hero-copy mb-0">Crea una cuenta nueva o entra con una existente para continuar tu proceso.</p>
         </div>
 
-        <div class="row g-2">
-          <div class="col-12">
-            <label class="form-label form-label-sm fw-semibold" for="email">Tu correo electrónico</label>
-            <input
-              class="form-control compact-control"
-              id="email"
-              name="email"
-              type="email"
-              required
-              value="<%= pageData.email ?? '' %>"
-            />
-          </div>
-          <div class="col-12">
-            <label class="form-label form-label-sm fw-semibold" for="password">Elige una contraseña</label>
-            <input
-              class="form-control compact-control"
-              id="password"
-              name="password"
-              type="password"
-              minlength="6"
-              required
-            />
-          </div>
+        <div class="premium-auth-switch" role="tablist" aria-label="Acceso a cuenta">
+          <button
+            class="premium-auth-switch__button <%= activeMode === 'register' ? 'is-active' : '' %>"
+            type="button"
+            data-auth-mode="register"
+            aria-pressed="<%= activeMode === 'register' ? 'true' : 'false' %>"
+          >
+            Crear cuenta
+          </button>
+          <button
+            class="premium-auth-switch__button <%= activeMode === 'login' ? 'is-active' : '' %>"
+            type="button"
+            data-auth-mode="login"
+            aria-pressed="<%= activeMode === 'login' ? 'true' : 'false' %>"
+          >
+            Ya tengo cuenta
+          </button>
         </div>
 
-        <input type="hidden" name="registrationIntent" value="<%= pageData.intent ?? 'account' %>" />
+        <div class="premium-auth-panels">
+          <form action="/registro" method="post" class="premium-auth-form <%= activeMode === 'register' ? 'is-active' : 'is-hidden' %>" data-auth-panel="register">
+            <input type="hidden" name="registrationIntent" value="<%= intent %>" />
 
-        <div class="surface-note">
-          <% if ((pageData.intent ?? 'account') === 'download') { %>
-            Al crear tu cuenta descargaremos tu informe completo en PDF inmediatamente.
-          <% } else { %>
-            Al crear tu cuenta continuaremos con el siguiente paso de tu proceso.
-          <% } %>
+            <div class="row g-2">
+              <div class="col-12">
+                <label class="form-label form-label-sm fw-semibold" for="register-email">Tu correo electrónico</label>
+                <input
+                  class="form-control compact-control"
+                  id="register-email"
+                  name="email"
+                  type="email"
+                  autocomplete="email"
+                  required
+                  value="<%= pageData.email ?? '' %>"
+                />
+              </div>
+              <div class="col-12">
+                <label class="form-label form-label-sm fw-semibold" for="register-password">Elige una contraseña</label>
+                <input
+                  class="form-control compact-control"
+                  id="register-password"
+                  name="password"
+                  type="password"
+                  autocomplete="new-password"
+                  minlength="6"
+                  required
+                />
+              </div>
+            </div>
+
+            <div class="surface-note mb-0">
+              <% if (intent === 'download') { %>
+                Al crear tu cuenta descargaremos tu informe completo en PDF inmediatamente.
+              <% } else { %>
+                Al crear tu cuenta continuaremos con el siguiente paso de tu proceso.
+              <% } %>
+            </div>
+
+            <% if (pageData.error && activeMode === 'register') { %>
+              <div class="alert alert-danger compact-alert mb-0" role="alert"><%= pageData.error %></div>
+            <% } %>
+
+            <button class="btn btn-primary app-cta app-cta--compact w-full" type="submit">
+              <%= intent === 'download' ? 'Crear cuenta y descargar' : 'Crear cuenta' %>
+            </button>
+          </form>
+
+          <form action="/login" method="post" class="premium-auth-form <%= activeMode === 'login' ? 'is-active' : 'is-hidden' %>" data-auth-panel="login">
+            <div class="row g-2">
+              <div class="col-12">
+                <label class="form-label form-label-sm fw-semibold" for="login-email">Tu correo electrónico</label>
+                <input
+                  class="form-control compact-control"
+                  id="login-email"
+                  name="email"
+                  type="email"
+                  autocomplete="email"
+                  required
+                  value="<%= pageData.loginEmail ?? '' %>"
+                />
+              </div>
+              <div class="col-12">
+                <label class="form-label form-label-sm fw-semibold" for="login-password">Tu contraseña</label>
+                <input
+                  class="form-control compact-control"
+                  id="login-password"
+                  name="password"
+                  type="password"
+                  autocomplete="current-password"
+                  required
+                />
+              </div>
+            </div>
+
+            <div class="surface-note surface-note--tight mb-0">
+              Si ya habías iniciado tu proceso, entra aquí para ver tu resultado sin repetir el flujo.
+            </div>
+
+            <% if (pageData.loginError && activeMode === 'login') { %>
+              <div class="alert alert-danger compact-alert mb-0" role="alert"><%= pageData.loginError %></div>
+            <% } %>
+
+            <button class="btn btn-primary app-cta app-cta--compact w-full" type="submit">Entrar</button>
+          </form>
         </div>
-
-        <% if (pageData.error) { %>
-          <div class="alert alert-danger compact-alert mb-0" role="alert"><%= pageData.error %></div>
-        <% } %>
       </div>
     </section>
+  </div>
 
-    <footer class="question-actions">
-    <a class="back-button question-actions__back" href="/full-results" aria-label="Volver">
+  <footer class="question-actions">
+    <a class="back-button question-actions__back" href="<%= intent === 'download' ? '/full-results' : '/' %>" aria-label="Volver">
       <span aria-hidden="true">‹</span>
     </a>
-      <div class="flex-grow-1">
-        <button
-          type="submit"
-          form="registro-form"
-          class="btn btn-primary app-cta question-actions__next"
-        >
-          <%= (pageData.intent ?? 'account') === 'download' ? 'Crear cuenta y descargar' : 'Crear cuenta' %>
-        </button>
-      </div>
-    </footer>
-  </form>
+    <span class="question-actions__back question-actions__back--ghost"></span>
+  </footer>
 </section>
+
+<script>
+  (() => {
+    const root = document.querySelector(".auth-access-page");
+    if (!root) {
+      return;
+    }
+
+    const buttons = root.querySelectorAll("[data-auth-mode]");
+    const panels = root.querySelectorAll("[data-auth-panel]");
+
+    const setMode = (mode) => {
+      buttons.forEach((button) => {
+        const isActive = button.getAttribute("data-auth-mode") === mode;
+        button.classList.toggle("is-active", isActive);
+        button.setAttribute("aria-pressed", isActive ? "true" : "false");
+      });
+
+      panels.forEach((panel) => {
+        const isActive = panel.getAttribute("data-auth-panel") === mode;
+        panel.classList.toggle("is-active", isActive);
+        panel.classList.toggle("is-hidden", !isActive);
+      });
+    };
+
+    buttons.forEach((button) => {
+      button.addEventListener("click", () => {
+        setMode(button.getAttribute("data-auth-mode") || "register");
+      });
+    });
+  })();
+</script>

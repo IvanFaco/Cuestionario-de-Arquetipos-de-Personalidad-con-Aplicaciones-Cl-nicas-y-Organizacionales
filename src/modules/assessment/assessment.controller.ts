@@ -236,12 +236,20 @@ const assessmentPersistenceService = getAssessmentPersistenceService();
 const paymentsService = getPaymentsService();
 const databaseInspector = getDatabaseInspector();
 const registerIntentOptions = ["account", "download"] as const;
+const authModeOptions = ["register", "login"] as const;
 
 type RegisterIntent = (typeof registerIntentOptions)[number];
+type AuthMode = (typeof authModeOptions)[number];
 
 function getRegisterIntent(value: unknown): RegisterIntent | null {
   return typeof value === "string" && registerIntentOptions.includes(value as RegisterIntent)
     ? (value as RegisterIntent)
+    : null;
+}
+
+function getAuthMode(value: unknown): AuthMode | null {
+  return typeof value === "string" && authModeOptions.includes(value as AuthMode)
+    ? (value as AuthMode)
     : null;
 }
 
@@ -251,21 +259,25 @@ function renderRegisterPage(
     email?: string;
     error?: string;
     intent?: RegisterIntent;
+    activeMode?: AuthMode;
+    loginEmail?: string;
+    loginError?: string;
   } = {}
 ) {
   res.render("layouts/main", {
-    title: "MiRealYo | Crear cuenta",
+    title: "MiRealYo | Acceso",
     page: "../pages/register/index",
     seo: buildSeoMeta(
       {
-        title: "MiRealYo | Crea tu cuenta",
-        description: "Crea tu cuenta para guardar tu lectura y acceder a tu informe completo.",
+        title: "MiRealYo | Acceso a tu cuenta",
+        description: "Crea tu cuenta o inicia sesión para guardar tu lectura y continuar tu proceso.",
         canonicalPath: "/registro"
       },
       res.app.locals.siteUrl
     ),
     pageData: {
       intent: pageData.intent ?? "download",
+      activeMode: pageData.activeMode ?? "register",
       ...pageData
     }
   });
@@ -472,7 +484,8 @@ export function renderRegister(req: Request, res: Response) {
   }
 
   const intent = getRegisterIntent(req.query.intent) ?? "account";
-  renderRegisterPage(res, { intent });
+  const activeMode = getAuthMode(req.query.mode) ?? "register";
+  renderRegisterPage(res, { intent, activeMode });
 }
 
 export function renderDaily(req: Request, res: Response) {
@@ -623,22 +636,7 @@ export function renderLogin(req: Request, res: Response) {
     return res.redirect(getAuthenticatedJourneyPath(req));
   }
 
-  res.render("layouts/main", {
-    title: "MiRealYo | Iniciar sesión",
-    page: "../pages/login/index",
-    seo: buildSeoMeta(
-      {
-        title: "MiRealYo | Iniciar sesión",
-        description: "Ingresa a tu cuenta para acceder a tu lectura.",
-        canonicalPath: "/login"
-      },
-      res.app.locals.siteUrl
-    ),
-    pageData: {
-      title: "Bienvenido de vuelta",
-      subtitle: "Ingresa a tu cuenta para retomar tu proceso y acceder a tu lectura."
-    }
-  });
+  return renderRegisterPage(res, { activeMode: "login", intent: "account" });
 }
 
 export async function handleLogin(req: Request, res: Response) {
@@ -646,23 +644,11 @@ export async function handleLogin(req: Request, res: Response) {
   const password = String(req.body.password ?? "");
 
   if (!email.includes("@") || !password) {
-    return res.status(400).render("layouts/main", {
-      title: "MiRealYo | Iniciar sesión",
-      page: "../pages/login/index",
-      seo: buildSeoMeta(
-        {
-          title: "MiRealYo | Iniciar sesión",
-          description: "Ingresa a tu cuenta para acceder a tu lectura.",
-          canonicalPath: "/login"
-        },
-        res.app.locals.siteUrl
-      ),
-      pageData: {
-        title: "Bienvenido de vuelta",
-        subtitle: "Ingresa a tu cuenta para retomar tu proceso y acceder a tu lectura.",
-        email,
-        error: "Credenciales inválidas."
-      }
+    return renderRegisterPage(res.status(400), {
+      activeMode: "login",
+      intent: "account",
+      loginEmail: email,
+      loginError: "Credenciales inválidas."
     });
   }
 
@@ -683,23 +669,11 @@ export async function handleLogin(req: Request, res: Response) {
     const message =
       error instanceof AuthError ? error.message : "No fue posible iniciar sesión.";
 
-    return res.status(400).render("layouts/main", {
-      title: "MiRealYo | Iniciar sesión",
-      page: "../pages/login/index",
-      seo: buildSeoMeta(
-        {
-          title: "MiRealYo | Iniciar sesión",
-          description: "Ingresa a tu cuenta para acceder a tu lectura.",
-          canonicalPath: "/login"
-        },
-        res.app.locals.siteUrl
-      ),
-      pageData: {
-        title: "Bienvenido de vuelta",
-        subtitle: "Ingresa a tu cuenta para retomar tu proceso y acceder a tu lectura.",
-        email,
-        error: message
-      }
+    return renderRegisterPage(res.status(400), {
+      activeMode: "login",
+      intent: "account",
+      loginEmail: email,
+      loginError: message
     });
   }
 }
