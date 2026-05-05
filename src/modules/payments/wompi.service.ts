@@ -25,6 +25,18 @@ interface WompiTransactionEvent {
   timestamp?: number;
 }
 
+interface WompiTransactionLookupResponse {
+  data?: {
+    id?: string;
+    reference?: string;
+    status?: PaymentStatus;
+    amount_in_cents?: number;
+    currency?: string;
+    payment_method_type?: string;
+    customer_email?: string;
+  };
+}
+
 function sha256(value: string): string {
   return crypto.createHash("sha256").update(value).digest("hex");
 }
@@ -42,6 +54,12 @@ function getNestedValue(source: unknown, path: string): string {
 }
 
 export class WompiService {
+  private getApiBaseUrl(): string {
+    return env.wompi.environment === "production"
+      ? "https://production.wompi.co/v1"
+      : "https://sandbox.wompi.co/v1";
+  }
+
   buildIntegritySignature(reference: string, amountInCents: number, currency: string): string {
     return sha256(`${reference}${amountInCents}${currency}${env.wompi.integritySecret}`);
   }
@@ -77,6 +95,35 @@ export class WompiService {
       status: transaction.status,
       providerTransactionId: transaction.id,
       providerPaymentMethod: transaction.payment_method_type
+    };
+  }
+
+  async fetchTransactionById(transactionId: string) {
+    if (!transactionId.trim()) {
+      return null;
+    }
+
+    const response = await fetch(
+      `${this.getApiBaseUrl()}/transactions/${encodeURIComponent(transactionId)}`
+    );
+
+    if (!response.ok) {
+      return null;
+    }
+
+    const payload = (await response.json()) as WompiTransactionLookupResponse;
+    const transaction = payload.data;
+
+    if (!transaction?.reference || !transaction.status) {
+      return null;
+    }
+
+    return {
+      reference: transaction.reference,
+      status: transaction.status,
+      providerTransactionId: transaction.id,
+      providerPaymentMethod: transaction.payment_method_type,
+      rawEvent: payload
     };
   }
 }

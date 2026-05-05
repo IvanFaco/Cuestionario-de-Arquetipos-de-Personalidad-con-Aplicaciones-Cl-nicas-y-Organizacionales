@@ -63,3 +63,42 @@ test("WompiService rejects invalid event checksums", () => {
 
   env.wompi.eventsSecret = previousEventsSecret;
 });
+
+test("WompiService fetches transaction details by id", async () => {
+  const originalFetch = globalThis.fetch;
+  const previousEnvironment = env.wompi.environment;
+  env.wompi.environment = "sandbox";
+
+  globalThis.fetch = (async () =>
+    ({
+      ok: true,
+      json: async () => ({
+        data: {
+          id: "trx_test_123",
+          reference: "MRY-123",
+          status: "APPROVED",
+          payment_method_type: "CARD"
+        }
+      })
+    } as Response)) as typeof fetch;
+
+  const transaction = await new WompiService().fetchTransactionById("trx_test_123");
+
+  assert.deepEqual(transaction, {
+    reference: "MRY-123",
+    status: "APPROVED",
+    providerTransactionId: "trx_test_123",
+    providerPaymentMethod: "CARD",
+    rawEvent: {
+      data: {
+        id: "trx_test_123",
+        reference: "MRY-123",
+        status: "APPROVED",
+        payment_method_type: "CARD"
+      }
+    }
+  });
+
+  globalThis.fetch = originalFetch;
+  env.wompi.environment = previousEnvironment;
+});

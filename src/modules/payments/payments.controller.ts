@@ -156,7 +156,7 @@ export async function registerForPremiumPayment(req: Request, res: Response) {
   if (!email.includes("@")) {
     return renderPremiumAuthGate(req, res.status(400), {
       email,
-      error: "Ingresa un correo electrónico válido.",
+      error: "Ingresa un correo electr\u00f3nico v\u00e1lido.",
       activeMode: "register"
     });
   }
@@ -164,7 +164,7 @@ export async function registerForPremiumPayment(req: Request, res: Response) {
   if (password.length < 6) {
     return renderPremiumAuthGate(req, res.status(400), {
       email,
-      error: "La contraseña debe tener al menos 6 caracteres.",
+      error: "La contrase\u00f1a debe tener al menos 6 caracteres.",
       activeMode: "register"
     });
   }
@@ -211,7 +211,7 @@ export async function loginForPremiumPayment(req: Request, res: Response) {
     return res.redirect(getJourneyPath(req));
   } catch (error) {
     const message =
-      error instanceof AuthError ? error.message : "No fue posible iniciar sesión.";
+      error instanceof AuthError ? error.message : "No fue posible iniciar sesi\u00f3n.";
 
     return renderPremiumAuthGate(req, res.status(400), {
       loginEmail: email,
@@ -221,10 +221,31 @@ export async function loginForPremiumPayment(req: Request, res: Response) {
   }
 }
 
-export function renderPaymentResponse(req: Request, res: Response) {
+function shouldPollPaymentStatus(
+  payment: ReturnType<typeof paymentsService.findPaymentByReference>,
+  isOwnPayment: boolean
+): boolean {
+  return Boolean(isOwnPayment && (!payment || payment.status === "PENDING"));
+}
+
+export async function renderPaymentResponse(req: Request, res: Response) {
   const reference = String(req.query.reference ?? "");
-  const payment = reference ? paymentsService.findPaymentByReference(reference) : null;
+  const transactionId = String(req.query.id ?? "");
+  let payment = reference ? paymentsService.findPaymentByReference(reference) : null;
+
+  if (transactionId && (!payment || payment.status === "PENDING")) {
+    try {
+      payment = (await paymentsService.syncPaymentStatusFromTransactionId(transactionId)) ?? payment;
+    } catch {
+      // Keep local state when remote validation is temporarily unavailable.
+    }
+  }
+
   const isOwnPayment = Boolean(payment && payment.userId === req.session.auth?.userId);
+
+  if (payment?.status === "APPROVED" && isOwnPayment) {
+    return res.redirect("/full-test");
+  }
 
   return res.render("layouts/main", {
     title: "MiRealYo | Estado del pago",
@@ -232,7 +253,7 @@ export function renderPaymentResponse(req: Request, res: Response) {
     seo: buildSeoMeta(
       {
         title: "MiRealYo | Estado del pago",
-        description: "Consulta el estado de activación de tu estudio profundo.",
+        description: "Consulta el estado de activaci\u00f3n de tu estudio profundo.",
         canonicalPath: "/pagos/respuesta",
         robots: "noindex,nofollow"
       },
@@ -240,8 +261,10 @@ export function renderPaymentResponse(req: Request, res: Response) {
     ),
     pageData: {
       reference,
+      transactionId,
       payment,
-      isOwnPayment
+      isOwnPayment,
+      shouldPoll: shouldPollPaymentStatus(payment, isOwnPayment)
     }
   });
 }

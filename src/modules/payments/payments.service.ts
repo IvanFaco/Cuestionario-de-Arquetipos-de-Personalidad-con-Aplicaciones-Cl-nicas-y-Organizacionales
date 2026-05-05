@@ -94,6 +94,16 @@ export class PaymentsService {
     });
   }
 
+  async syncPaymentStatusFromTransactionId(transactionId: string): Promise<PaymentRecord | null> {
+    const transaction = await this.wompiService.fetchTransactionById(transactionId);
+
+    if (!transaction) {
+      return null;
+    }
+
+    return this.updateFromWompiEvent(transaction);
+  }
+
   isWompiConfigured(): boolean {
     return this.wompiService.isConfigured();
   }
