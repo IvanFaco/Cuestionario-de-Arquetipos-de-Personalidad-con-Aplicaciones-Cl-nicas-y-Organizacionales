@@ -83,8 +83,24 @@ export class PaymentsService {
     status: PaymentStatus;
     providerTransactionId?: string;
     providerPaymentMethod?: string;
+    amountInCents?: number;
+    currency?: string;
     rawEvent: unknown;
   }): PaymentRecord | null {
+    const payment = this.findPaymentByReference(input.reference);
+
+    if (!payment) {
+      return null;
+    }
+
+    if (input.amountInCents !== undefined && input.amountInCents !== payment.amountInCents) {
+      return null;
+    }
+
+    if (input.currency && input.currency !== payment.currency) {
+      return null;
+    }
+
     return this.paymentsRepository.updatePaymentFromProvider({
       reference: input.reference,
       status: input.status,

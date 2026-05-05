@@ -233,7 +233,7 @@ function shouldPollPaymentStatus(
 
 export async function renderPaymentResponse(req: Request, res: Response) {
   const reference = String(req.query.reference ?? "");
-  const transactionId = String(req.query.id ?? "");
+  const transactionId = String(req.query.id ?? req.query.transaction_id ?? "");
   let payment = reference ? paymentsService.findPaymentByReference(reference) : null;
 
   if (transactionId && (!payment || payment.status === "PENDING")) {

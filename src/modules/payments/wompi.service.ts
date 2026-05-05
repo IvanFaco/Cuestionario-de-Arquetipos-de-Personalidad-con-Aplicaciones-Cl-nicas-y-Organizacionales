@@ -3,6 +3,14 @@ import crypto from "node:crypto";
 import { env } from "../../config/env.js";
 import type { PaymentStatus } from "./payments.types.js";
 
+const paymentStatuses = new Set<PaymentStatus>([
+  "PENDING",
+  "APPROVED",
+  "DECLINED",
+  "ERROR",
+  "VOIDED"
+]);
+
 interface WompiEventSignature {
   properties?: string[];
   checksum?: string;
@@ -53,6 +61,10 @@ function getNestedValue(source: unknown, path: string): string {
   return value === undefined || value === null ? "" : String(value);
 }
 
+function isPaymentStatus(value: unknown): value is PaymentStatus {
+  return typeof value === "string" && paymentStatuses.has(value as PaymentStatus);
+}
+
 export class WompiService {
   private getApiBaseUrl(): string {
     return env.wompi.environment === "production"
@@ -86,7 +98,11 @@ export class WompiService {
   extractTransactionEvent(event: WompiTransactionEvent) {
     const transaction = event.data?.transaction;
 
-    if (event.event !== "transaction.updated" || !transaction?.reference || !transaction.status) {
+    if (
+      event.event !== "transaction.updated" ||
+      !transaction?.reference ||
+      !isPaymentStatus(transaction.status)
+    ) {
       return null;
     }
 
@@ -94,17 +110,24 @@ export class WompiService {
       reference: transaction.reference,
       status: transaction.status,
       providerTransactionId: transaction.id,
-      providerPaymentMethod: transaction.payment_method_type
+      providerPaymentMethod: transaction.payment_method_type,
+      amountInCents: transaction.amount_in_cents,
+      currency: transaction.currency
     };
   }
 
   async fetchTransactionById(transactionId: string) {
-    if (!transactionId.trim()) {
+    if (!transactionId.trim() || !env.wompi.publicKey) {
       return null;
     }
 
     const response = await fetch(
-      `${this.getApiBaseUrl()}/transactions/${encodeURIComponent(transactionId)}`
+      `${this.getApiBaseUrl()}/transactions/${encodeURIComponent(transactionId)}`,
+      {
+        headers: {
+          Authorization: `Bearer ${env.wompi.publicKey}`
+        }
+      }
     );
 
     if (!response.ok) {
@@ -114,7 +137,7 @@ export class WompiService {
     const payload = (await response.json()) as WompiTransactionLookupResponse;
     const transaction = payload.data;
 
-    if (!transaction?.reference || !transaction.status) {
+    if (!transaction?.reference || !isPaymentStatus(transaction.status)) {
       return null;
     }
 
@@ -123,6 +146,8 @@ export class WompiService {
       status: transaction.status,
       providerTransactionId: transaction.id,
       providerPaymentMethod: transaction.payment_method_type,
+      amountInCents: transaction.amount_in_cents,
+      currency: transaction.currency,
       rawEvent: payload
     };
   }
