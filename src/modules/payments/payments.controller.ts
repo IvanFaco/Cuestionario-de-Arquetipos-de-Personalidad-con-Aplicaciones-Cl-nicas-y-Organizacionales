@@ -1,6 +1,7 @@
 import type { Request, Response } from "express";
 
 import { AuthError } from "../auth/auth.service.js";
+import { env } from "../../config/env.js";
 import { getAuthService } from "../auth/auth.container.js";
 import { resolveAssessmentJourneyPath } from "../assessment/assessment.journey.js";
 import { getAssessmentPersistenceService } from "../assessment/assessment.persistence.container.js";
@@ -104,7 +105,9 @@ function renderPremiumCheckout(req: Request, res: Response) {
     pageData: {
       payment,
       checkout,
-      isConfigured: paymentsService.isWompiConfigured()
+      isConfigured: paymentsService.isWompiConfigured(),
+      allowLocalPaymentSimulation:
+        env.nodeEnv !== "production" && !paymentsService.isWompiConfigured()
     }
   });
 }
@@ -267,6 +270,25 @@ export async function renderPaymentResponse(req: Request, res: Response) {
       shouldPoll: shouldPollPaymentStatus(payment, isOwnPayment)
     }
   });
+}
+
+export function simulateApprovedPremiumPayment(req: Request, res: Response) {
+  if (env.nodeEnv === "production" || paymentsService.isWompiConfigured()) {
+    return res.status(404).send("Not found");
+  }
+
+  if (!req.session.auth) {
+    return res.redirect("/pagos/estudio-profundo/registro");
+  }
+
+  const reference = String(req.body.reference ?? "");
+  const payment = paymentsService.approveLocalTestPayment(reference, req.session.auth.userId);
+
+  if (!payment) {
+    return res.redirect("/pagos/estudio-profundo");
+  }
+
+  return res.redirect("/full-test");
 }
 
 export function handleWompiWebhook(req: Request, res: Response) {

@@ -94,6 +94,26 @@ export class PaymentsService {
     });
   }
 
+  approveLocalTestPayment(reference: string, userId: string): PaymentRecord | null {
+    const payment = this.findPaymentByReference(reference);
+
+    if (!payment || payment.userId !== userId || payment.status !== "PENDING") {
+      return null;
+    }
+
+    return this.updateFromWompiEvent({
+      reference,
+      status: "APPROVED",
+      providerTransactionId: `local-test-${Date.now()}`,
+      providerPaymentMethod: "LOCAL_TEST",
+      rawEvent: {
+        source: "local-payment-simulation",
+        reference,
+        status: "APPROVED"
+      }
+    });
+  }
+
   async syncPaymentStatusFromTransactionId(transactionId: string): Promise<PaymentRecord | null> {
     const transaction = await this.wompiService.fetchTransactionById(transactionId);
 
