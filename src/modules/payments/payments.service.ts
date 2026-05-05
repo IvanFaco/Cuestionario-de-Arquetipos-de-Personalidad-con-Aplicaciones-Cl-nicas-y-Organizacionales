@@ -83,8 +83,24 @@ export class PaymentsService {
     status: PaymentStatus;
     providerTransactionId?: string;
     providerPaymentMethod?: string;
+    amountInCents?: number;
+    currency?: string;
     rawEvent: unknown;
   }): PaymentRecord | null {
+    const payment = this.findPaymentByReference(input.reference);
+
+    if (!payment) {
+      return null;
+    }
+
+    if (input.amountInCents !== undefined && input.amountInCents !== payment.amountInCents) {
+      return null;
+    }
+
+    if (input.currency && input.currency !== payment.currency) {
+      return null;
+    }
+
     return this.paymentsRepository.updatePaymentFromProvider({
       reference: input.reference,
       status: input.status,
@@ -92,6 +108,36 @@ export class PaymentsService {
       providerPaymentMethod: input.providerPaymentMethod,
       lastEventJson: JSON.stringify(input.rawEvent)
     });
+  }
+
+  approveLocalTestPayment(reference: string, userId: string): PaymentRecord | null {
+    const payment = this.findPaymentByReference(reference);
+
+    if (!payment || payment.userId !== userId || payment.status !== "PENDING") {
+      return null;
+    }
+
+    return this.updateFromWompiEvent({
+      reference,
+      status: "APPROVED",
+      providerTransactionId: `local-test-${Date.now()}`,
+      providerPaymentMethod: "LOCAL_TEST",
+      rawEvent: {
+        source: "local-payment-simulation",
+        reference,
+        status: "APPROVED"
+      }
+    });
+  }
+
+  async syncPaymentStatusFromTransactionId(transactionId: string): Promise<PaymentRecord | null> {
+    const transaction = await this.wompiService.fetchTransactionById(transactionId);
+
+    if (!transaction) {
+      return null;
+    }
+
+    return this.updateFromWompiEvent(transaction);
   }
 
   isWompiConfigured(): boolean {

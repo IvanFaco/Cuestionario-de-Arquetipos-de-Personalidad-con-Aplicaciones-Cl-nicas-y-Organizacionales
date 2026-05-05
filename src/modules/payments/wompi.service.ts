@@ -3,6 +3,14 @@ import crypto from "node:crypto";
 import { env } from "../../config/env.js";
 import type { PaymentStatus } from "./payments.types.js";
 
+const paymentStatuses = new Set<PaymentStatus>([
+  "PENDING",
+  "APPROVED",
+  "DECLINED",
+  "ERROR",
+  "VOIDED"
+]);
+
 interface WompiEventSignature {
   properties?: string[];
   checksum?: string;
@@ -25,6 +33,18 @@ interface WompiTransactionEvent {
   timestamp?: number;
 }
 
+interface WompiTransactionLookupResponse {
+  data?: {
+    id?: string;
+    reference?: string;
+    status?: PaymentStatus;
+    amount_in_cents?: number;
+    currency?: string;
+    payment_method_type?: string;
+    customer_email?: string;
+  };
+}
+
 function sha256(value: string): string {
   return crypto.createHash("sha256").update(value).digest("hex");
 }
@@ -41,7 +61,17 @@ function getNestedValue(source: unknown, path: string): string {
   return value === undefined || value === null ? "" : String(value);
 }
 
+function isPaymentStatus(value: unknown): value is PaymentStatus {
+  return typeof value === "string" && paymentStatuses.has(value as PaymentStatus);
+}
+
 export class WompiService {
+  private getApiBaseUrl(): string {
+    return env.wompi.environment === "production"
+      ? "https://production.wompi.co/v1"
+      : "https://sandbox.wompi.co/v1";
+  }
+
   buildIntegritySignature(reference: string, amountInCents: number, currency: string): string {
     return sha256(`${reference}${amountInCents}${currency}${env.wompi.integritySecret}`);
   }
@@ -68,7 +98,11 @@ export class WompiService {
   extractTransactionEvent(event: WompiTransactionEvent) {
     const transaction = event.data?.transaction;
 
-    if (event.event !== "transaction.updated" || !transaction?.reference || !transaction.status) {
+    if (
+      event.event !== "transaction.updated" ||
+      !transaction?.reference ||
+      !isPaymentStatus(transaction.status)
+    ) {
       return null;
     }
 
@@ -76,7 +110,45 @@ export class WompiService {
       reference: transaction.reference,
       status: transaction.status,
       providerTransactionId: transaction.id,
-      providerPaymentMethod: transaction.payment_method_type
+      providerPaymentMethod: transaction.payment_method_type,
+      amountInCents: transaction.amount_in_cents,
+      currency: transaction.currency
+    };
+  }
+
+  async fetchTransactionById(transactionId: string) {
+    if (!transactionId.trim() || !env.wompi.publicKey) {
+      return null;
+    }
+
+    const response = await fetch(
+      `${this.getApiBaseUrl()}/transactions/${encodeURIComponent(transactionId)}`,
+      {
+        headers: {
+          Authorization: `Bearer ${env.wompi.publicKey}`
+        }
+      }
+    );
+
+    if (!response.ok) {
+      return null;
+    }
+
+    const payload = (await response.json()) as WompiTransactionLookupResponse;
+    const transaction = payload.data;
+
+    if (!transaction?.reference || !isPaymentStatus(transaction.status)) {
+      return null;
+    }
+
+    return {
+      reference: transaction.reference,
+      status: transaction.status,
+      providerTransactionId: transaction.id,
+      providerPaymentMethod: transaction.payment_method_type,
+      amountInCents: transaction.amount_in_cents,
+      currency: transaction.currency,
+      rawEvent: payload
     };
   }
 }

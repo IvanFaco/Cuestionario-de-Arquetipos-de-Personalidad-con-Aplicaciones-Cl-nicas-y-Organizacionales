@@ -63,3 +63,59 @@ test("WompiService rejects invalid event checksums", () => {
 
   env.wompi.eventsSecret = previousEventsSecret;
 });
+
+test("WompiService fetches transaction details by id", async () => {
+  const originalFetch = globalThis.fetch;
+  const previousEnvironment = env.wompi.environment;
+  const previousPublicKey = env.wompi.publicKey;
+  env.wompi.environment = "sandbox";
+  env.wompi.publicKey = "pub_test_123";
+  let requestedUrl = "";
+  let requestedAuthorization = "";
+
+  globalThis.fetch = (async (input, init) => {
+    requestedUrl = String(input);
+    requestedAuthorization = String(new Headers(init?.headers).get("authorization"));
+
+    return {
+      ok: true,
+      json: async () => ({
+        data: {
+          id: "trx_test_123",
+          reference: "MRY-123",
+          status: "APPROVED",
+          amount_in_cents: 4900000,
+          currency: "COP",
+          payment_method_type: "CARD"
+        }
+      })
+    } as Response;
+  }) as typeof fetch;
+
+  const transaction = await new WompiService().fetchTransactionById("trx_test_123");
+
+  assert.equal(requestedUrl, "https://sandbox.wompi.co/v1/transactions/trx_test_123");
+  assert.equal(requestedAuthorization, "Bearer pub_test_123");
+  assert.deepEqual(transaction, {
+    reference: "MRY-123",
+    status: "APPROVED",
+    providerTransactionId: "trx_test_123",
+    providerPaymentMethod: "CARD",
+    amountInCents: 4900000,
+    currency: "COP",
+    rawEvent: {
+      data: {
+        id: "trx_test_123",
+        reference: "MRY-123",
+        status: "APPROVED",
+        amount_in_cents: 4900000,
+        currency: "COP",
+        payment_method_type: "CARD"
+      }
+    }
+  });
+
+  globalThis.fetch = originalFetch;
+  env.wompi.environment = previousEnvironment;
+  env.wompi.publicKey = previousPublicKey;
+});

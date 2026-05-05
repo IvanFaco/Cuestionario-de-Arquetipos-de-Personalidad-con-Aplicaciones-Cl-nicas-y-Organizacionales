@@ -30,6 +30,14 @@
     <p class="surface-note text-error">
       La pasarela no está configurada. Define las variables Wompi antes de probar el pago.
     </p>
+    <% if (pageData.allowLocalPaymentSimulation) { %>
+      <form action="/pagos/estudio-profundo/simular-aprobado" method="post" class="question-actions teaser-screen__actions">
+        <input type="hidden" name="reference" value="<%= pageData.payment.reference %>">
+        <button class="btn btn-primary app-cta question-actions__next" type="submit">
+          Simular pago aprobado
+        </button>
+      </form>
+    <% } %>
   <% } else { %>
     <div class="question-actions teaser-screen__actions">
       <button
