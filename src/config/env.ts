@@ -1,3 +1,9 @@
+import { existsSync } from "node:fs";
+
+if (process.env.NODE_ENV !== "production" && existsSync(".env")) {
+  process.loadEnvFile?.();
+}
+
 const port = Number.parseInt(process.env.PORT ?? "3000", 10);
 const nodeEnv = process.env.NODE_ENV ?? "development";
 const assetVersion =
