@@ -94,6 +94,39 @@ export class PaymentsService {
     });
   }
 
+  async syncFromWompiTransaction(transactionId: string): Promise<PaymentRecord | null> {
+    const transaction = await this.wompiService.fetchTransaction(transactionId);
+
+    if (!transaction) {
+      return null;
+    }
+
+    const payment = this.findPaymentByReference(transaction.reference);
+
+    if (!payment) {
+      return null;
+    }
+
+    if (
+      transaction.amountInCents !== undefined &&
+      transaction.amountInCents !== payment.amountInCents
+    ) {
+      return payment;
+    }
+
+    if (transaction.currency && transaction.currency !== payment.currency) {
+      return payment;
+    }
+
+    return this.paymentsRepository.updatePaymentFromProvider({
+      reference: transaction.reference,
+      status: transaction.status,
+      providerTransactionId: transaction.id,
+      providerPaymentMethod: transaction.paymentMethodType,
+      lastEventJson: JSON.stringify({ source: "redirect_lookup", transaction })
+    });
+  }
+
   isWompiConfigured(): boolean {
     return this.wompiService.isConfigured();
   }

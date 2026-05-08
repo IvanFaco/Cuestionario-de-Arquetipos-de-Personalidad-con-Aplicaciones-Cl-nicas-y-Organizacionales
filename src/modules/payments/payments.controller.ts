@@ -221,10 +221,18 @@ export async function loginForPremiumPayment(req: Request, res: Response) {
   }
 }
 
-export function renderPaymentResponse(req: Request, res: Response) {
+export async function renderPaymentResponse(req: Request, res: Response) {
   const reference = String(req.query.reference ?? "");
-  const payment = reference ? paymentsService.findPaymentByReference(reference) : null;
+  const transactionId = String(req.query.id ?? req.query.transaction_id ?? "").trim();
+  const syncedPayment = transactionId
+    ? await paymentsService.syncFromWompiTransaction(transactionId)
+    : null;
+  const payment = syncedPayment ?? (reference ? paymentsService.findPaymentByReference(reference) : null);
   const isOwnPayment = Boolean(payment && payment.userId === req.session.auth?.userId);
+
+  if (payment?.status === "APPROVED" && isOwnPayment) {
+    return res.redirect("/full-test");
+  }
 
   return res.render("layouts/main", {
     title: "MiRealYo | Estado del pago",
@@ -240,6 +248,7 @@ export function renderPaymentResponse(req: Request, res: Response) {
     ),
     pageData: {
       reference,
+      transactionId,
       payment,
       isOwnPayment
     }
