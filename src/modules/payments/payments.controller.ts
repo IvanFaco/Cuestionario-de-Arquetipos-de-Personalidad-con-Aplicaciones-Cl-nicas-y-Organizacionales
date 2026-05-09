@@ -5,12 +5,14 @@ import { getAuthService } from "../auth/auth.container.js";
 import { resolveAssessmentJourneyPath } from "../assessment/assessment.journey.js";
 import { getAssessmentPersistenceService } from "../assessment/assessment.persistence.container.js";
 import { buildSeoMeta } from "../assessment/assessment.seo.js";
+import { env } from "../../config/env.js";
 import { getPaymentsService, getWompiService } from "./payments.container.js";
 
 const authService = getAuthService();
 const assessmentPersistenceService = getAssessmentPersistenceService();
 const paymentsService = getPaymentsService();
 const wompiService = getWompiService();
+const isSandboxWompi = env.wompi.environment.toLowerCase() !== "production";
 
 function hasBasicResult(req: Request): boolean {
   return Boolean(req.session.assessment?.hookOutcome);
@@ -234,7 +236,7 @@ export async function renderPaymentResponse(req: Request, res: Response) {
     return res.redirect("/full-test");
   }
 
-  if (payment && isOwnPayment && payment.status === "PENDING") {
+  if (isSandboxWompi && payment && isOwnPayment && payment.status === "PENDING") {
     return res.redirect("/full-test?payment=pending");
   }
 
