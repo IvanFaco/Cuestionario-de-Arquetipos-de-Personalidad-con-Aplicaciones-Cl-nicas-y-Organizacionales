@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { requireAdminBasicAuth } from "./admin-basic-auth.middleware.js";
 
 import {
   renderAdmin,
@@ -41,6 +42,8 @@ import {
 	} from "./assessment.controller.js";
 
 export const assessmentRouter = Router();
+
+assessmentRouter.use(["/admin", "/admin/appearance", "/admin/env"], requireAdminBasicAuth);
 
 assessmentRouter.get("/", renderLanding);
 assessmentRouter.get("/privacidad", renderPrivacy);

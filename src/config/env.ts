@@ -21,6 +21,35 @@ const assetVersion =
 const normalizedPort = Number.isNaN(port) ? 3000 : port;
 const premiumAmountInCents = Number.parseInt(getEnv("WOMPI_PREMIUM_AMOUNT_CENTS", "4900000"), 10);
 
+function isLocalSiteUrl(value: string) {
+  try {
+    const parsed = new URL(value);
+    return parsed.hostname === "localhost" || parsed.hostname === "127.0.0.1";
+  } catch {
+    return false;
+  }
+}
+
+function resolveWompiEnvironment(input: { requestedEnvironment: string; nodeEnvironment: string; siteUrl: string }) {
+  const requested = input.requestedEnvironment.trim().toLowerCase() || "sandbox";
+  const wantsProduction = requested.includes("prod");
+  const isLocalRuntime = input.nodeEnvironment !== "production" || isLocalSiteUrl(input.siteUrl);
+  const forcedSandbox = wantsProduction && isLocalRuntime;
+
+  return {
+    requestedEnvironment: requested,
+    environment: forcedSandbox ? "sandbox" : requested,
+    forcedSandbox
+  };
+}
+
+const requestedWompiEnvironment = getEnv("WOMPI_ENV", "sandbox");
+const resolvedWompiEnvironment = resolveWompiEnvironment({
+  requestedEnvironment: requestedWompiEnvironment,
+  nodeEnvironment: nodeEnv,
+  siteUrl: getEnv("SITE_URL", `http://localhost:${normalizedPort}`)
+});
+
 export const env = {
   nodeEnv,
   port: normalizedPort,
@@ -34,7 +63,9 @@ export const env = {
     publicKey: getEnv("WOMPI_PUBLIC_KEY"),
     integritySecret: getEnv("WOMPI_INTEGRITY_SECRET"),
     eventsSecret: getEnv("WOMPI_EVENTS_SECRET"),
-    environment: getEnv("WOMPI_ENV", "sandbox"),
+    requestedEnvironment: resolvedWompiEnvironment.requestedEnvironment,
+    environment: resolvedWompiEnvironment.environment,
+    forcedSandbox: resolvedWompiEnvironment.forcedSandbox,
     premiumAmountInCents: Number.isNaN(premiumAmountInCents) ? 4900000 : premiumAmountInCents,
     currency: getEnv("WOMPI_CURRENCY", "COP")
   }
@@ -132,7 +163,6 @@ function applyRuntimeEnv(values: EnvFileValues) {
 
   if (values.APP_VERSION !== undefined) env.appVersion = values.APP_VERSION;
   if (values.SITE_URL !== undefined) env.siteUrl = values.SITE_URL;
-  if (values.WOMPI_ENV !== undefined) env.wompi.environment = values.WOMPI_ENV;
   if (values.WOMPI_PUBLIC_KEY !== undefined) env.wompi.publicKey = values.WOMPI_PUBLIC_KEY;
   if (values.WOMPI_INTEGRITY_SECRET !== undefined) env.wompi.integritySecret = values.WOMPI_INTEGRITY_SECRET;
   if (values.WOMPI_EVENTS_SECRET !== undefined) env.wompi.eventsSecret = values.WOMPI_EVENTS_SECRET;
@@ -143,6 +173,16 @@ function applyRuntimeEnv(values: EnvFileValues) {
   if (values.WOMPI_CURRENCY !== undefined) env.wompi.currency = values.WOMPI_CURRENCY;
   if (values.NODE_ENV !== undefined) env.nodeEnv = values.NODE_ENV;
   if (values.SESSION_SECRET !== undefined) env.sessionSecret = values.SESSION_SECRET;
+
+  const resolved = resolveWompiEnvironment({
+    requestedEnvironment:
+      values.WOMPI_ENV !== undefined ? values.WOMPI_ENV : env.wompi.requestedEnvironment,
+    nodeEnvironment: env.nodeEnv,
+    siteUrl: env.siteUrl
+  });
+  env.wompi.requestedEnvironment = resolved.requestedEnvironment;
+  env.wompi.environment = resolved.environment;
+  env.wompi.forcedSandbox = resolved.forcedSandbox;
 }
 
 function quoteEnvValue(value: string) {

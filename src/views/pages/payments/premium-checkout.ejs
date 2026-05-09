@@ -31,6 +31,16 @@
       La pasarela no está configurada. Define las variables Wompi antes de probar el pago.
     </p>
   <% } else { %>
+    <% if (pageData.isSandboxForced) { %>
+      <p class="surface-note">
+        Estás en entorno local/no productivo: el checkout se ejecuta en <strong>sandbox</strong> aunque WOMPI_ENV pida producción.
+      </p>
+    <% } %>
+    <% if (!pageData.isWebhookConfigured) { %>
+      <p class="surface-note">
+        Checkout habilitado. Falta <code>WOMPI_EVENTS_SECRET</code>, así que la confirmación por webhook no estará activa hasta configurarlo.
+      </p>
+    <% } %>
     <div class="question-actions teaser-screen__actions">
       <button
         class="btn btn-primary app-cta question-actions__next"

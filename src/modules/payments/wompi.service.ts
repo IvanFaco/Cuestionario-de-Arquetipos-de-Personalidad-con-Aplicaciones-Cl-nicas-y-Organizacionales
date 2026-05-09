@@ -80,6 +80,18 @@ export class WompiService {
     return Boolean(env.wompi.publicKey && env.wompi.integritySecret && env.wompi.eventsSecret);
   }
 
+  isCheckoutConfigured(): boolean {
+    if (!env.wompi.publicKey || !env.wompi.integritySecret) {
+      return false;
+    }
+
+    const expectedPrefix = env.wompi.environment.toLowerCase().includes("prod")
+      ? "pub_prod_"
+      : "pub_test_";
+
+    return env.wompi.publicKey.startsWith(expectedPrefix);
+  }
+
   validateEvent(event: WompiTransactionEvent): boolean {
     const properties = event.signature?.properties;
     const checksum = event.signature?.checksum;

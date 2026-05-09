@@ -106,7 +106,9 @@ function renderPremiumCheckout(req: Request, res: Response) {
     pageData: {
       payment,
       checkout,
-      isConfigured: paymentsService.isWompiConfigured()
+      isConfigured: paymentsService.isWompiCheckoutConfigured(),
+      isWebhookConfigured: paymentsService.isWompiConfigured(),
+      isSandboxForced: env.wompi.forcedSandbox
     }
   });
 }
