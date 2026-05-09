@@ -16,6 +16,9 @@
   <% if (pageData.saved) { %>
     <div class="alert alert-success mt-3 mb-0" role="alert">Apariencia actualizada.</div>
   <% } %>
+  <% if (pageData.envSaved) { %>
+    <div class="alert alert-success mt-3 mb-0" role="alert">Variables actualizadas en <code>.env</code>.</div>
+  <% } %>
 
   <section class="admin-grid admin-grid--primary mt-3">
     <article class="admin-card compact-stack admin-card--appearance">
@@ -209,8 +212,40 @@
 	        </table>
 	      </div>
 	      <div class="surface-note">
-	        En Wompi Dashboard configura el webhook para eventos <strong>transaction.updated</strong> usando la URL indicada.
-	      </div>
-	    </article>
-	  </section>
-	</section>
+		        En Wompi Dashboard configura el webhook para eventos <strong>transaction.updated</strong> usando la URL indicada.
+		      </div>
+		    </article>
+
+		    <article class="admin-card compact-stack admin-card--env">
+		      <div class="admin-card__header">
+		        <p class="eyebrow mb-0">Entorno</p>
+		        <h2 class="h5 mb-0">Editar variables locales</h2>
+		      </div>
+		      <div class="surface-note">
+		        Escribe en <code>.env</code>. En producción, sincroniza estos valores también en el panel de despliegue.
+		      </div>
+		      <form action="/admin/env" method="post" class="admin-env-form">
+		        <% pageData.envFields.forEach((field) => { %>
+		          <div class="admin-env-field">
+		            <label class="form-label form-label-sm fw-semibold" for="env-<%= field.name %>">
+		              <%= field.name %>
+		            </label>
+		            <input
+		              class="form-control compact-control"
+		              id="env-<%= field.name %>"
+		              name="<%= field.name %>"
+		              type="<%= field.secret ? 'password' : 'text' %>"
+		              value="<%= field.inputValue %>"
+		              placeholder="<%= field.placeholder %>"
+		            />
+		            <div class="admin-env-meta">
+		              <span>Actual: <code><%= field.displayValue || 'No configurada' %></code></span>
+		              <span><%= field.source %><%= field.restartRequired ? ' · requiere reinicio' : '' %></span>
+		            </div>
+		          </div>
+		        <% }) %>
+		        <button class="btn btn-primary app-cta app-cta--compact" type="submit">Guardar variables</button>
+		      </form>
+		    </article>
+		  </section>
+		</section>

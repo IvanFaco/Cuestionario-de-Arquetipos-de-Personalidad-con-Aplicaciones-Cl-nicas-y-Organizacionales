@@ -1193,6 +1193,35 @@ body {
   gap: 0.75rem;
 }
 
+.admin-card--env {
+  grid-column: 1 / -1;
+}
+
+.admin-env-form {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+}
+
+.admin-env-field {
+  display: grid;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.admin-env-meta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.35rem 0.75rem;
+  color: #668196;
+  font-size: var(--type-xs);
+}
+
+.admin-env-meta code {
+  color: #17344a;
+}
+
 .dashboard-screen__header {
   gap: 0.75rem;
 }
@@ -1483,6 +1512,14 @@ body {
 
   .admin-meta-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .admin-env-form {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .admin-env-form .btn {
+    grid-column: 1 / -1;
   }
 
   .app-stage__inner {

@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
 
-import { env } from "../../config/env.js";
+import { env, getEditableEnvSnapshot, updateEditableEnv } from "../../config/env.js";
 import { AuthError } from "../auth/auth.service.js";
 import { getAuthService } from "../auth/auth.container.js";
 import { getPaymentsService } from "../payments/payments.container.js";
@@ -252,6 +252,19 @@ function maskEnvValue(value: string): string {
   }
 
   return `${value.slice(0, 6)}...${value.slice(-4)}`;
+}
+
+function getAdminEnvEditorFields() {
+  return getEditableEnvSnapshot().map((item) => ({
+    ...item,
+    displayValue: item.secret ? maskEnvValue(item.current) : item.current,
+    inputValue: item.secret ? "" : item.current,
+    placeholder: item.secret
+      ? item.current
+        ? "Dejar en blanco para conservar"
+        : "Pegar valor"
+      : ""
+  }));
 }
 
 function getWompiProductionEnvChecklist() {
@@ -845,12 +858,14 @@ export function renderAdmin(req: Request, res: Response) {
       res.app.locals.siteUrl
     ),
     pageData: {
-      appearance: getAppearanceSettings(),
-      themeOptions: options.themes,
-      fontOptions: options.fonts,
-      wompiProductionEnv: getWompiProductionEnvChecklist(),
-      saved: req.query.saved === "1",
-      tables,
+	      appearance: getAppearanceSettings(),
+	      themeOptions: options.themes,
+	      fontOptions: options.fonts,
+	      envFields: getAdminEnvEditorFields(),
+	      wompiProductionEnv: getWompiProductionEnvChecklist(),
+	      saved: req.query.saved === "1",
+	      envSaved: req.query.envSaved === "1",
+	      tables,
       selectedTable,
       selectedTableData,
       limit
@@ -1095,6 +1110,27 @@ export function renderFullTestIntro(req: Request, res: Response) {
 	    }
 	  });
 	}
+
+export function updateAdminEnv(req: Request, res: Response) {
+  const updates: Record<string, string> = {};
+
+  for (const field of getEditableEnvSnapshot()) {
+    const rawValue = req.body[field.name];
+    const value = typeof rawValue === "string" ? rawValue.trim() : "";
+
+    if (field.secret && !value) {
+      continue;
+    }
+
+    updates[field.name] = value;
+  }
+
+  updateEditableEnv(updates);
+  res.app.locals.appVersion = env.appVersion;
+  res.app.locals.siteUrl = env.siteUrl;
+
+  return res.redirect("/admin?envSaved=1");
+}
 
 export function startQuickTest(req: Request, res: Response) {
   const session = ensureAssessmentSession(req);

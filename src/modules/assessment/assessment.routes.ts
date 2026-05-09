@@ -34,10 +34,11 @@ import {
   startAssessment,
   startQuickTest,
   startPremium,
-  submitHookQuestion,
-  submitPremiumQuestion,
-  updateAdminAppearance
-} from "./assessment.controller.js";
+	  submitHookQuestion,
+	  submitPremiumQuestion,
+	  updateAdminAppearance,
+	  updateAdminEnv
+	} from "./assessment.controller.js";
 
 export const assessmentRouter = Router();
 
@@ -51,6 +52,7 @@ assessmentRouter.post("/logout", handleLogout);
 assessmentRouter.get("/admin", renderAdmin);
 assessmentRouter.get("/db", renderDatabaseExplorer);
 assessmentRouter.post("/admin/appearance", updateAdminAppearance);
+assessmentRouter.post("/admin/env", updateAdminEnv);
 assessmentRouter.get("/empezar", renderPreOnboarding);
 assessmentRouter.post("/empezar", startLeadCapture);
 assessmentRouter.get("/onboarding", renderOnboarding);
