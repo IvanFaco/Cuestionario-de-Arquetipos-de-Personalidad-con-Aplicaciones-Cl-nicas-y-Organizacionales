@@ -1089,11 +1089,12 @@ export function renderFullTestIntro(req: Request, res: Response) {
       },
       res.app.locals.siteUrl
     ),
-    pageData: {
-      premiumCount: getPremiumQuestions().length
-    }
-  });
-}
+	    pageData: {
+	      cameFromPendingPayment: req.query.payment === "pending",
+	      premiumCount: getPremiumQuestions().length
+	    }
+	  });
+	}
 
 export function startQuickTest(req: Request, res: Response) {
   const session = ensureAssessmentSession(req);

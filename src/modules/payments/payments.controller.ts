@@ -234,6 +234,10 @@ export async function renderPaymentResponse(req: Request, res: Response) {
     return res.redirect("/full-test");
   }
 
+  if (payment && isOwnPayment && payment.status === "PENDING") {
+    return res.redirect("/full-test?payment=pending");
+  }
+
   return res.render("layouts/main", {
     title: "MiRealYo | Estado del pago",
     page: "../pages/payments/payment-response",
