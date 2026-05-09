@@ -1109,7 +1109,8 @@ export function renderFullTestIntro(req: Request, res: Response) {
       res.app.locals.siteUrl
     ),
 	    pageData: {
-	      cameFromPendingPayment: req.query.payment === "pending",
+	      cameFromPendingPayment:
+	        req.query.payment === "pending" || req.query.payment === "development",
 	      premiumCount: getPremiumQuestions().length
 	    }
 	  });

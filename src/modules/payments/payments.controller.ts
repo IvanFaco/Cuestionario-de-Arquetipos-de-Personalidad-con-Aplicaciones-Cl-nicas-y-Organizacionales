@@ -13,6 +13,7 @@ const assessmentPersistenceService = getAssessmentPersistenceService();
 const paymentsService = getPaymentsService();
 const wompiService = getWompiService();
 const isSandboxWompi = env.wompi.environment.toLowerCase() !== "production";
+const isDevelopmentWompiBypass = env.wompi.requestedEnvironment.toLowerCase() === "development";
 
 function hasBasicResult(req: Request): boolean {
   return Boolean(req.session.assessment?.hookOutcome);
@@ -40,6 +41,16 @@ function persistCurrentAssessment(req: Request): void {
   }
 
   assessmentPersistenceService.save(userId, assessment);
+}
+
+function grantDevelopmentBypassAndContinue(req: Request, res: Response) {
+  const userId = req.session.auth?.userId;
+
+  if (userId) {
+    paymentsService.ensureApprovedPremiumAccessForDevelopment(userId);
+  }
+
+  return res.redirect("/full-test?payment=development");
 }
 
 function renderPremiumAuthGate(
@@ -80,6 +91,10 @@ function renderPremiumCheckout(req: Request, res: Response) {
 
   if (!hasBasicResult(req)) {
     return res.redirect(getJourneyPath(req));
+  }
+
+  if (isDevelopmentWompiBypass) {
+    return grantDevelopmentBypassAndContinue(req, res);
   }
 
   persistCurrentAssessment(req);
@@ -139,6 +154,10 @@ export function renderPremiumPaymentAuth(req: Request, res: Response) {
   }
 
   if (req.session.auth) {
+    if (isDevelopmentWompiBypass) {
+      return grantDevelopmentBypassAndContinue(req, res);
+    }
+
     return res.redirect(getJourneyPath(req));
   }
 
@@ -180,6 +199,11 @@ export async function registerForPremiumPayment(req: Request, res: Response) {
       email: user.email
     };
     persistCurrentAssessment(req);
+
+    if (isDevelopmentWompiBypass) {
+      return grantDevelopmentBypassAndContinue(req, res);
+    }
+
     return res.redirect(getJourneyPath(req));
   } catch (error) {
     const message =
@@ -212,6 +236,11 @@ export async function loginForPremiumPayment(req: Request, res: Response) {
       email: user.email
     };
     persistCurrentAssessment(req);
+
+    if (isDevelopmentWompiBypass) {
+      return grantDevelopmentBypassAndContinue(req, res);
+    }
+
     return res.redirect(getJourneyPath(req));
   } catch (error) {
     const message =

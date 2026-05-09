@@ -24,6 +24,13 @@ export class PaymentsService {
     );
   }
 
+  findApprovedPremiumPayment(userId: string): PaymentRecord | null {
+    return this.paymentsRepository.findApprovedPaymentForUserProduct(
+      userId,
+      PREMIUM_ASSESSMENT_PRODUCT
+    );
+  }
+
   findLatestPremiumPayment(userId: string): PaymentRecord | null {
     return this.paymentsRepository.findLatestPaymentForUserProduct(
       userId,
@@ -58,6 +65,25 @@ export class PaymentsService {
       provider: "WOMPI",
       checkoutPayloadJson: JSON.stringify({ signature })
     });
+  }
+
+  ensureApprovedPremiumAccessForDevelopment(userId: string): PaymentRecord {
+    const approved = this.findApprovedPremiumPayment(userId);
+
+    if (approved?.status === "APPROVED") {
+      return approved;
+    }
+
+    const payment = this.createOrReusePendingPremiumPayment(userId);
+    const approvedPayment = this.updateFromWompiEvent({
+      reference: payment.reference,
+      status: "APPROVED",
+      providerTransactionId: `dev-bypass-${Date.now()}`,
+      providerPaymentMethod: "DEV_BYPASS",
+      rawEvent: { source: "development_bypass" }
+    });
+
+    return approvedPayment ?? payment;
   }
 
   buildCheckout(payment: PaymentRecord) {
