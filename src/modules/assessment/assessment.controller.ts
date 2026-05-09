@@ -1,5 +1,6 @@
 import type { Request, Response } from "express";
 
+import { env } from "../../config/env.js";
 import { AuthError } from "../auth/auth.service.js";
 import { getAuthService } from "../auth/auth.container.js";
 import { getPaymentsService } from "../payments/payments.container.js";
@@ -240,6 +241,88 @@ const authModeOptions = ["register", "login"] as const;
 
 type RegisterIntent = (typeof registerIntentOptions)[number];
 type AuthMode = (typeof authModeOptions)[number];
+
+function maskEnvValue(value: string): string {
+  if (!value) {
+    return "No configurada";
+  }
+
+  if (value.length <= 8) {
+    return "Configurada";
+  }
+
+  return `${value.slice(0, 6)}...${value.slice(-4)}`;
+}
+
+function getWompiProductionEnvChecklist() {
+  const webhookUrl = `${env.siteUrl.replace(/\/+$/, "")}/webhooks/wompi`;
+
+  return [
+    {
+      name: "NODE_ENV",
+      expected: "production",
+      current: env.nodeEnv,
+      configured: env.nodeEnv === "production",
+      note: "Activa comportamiento de producción en la app."
+    },
+    {
+      name: "SITE_URL",
+      expected: "https://tu-dominio.com",
+      current: env.siteUrl,
+      configured: /^https:\/\//i.test(env.siteUrl),
+      note: "Debe ser público y HTTPS para redirecciones de Wompi."
+    },
+    {
+      name: "WOMPI_ENV",
+      expected: "production",
+      current: env.wompi.environment,
+      configured: env.wompi.environment.toLowerCase().includes("prod"),
+      note: "Usa endpoints productivos de Wompi."
+    },
+    {
+      name: "WOMPI_PUBLIC_KEY",
+      expected: "pub_prod_...",
+      current: maskEnvValue(env.wompi.publicKey),
+      configured: env.wompi.publicKey.startsWith("pub_prod_"),
+      note: "Llave pública productiva para checkout y consulta de transacciones."
+    },
+    {
+      name: "WOMPI_INTEGRITY_SECRET",
+      expected: "prod_integrity_...",
+      current: maskEnvValue(env.wompi.integritySecret),
+      configured: Boolean(env.wompi.integritySecret),
+      note: "Se usa para firmar referencias del checkout."
+    },
+    {
+      name: "WOMPI_EVENTS_SECRET",
+      expected: "Secret de eventos productivo",
+      current: maskEnvValue(env.wompi.eventsSecret),
+      configured: Boolean(env.wompi.eventsSecret),
+      note: "Valida webhooks transaction.updated."
+    },
+    {
+      name: "WOMPI_PREMIUM_AMOUNT_CENTS",
+      expected: "Monto en centavos, ej. 4900000",
+      current: String(env.wompi.premiumAmountInCents),
+      configured: env.wompi.premiumAmountInCents > 0,
+      note: "Debe coincidir con el valor real del estudio profundo."
+    },
+    {
+      name: "WOMPI_CURRENCY",
+      expected: "COP",
+      current: env.wompi.currency,
+      configured: env.wompi.currency === "COP",
+      note: "Wompi Colombia opera en COP."
+    },
+    {
+      name: "Webhook URL",
+      expected: "Configurar en Wompi Dashboard",
+      current: webhookUrl,
+      configured: /^https:\/\//i.test(webhookUrl),
+      note: "URL destino para eventos: transaction.updated."
+    }
+  ];
+}
 
 function getRegisterIntent(value: unknown): RegisterIntent | null {
   return typeof value === "string" && registerIntentOptions.includes(value as RegisterIntent)
@@ -765,6 +848,7 @@ export function renderAdmin(req: Request, res: Response) {
       appearance: getAppearanceSettings(),
       themeOptions: options.themes,
       fontOptions: options.fonts,
+      wompiProductionEnv: getWompiProductionEnvChecklist(),
       saved: req.query.saved === "1",
       tables,
       selectedTable,

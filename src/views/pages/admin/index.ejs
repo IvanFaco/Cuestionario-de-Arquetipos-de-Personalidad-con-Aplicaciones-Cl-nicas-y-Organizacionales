@@ -141,11 +141,11 @@
     </article>
   </section>
 
-  <section class="admin-grid mt-3">
-    <article class="admin-card compact-stack">
-      <div>
-        <p class="eyebrow mb-0">Estado</p>
-        <h2 class="h5 mb-0">Configuracion activa</h2>
+	  <section class="admin-grid mt-3">
+	    <article class="admin-card compact-stack">
+	      <div>
+	        <p class="eyebrow mb-0">Estado</p>
+	        <h2 class="h5 mb-0">Configuracion activa</h2>
       </div>
       <div class="surface-note">URL: <strong>/admin</strong></div>
       <div class="surface-note">Tema activo: <strong><%= pageData.appearance.bootswatchTheme %></strong></div>
@@ -164,8 +164,52 @@
         <a class="btn btn-primary app-cta app-cta--compact" href="/">Ir a la splash</a>
         <a class="btn btn-primary app-cta app-cta--compact" href="/migration">Ver estado de migracion</a>
         <a class="btn btn-primary app-cta app-cta--compact" href="/health">Healthcheck</a>
-        <button class="btn btn-outline w-full" type="button" data-reset-pwa-cache>Resetear cache PWA</button>
-      </div>
-    </article>
-  </section>
-</section>
+	        <button class="btn btn-outline w-full" type="button" data-reset-pwa-cache>Resetear cache PWA</button>
+	      </div>
+	    </article>
+
+	    <article class="admin-card compact-stack">
+	      <div>
+	        <p class="eyebrow mb-0">Pagos</p>
+	        <h2 class="h5 mb-0">Variables Wompi produccion</h2>
+	      </div>
+	      <div class="surface-note">
+	        Esta lista muestra lo necesario para ejecutar el checkout productivo sin exponer secretos completos.
+	      </div>
+	      <div class="admin-table-wrap">
+	        <table class="table table-sm align-middle mb-0">
+	          <thead>
+	            <tr>
+	              <th scope="col">Variable</th>
+	              <th scope="col">Esperado</th>
+	              <th scope="col">Actual</th>
+	              <th scope="col">Estado</th>
+	            </tr>
+	          </thead>
+	          <tbody>
+	            <% pageData.wompiProductionEnv.forEach((item) => { %>
+	              <tr>
+	                <td>
+	                  <strong><%= item.name %></strong>
+	                  <div class="text-muted small"><%= item.note %></div>
+	                </td>
+	                <td><code><%= item.expected %></code></td>
+	                <td><code><%= item.current %></code></td>
+	                <td>
+	                  <% if (item.configured) { %>
+	                    <span class="badge text-bg-success">OK</span>
+	                  <% } else { %>
+	                    <span class="badge text-bg-warning">Revisar</span>
+	                  <% } %>
+	                </td>
+	              </tr>
+	            <% }) %>
+	          </tbody>
+	        </table>
+	      </div>
+	      <div class="surface-note">
+	        En Wompi Dashboard configura el webhook para eventos <strong>transaction.updated</strong> usando la URL indicada.
+	      </div>
+	    </article>
+	  </section>
+	</section>
