@@ -7,6 +7,7 @@
       <% if (!session?.auth) { %>
         <a href="/registro?mode=login" class="link-primary fw-semibold text-decoration-none">Ya soy usuario, Iniciar sesión</a>
         <a href="/privacidad" class="link-secondary small text-decoration-underline">Política de privacidad</a>
+        <span class="splash-version">v<%= appVersion %></span>
       <% } %>
     </header>
   </div>

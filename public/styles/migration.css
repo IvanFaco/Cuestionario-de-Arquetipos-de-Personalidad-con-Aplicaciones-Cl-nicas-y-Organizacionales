@@ -175,6 +175,12 @@ body {
   width: 100%;
 }
 
+.splash-version {
+  color: var(--ink-soft);
+  font-size: var(--type-xs);
+  line-height: 1;
+}
+
 .landing-hero {
   display: flex;
   flex-direction: column;

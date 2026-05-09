@@ -25,8 +25,38 @@ interface WompiTransactionEvent {
   timestamp?: number;
 }
 
+interface WompiTransactionLookupResponse {
+  data?: {
+    id?: string;
+    reference?: string;
+    status?: PaymentStatus;
+    amount_in_cents?: number;
+    currency?: string;
+    payment_method_type?: string;
+  };
+}
+
+export interface WompiTransactionSnapshot {
+  id: string;
+  reference: string;
+  status: PaymentStatus;
+  amountInCents?: number;
+  currency?: string;
+  paymentMethodType?: string;
+}
+
 function sha256(value: string): string {
   return crypto.createHash("sha256").update(value).digest("hex");
+}
+
+function isPaymentStatus(value: unknown): value is PaymentStatus {
+  return (
+    value === "PENDING" ||
+    value === "APPROVED" ||
+    value === "DECLINED" ||
+    value === "ERROR" ||
+    value === "VOIDED"
+  );
 }
 
 function getNestedValue(source: unknown, path: string): string {
@@ -78,5 +108,52 @@ export class WompiService {
       providerTransactionId: transaction.id,
       providerPaymentMethod: transaction.payment_method_type
     };
+  }
+
+  async fetchTransaction(transactionId: string): Promise<WompiTransactionSnapshot | null> {
+    const normalizedTransactionId = transactionId.trim();
+
+    if (!normalizedTransactionId || !env.wompi.publicKey) {
+      return null;
+    }
+
+    try {
+      const response = await fetch(
+        `${this.getApiBaseUrl()}/v1/transactions/${encodeURIComponent(normalizedTransactionId)}`,
+        {
+          headers: {
+            Authorization: `Bearer ${env.wompi.publicKey}`
+          }
+        }
+      );
+
+      if (!response.ok) {
+        return null;
+      }
+
+      const body = (await response.json()) as WompiTransactionLookupResponse;
+      const transaction = body.data;
+
+      if (!transaction?.id || !transaction.reference || !isPaymentStatus(transaction.status)) {
+        return null;
+      }
+
+      return {
+        id: transaction.id,
+        reference: transaction.reference,
+        status: transaction.status,
+        amountInCents: transaction.amount_in_cents,
+        currency: transaction.currency,
+        paymentMethodType: transaction.payment_method_type
+      };
+    } catch {
+      return null;
+    }
+  }
+
+  private getApiBaseUrl(): string {
+    return env.wompi.environment.toLowerCase().includes("prod")
+      ? "https://production.wompi.co"
+      : "https://sandbox.wompi.co";
   }
 }

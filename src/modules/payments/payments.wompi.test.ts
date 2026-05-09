@@ -63,3 +63,54 @@ test("WompiService rejects invalid event checksums", () => {
 
   env.wompi.eventsSecret = previousEventsSecret;
 });
+
+test("WompiService fetches transaction snapshots from redirect transaction id", async () => {
+  const previousPublicKey = env.wompi.publicKey;
+  const previousEnvironment = env.wompi.environment;
+  const previousFetch = globalThis.fetch;
+  const requestedUrls: string[] = [];
+  const requestedAuthorizationHeaders: string[] = [];
+
+  env.wompi.publicKey = "pub_test_123";
+  env.wompi.environment = "sandbox";
+  globalThis.fetch = (async (url, init) => {
+    requestedUrls.push(String(url));
+    requestedAuthorizationHeaders.push(String((init?.headers as Record<string, string>).Authorization));
+
+    return {
+      ok: true,
+      json: async () => ({
+        data: {
+          id: "01-1531231271-19365",
+          reference: "MRY-123",
+          status: "APPROVED",
+          amount_in_cents: 4900000,
+          currency: "COP",
+          payment_method_type: "CARD"
+        }
+      })
+    } as Response;
+  }) as typeof fetch;
+
+  try {
+    const transaction = await new WompiService().fetchTransaction("01-1531231271-19365");
+
+    assert.deepEqual(transaction, {
+      id: "01-1531231271-19365",
+      reference: "MRY-123",
+      status: "APPROVED",
+      amountInCents: 4900000,
+      currency: "COP",
+      paymentMethodType: "CARD"
+    });
+    assert.equal(
+      requestedUrls[0],
+      "https://sandbox.wompi.co/v1/transactions/01-1531231271-19365"
+    );
+    assert.equal(requestedAuthorizationHeaders[0], "Bearer pub_test_123");
+  } finally {
+    globalThis.fetch = previousFetch;
+    env.wompi.publicKey = previousPublicKey;
+    env.wompi.environment = previousEnvironment;
+  }
+});
