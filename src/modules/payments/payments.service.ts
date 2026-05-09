@@ -130,4 +130,8 @@ export class PaymentsService {
   isWompiConfigured(): boolean {
     return this.wompiService.isConfigured();
   }
+
+  isWompiCheckoutConfigured(): boolean {
+    return this.wompiService.isCheckoutConfigured();
+  }
 }
