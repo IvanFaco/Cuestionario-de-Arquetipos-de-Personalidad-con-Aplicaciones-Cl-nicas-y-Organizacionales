@@ -24,6 +24,13 @@ export class PaymentsService {
     );
   }
 
+  findApprovedPremiumPayment(userId: string): PaymentRecord | null {
+    return this.paymentsRepository.findApprovedPaymentForUserProduct(
+      userId,
+      PREMIUM_ASSESSMENT_PRODUCT
+    );
+  }
+
   findLatestPremiumPayment(userId: string): PaymentRecord | null {
     return this.paymentsRepository.findLatestPaymentForUserProduct(
       userId,
@@ -58,6 +65,25 @@ export class PaymentsService {
       provider: "WOMPI",
       checkoutPayloadJson: JSON.stringify({ signature })
     });
+  }
+
+  ensureApprovedPremiumAccessForDevelopment(userId: string): PaymentRecord {
+    const approved = this.findApprovedPremiumPayment(userId);
+
+    if (approved?.status === "APPROVED") {
+      return approved;
+    }
+
+    const payment = this.createOrReusePendingPremiumPayment(userId);
+    const approvedPayment = this.updateFromWompiEvent({
+      reference: payment.reference,
+      status: "APPROVED",
+      providerTransactionId: `dev-bypass-${Date.now()}`,
+      providerPaymentMethod: "DEV_BYPASS",
+      rawEvent: { source: "development_bypass" }
+    });
+
+    return approvedPayment ?? payment;
   }
 
   buildCheckout(payment: PaymentRecord) {
@@ -130,17 +156,48 @@ export class PaymentsService {
     });
   }
 
-  async syncPaymentStatusFromTransactionId(transactionId: string): Promise<PaymentRecord | null> {
-    const transaction = await this.wompiService.fetchTransactionById(transactionId);
+  async syncFromWompiTransaction(transactionId: string): Promise<PaymentRecord | null> {
+    const transaction = await this.wompiService.fetchTransaction(transactionId);
 
     if (!transaction) {
       return null;
     }
 
-    return this.updateFromWompiEvent(transaction);
+    const payment = this.findPaymentByReference(transaction.reference);
+
+    if (!payment) {
+      return null;
+    }
+
+    if (
+      transaction.amountInCents !== undefined &&
+      transaction.amountInCents !== payment.amountInCents
+    ) {
+      return payment;
+    }
+
+    if (transaction.currency && transaction.currency !== payment.currency) {
+      return payment;
+    }
+
+    return this.paymentsRepository.updatePaymentFromProvider({
+      reference: transaction.reference,
+      status: transaction.status,
+      providerTransactionId: transaction.id,
+      providerPaymentMethod: transaction.paymentMethodType,
+      lastEventJson: JSON.stringify({ source: "redirect_lookup", transaction })
+    });
+  }
+
+  async syncPaymentStatusFromTransactionId(transactionId: string): Promise<PaymentRecord | null> {
+    return this.syncFromWompiTransaction(transactionId);
   }
 
   isWompiConfigured(): boolean {
     return this.wompiService.isConfigured();
+  }
+
+  isWompiCheckoutConfigured(): boolean {
+    return this.wompiService.isCheckoutConfigured();
   }
 }

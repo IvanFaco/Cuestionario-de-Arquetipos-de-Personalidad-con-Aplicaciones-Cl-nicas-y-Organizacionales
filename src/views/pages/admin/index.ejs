@@ -1,22 +1,28 @@
 <section class="admin-shell">
-  <article class="admin-card admin-card--hero">
-    <div>
+  <article class="admin-card admin-card--hero admin-hero">
+    <div class="admin-hero__copy">
       <p class="eyebrow mb-0">Panel interno</p>
-      <h1 class="display-6 fw-bold mb-2">Admin</h1>
+      <h1 class="admin-hero__title mb-0">Admin</h1>
+      <p class="admin-hero__subtitle mb-0">
+        Ajusta la apariencia, revisa datos y valida configuraciones operativas desde un solo lugar.
+      </p>
     </div>
-    <p class="lead text-muted mb-0">
-      Ajusta la apariencia global y revisa el contenido de las tablas de la base de datos desde un
-      solo lugar.
-    </p>
+    <div class="admin-hero__actions">
+      <a class="btn btn-outline app-cta--compact" href="/">Splash</a>
+      <a class="btn btn-outline app-cta--compact" href="/health">Health</a>
+    </div>
   </article>
 
   <% if (pageData.saved) { %>
     <div class="alert alert-success mt-3 mb-0" role="alert">Apariencia actualizada.</div>
   <% } %>
+  <% if (pageData.envSaved) { %>
+    <div class="alert alert-success mt-3 mb-0" role="alert">Variables actualizadas en <code>.env</code>.</div>
+  <% } %>
 
-  <section class="admin-grid mt-3">
-    <article class="admin-card compact-stack">
-      <div>
+  <section class="admin-grid admin-grid--primary mt-3">
+    <article class="admin-card compact-stack admin-card--appearance">
+      <div class="admin-card__header">
         <p class="eyebrow mb-0">Apariencia</p>
         <h2 class="h5 mb-0">Tema, fuente y escala tipografica</h2>
       </div>
@@ -78,8 +84,8 @@
       </form>
     </article>
 
-    <article class="admin-card compact-stack">
-      <div>
+    <article class="admin-card compact-stack admin-card--data">
+      <div class="admin-card__header">
         <p class="eyebrow mb-0">Base de datos</p>
         <h2 class="h5 mb-0">Tablas y contenido</h2>
       </div>
@@ -115,7 +121,7 @@
           </div>
         </div>
 
-        <div class="admin-table-wrap">
+        <div class="admin-table-wrap admin-table-wrap--data">
           <table class="table table-sm align-middle mb-0">
             <thead>
               <tr>
@@ -141,31 +147,105 @@
     </article>
   </section>
 
-  <section class="admin-grid mt-3">
-    <article class="admin-card compact-stack">
-      <div>
-        <p class="eyebrow mb-0">Estado</p>
-        <h2 class="h5 mb-0">Configuracion activa</h2>
-      </div>
-      <div class="surface-note">URL: <strong>/admin</strong></div>
-      <div class="surface-note">Tema activo: <strong><%= pageData.appearance.bootswatchTheme %></strong></div>
-      <div class="surface-note">
-        Fuente activa: <strong><%= pageData.fontOptions.find((option) => option.value === pageData.appearance.fontOption)?.label %></strong>
-      </div>
-      <% if (pageData.appearance.customFontCssHref && pageData.appearance.customFontFamily) { %>
-        <div class="surface-note">
-          Fuente custom: <strong><%= pageData.appearance.customFontFamily %></strong>
-        </div>
-      <% } %>
-      <div class="surface-note">
-        SEO: <strong>noindex, nofollow</strong>
-      </div>
-      <div class="d-grid gap-2">
-        <a class="btn btn-primary app-cta app-cta--compact" href="/">Ir a la splash</a>
-        <a class="btn btn-primary app-cta app-cta--compact" href="/migration">Ver estado de migracion</a>
-        <a class="btn btn-primary app-cta app-cta--compact" href="/health">Healthcheck</a>
-        <button class="btn btn-outline w-full" type="button" data-reset-pwa-cache>Resetear cache PWA</button>
-      </div>
-    </article>
-  </section>
-</section>
+		  <section class="admin-grid admin-grid--secondary mt-3">
+		    <article class="admin-card compact-stack">
+		      <div class="admin-card__header">
+		        <p class="eyebrow mb-0">Estado</p>
+		        <h2 class="h5 mb-0">Configuracion activa</h2>
+	      </div>
+	      <div class="admin-status-list">
+	        <div class="surface-note">URL <strong>/admin</strong></div>
+	        <div class="surface-note">Tema <strong><%= pageData.appearance.bootswatchTheme %></strong></div>
+	        <div class="surface-note">
+	          Fuente <strong><%= pageData.fontOptions.find((option) => option.value === pageData.appearance.fontOption)?.label %></strong>
+	        </div>
+	        <% if (pageData.appearance.customFontCssHref && pageData.appearance.customFontFamily) { %>
+	          <div class="surface-note">
+	            Fuente custom <strong><%= pageData.appearance.customFontFamily %></strong>
+	          </div>
+	        <% } %>
+	        <div class="surface-note">SEO <strong>noindex, nofollow</strong></div>
+	      </div>
+	      <div class="d-grid gap-2">
+	        <a class="btn btn-primary app-cta app-cta--compact" href="/migration">Ver estado de migracion</a>
+		        <button class="btn btn-outline w-full" type="button" data-reset-pwa-cache>Resetear cache PWA</button>
+		      </div>
+		    </article>
+
+		    <article class="admin-card compact-stack">
+		      <div class="admin-card__header">
+		        <p class="eyebrow mb-0">Pagos</p>
+		        <h2 class="h5 mb-0">Variables Wompi produccion</h2>
+		      </div>
+	      <div class="surface-note">
+	        Esta lista muestra lo necesario para ejecutar el checkout productivo sin exponer secretos completos.
+	      </div>
+	      <div class="admin-table-wrap">
+	        <table class="table table-sm align-middle mb-0">
+	          <thead>
+	            <tr>
+	              <th scope="col">Variable</th>
+	              <th scope="col">Esperado</th>
+	              <th scope="col">Actual</th>
+	              <th scope="col">Estado</th>
+	            </tr>
+	          </thead>
+	          <tbody>
+	            <% pageData.wompiProductionEnv.forEach((item) => { %>
+	              <tr>
+	                <td>
+	                  <strong><%= item.name %></strong>
+	                  <div class="text-muted small"><%= item.note %></div>
+	                </td>
+	                <td><code><%= item.expected %></code></td>
+	                <td><code><%= item.current %></code></td>
+	                <td>
+	                  <% if (item.configured) { %>
+	                    <span class="badge text-bg-success">OK</span>
+	                  <% } else { %>
+	                    <span class="badge text-bg-warning">Revisar</span>
+	                  <% } %>
+	                </td>
+	              </tr>
+	            <% }) %>
+	          </tbody>
+	        </table>
+	      </div>
+	      <div class="surface-note">
+		        En Wompi Dashboard configura el webhook para eventos <strong>transaction.updated</strong> usando la URL indicada.
+		      </div>
+		    </article>
+
+		    <article class="admin-card compact-stack admin-card--env">
+		      <div class="admin-card__header">
+		        <p class="eyebrow mb-0">Entorno</p>
+		        <h2 class="h5 mb-0">Editar variables locales</h2>
+		      </div>
+		      <div class="surface-note">
+		        Escribe en <code>.env</code>. En producción, sincroniza estos valores también en el panel de despliegue.
+		      </div>
+		      <form action="/admin/env" method="post" class="admin-env-form">
+		        <% pageData.envFields.forEach((field) => { %>
+		          <div class="admin-env-field">
+		            <label class="form-label form-label-sm fw-semibold" for="env-<%= field.name %>">
+		              <%= field.name %>
+		            </label>
+		            <input
+		              class="form-control compact-control"
+		              id="env-<%= field.name %>"
+		              name="<%= field.name %>"
+		              type="<%= field.secret ? 'password' : 'text' %>"
+		              value="<%= field.inputValue %>"
+		              placeholder="<%= field.placeholder %>"
+		            />
+		            <div class="admin-env-meta">
+		              <span>Actual: <code><%= field.displayValue || 'No configurada' %></code></span>
+		              <span><%= field.source %><%= field.restartRequired ? ' · requiere reinicio' : '' %></span>
+		            </div>
+		          </div>
+		        <% }) %>
+		        <button class="btn btn-primary app-cta app-cta--compact" type="submit">Guardar variables</button>
+		      </form>
+		    </article>
+		  </section>
+		</section>

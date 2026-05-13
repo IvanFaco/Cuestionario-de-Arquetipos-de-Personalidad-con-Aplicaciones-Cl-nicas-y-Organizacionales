@@ -1,5 +1,6 @@
 import type { Request, Response } from "express";
 
+import { env, getEditableEnvSnapshot, updateEditableEnv } from "../../config/env.js";
 import { AuthError } from "../auth/auth.service.js";
 import { getAuthService } from "../auth/auth.container.js";
 import { getPaymentsService } from "../payments/payments.container.js";
@@ -240,6 +241,105 @@ const authModeOptions = ["register", "login"] as const;
 
 type RegisterIntent = (typeof registerIntentOptions)[number];
 type AuthMode = (typeof authModeOptions)[number];
+
+function maskEnvValue(value: string): string {
+  if (!value) {
+    return "No configurada";
+  }
+
+  if (value.length <= 8) {
+    return "Configurada";
+  }
+
+  return `${value.slice(0, 6)}...${value.slice(-4)}`;
+}
+
+function getAdminEnvEditorFields() {
+  return getEditableEnvSnapshot().map((item) => ({
+    ...item,
+    displayValue: item.secret ? maskEnvValue(item.current) : item.current,
+    inputValue: item.secret ? "" : item.current,
+    placeholder: item.secret
+      ? item.current
+        ? "Dejar en blanco para conservar"
+        : "Pegar valor"
+      : ""
+  }));
+}
+
+function getWompiProductionEnvChecklist() {
+  const webhookUrl = `${env.siteUrl.replace(/\/+$/, "")}/webhooks/wompi`;
+
+  return [
+    {
+      name: "NODE_ENV",
+      expected: "production",
+      current: env.nodeEnv,
+      configured: env.nodeEnv === "production",
+      note: "Activa comportamiento de producción en la app."
+    },
+    {
+      name: "SITE_URL",
+      expected: "https://tu-dominio.com",
+      current: env.siteUrl,
+      configured: /^https:\/\//i.test(env.siteUrl),
+      note: "Debe ser público y HTTPS para redirecciones de Wompi."
+    },
+    {
+      name: "WOMPI_ENV",
+      expected: "production",
+      current: env.wompi.forcedSandbox
+        ? `${env.wompi.environment} (forzado; solicitado: ${env.wompi.requestedEnvironment})`
+        : env.wompi.environment,
+      configured: env.wompi.environment.toLowerCase().includes("prod"),
+      note: env.wompi.forcedSandbox
+        ? "Entorno local detectado: se fuerza sandbox para evitar 403 de producción en localhost."
+        : "Usa endpoints productivos de Wompi."
+    },
+    {
+      name: "WOMPI_PUBLIC_KEY",
+      expected: "pub_prod_...",
+      current: maskEnvValue(env.wompi.publicKey),
+      configured: env.wompi.publicKey.startsWith("pub_prod_"),
+      note: "Llave pública productiva para checkout y consulta de transacciones."
+    },
+    {
+      name: "WOMPI_INTEGRITY_SECRET",
+      expected: "prod_integrity_...",
+      current: maskEnvValue(env.wompi.integritySecret),
+      configured: Boolean(env.wompi.integritySecret),
+      note: "Se usa para firmar referencias del checkout."
+    },
+    {
+      name: "WOMPI_EVENTS_SECRET",
+      expected: "Secret de eventos productivo",
+      current: maskEnvValue(env.wompi.eventsSecret),
+      configured: Boolean(env.wompi.eventsSecret),
+      note: "Valida webhooks transaction.updated."
+    },
+    {
+      name: "WOMPI_PREMIUM_AMOUNT_CENTS",
+      expected: "Monto en centavos, ej. 4900000",
+      current: String(env.wompi.premiumAmountInCents),
+      configured: env.wompi.premiumAmountInCents > 0,
+      note: "Debe coincidir con el valor real del estudio profundo."
+    },
+    {
+      name: "WOMPI_CURRENCY",
+      expected: "COP",
+      current: env.wompi.currency,
+      configured: env.wompi.currency === "COP",
+      note: "Wompi Colombia opera en COP."
+    },
+    {
+      name: "Webhook URL",
+      expected: "Configurar en Wompi Dashboard",
+      current: webhookUrl,
+      configured: /^https:\/\//i.test(webhookUrl),
+      note: "URL destino para eventos: transaction.updated."
+    }
+  ];
+}
 
 function getRegisterIntent(value: unknown): RegisterIntent | null {
   return typeof value === "string" && registerIntentOptions.includes(value as RegisterIntent)
@@ -762,11 +862,14 @@ export function renderAdmin(req: Request, res: Response) {
       res.app.locals.siteUrl
     ),
     pageData: {
-      appearance: getAppearanceSettings(),
-      themeOptions: options.themes,
-      fontOptions: options.fonts,
-      saved: req.query.saved === "1",
-      tables,
+	      appearance: getAppearanceSettings(),
+	      themeOptions: options.themes,
+	      fontOptions: options.fonts,
+	      envFields: getAdminEnvEditorFields(),
+	      wompiProductionEnv: getWompiProductionEnvChecklist(),
+	      saved: req.query.saved === "1",
+	      envSaved: req.query.envSaved === "1",
+	      tables,
       selectedTable,
       selectedTableData,
       limit
@@ -1005,10 +1108,46 @@ export function renderFullTestIntro(req: Request, res: Response) {
       },
       res.app.locals.siteUrl
     ),
-    pageData: {
-      premiumCount: getPremiumQuestions().length
+	    pageData: {
+	      cameFromPendingPayment:
+	        req.query.payment === "pending" || req.query.payment === "development",
+	      premiumCount: getPremiumQuestions().length
+	    }
+	  });
+	}
+
+export function updateAdminEnv(req: Request, res: Response) {
+  const updates: Record<string, string> = {};
+
+  for (const field of getEditableEnvSnapshot()) {
+    const rawValue = req.body[field.name];
+    const value = typeof rawValue === "string" ? rawValue.trim() : "";
+
+    if (field.secret && !value) {
+      continue;
     }
-  });
+
+    updates[field.name] = value;
+  }
+
+  if (updates.SITE_URL && !isValidPublicSiteUrl(updates.SITE_URL)) {
+    return res.redirect("/admin?envSaved=0&envError=site_url_invalid");
+  }
+
+  updateEditableEnv(updates);
+  res.app.locals.appVersion = env.appVersion;
+  res.app.locals.siteUrl = env.siteUrl;
+
+  return res.redirect("/admin?envSaved=1");
+}
+
+function isValidPublicSiteUrl(value: string) {
+  try {
+    const parsed = new URL(value);
+    return parsed.protocol === "http:" || parsed.protocol === "https:";
+  } catch (_error) {
+    return false;
+  }
 }
 
 export function startQuickTest(req: Request, res: Response) {

@@ -45,8 +45,21 @@ interface WompiTransactionLookupResponse {
   };
 }
 
+export interface WompiTransactionSnapshot {
+  id: string;
+  reference: string;
+  status: PaymentStatus;
+  amountInCents?: number;
+  currency?: string;
+  paymentMethodType?: string;
+}
+
 function sha256(value: string): string {
   return crypto.createHash("sha256").update(value).digest("hex");
+}
+
+function isPaymentStatus(value: unknown): value is PaymentStatus {
+  return typeof value === "string" && paymentStatuses.has(value as PaymentStatus);
 }
 
 function getNestedValue(source: unknown, path: string): string {
@@ -61,13 +74,9 @@ function getNestedValue(source: unknown, path: string): string {
   return value === undefined || value === null ? "" : String(value);
 }
 
-function isPaymentStatus(value: unknown): value is PaymentStatus {
-  return typeof value === "string" && paymentStatuses.has(value as PaymentStatus);
-}
-
 export class WompiService {
   private getApiBaseUrl(): string {
-    return env.wompi.environment === "production"
+    return env.wompi.environment.toLowerCase().includes("prod")
       ? "https://production.wompi.co/v1"
       : "https://sandbox.wompi.co/v1";
   }
@@ -78,6 +87,18 @@ export class WompiService {
 
   isConfigured(): boolean {
     return Boolean(env.wompi.publicKey && env.wompi.integritySecret && env.wompi.eventsSecret);
+  }
+
+  isCheckoutConfigured(): boolean {
+    if (!env.wompi.publicKey || !env.wompi.integritySecret) {
+      return false;
+    }
+
+    const expectedPrefix = env.wompi.environment.toLowerCase().includes("prod")
+      ? "pub_prod_"
+      : "pub_test_";
+
+    return env.wompi.publicKey.startsWith(expectedPrefix);
   }
 
   validateEvent(event: WompiTransactionEvent): boolean {
@@ -116,28 +137,51 @@ export class WompiService {
     };
   }
 
-  async fetchTransactionById(transactionId: string) {
-    if (!transactionId.trim() || !env.wompi.publicKey) {
+  async fetchTransaction(transactionId: string): Promise<WompiTransactionSnapshot | null> {
+    const normalizedTransactionId = transactionId.trim();
+
+    if (!normalizedTransactionId || !env.wompi.publicKey) {
       return null;
     }
 
-    const response = await fetch(
-      `${this.getApiBaseUrl()}/transactions/${encodeURIComponent(transactionId)}`,
-      {
-        headers: {
-          Authorization: `Bearer ${env.wompi.publicKey}`
+    try {
+      const response = await fetch(
+        `${this.getApiBaseUrl()}/transactions/${encodeURIComponent(normalizedTransactionId)}`,
+        {
+          headers: {
+            Authorization: `Bearer ${env.wompi.publicKey}`
+          }
         }
-      }
-    );
+      );
 
-    if (!response.ok) {
+      if (!response.ok) {
+        return null;
+      }
+
+      const body = (await response.json()) as WompiTransactionLookupResponse;
+      const transaction = body.data;
+
+      if (!transaction?.id || !transaction.reference || !isPaymentStatus(transaction.status)) {
+        return null;
+      }
+
+      return {
+        id: transaction.id,
+        reference: transaction.reference,
+        status: transaction.status,
+        amountInCents: transaction.amount_in_cents,
+        currency: transaction.currency,
+        paymentMethodType: transaction.payment_method_type
+      };
+    } catch {
       return null;
     }
+  }
 
-    const payload = (await response.json()) as WompiTransactionLookupResponse;
-    const transaction = payload.data;
+  async fetchTransactionById(transactionId: string) {
+    const transaction = await this.fetchTransaction(transactionId);
 
-    if (!transaction?.reference || !isPaymentStatus(transaction.status)) {
+    if (!transaction) {
       return null;
     }
 
@@ -145,10 +189,10 @@ export class WompiService {
       reference: transaction.reference,
       status: transaction.status,
       providerTransactionId: transaction.id,
-      providerPaymentMethod: transaction.payment_method_type,
-      amountInCents: transaction.amount_in_cents,
+      providerPaymentMethod: transaction.paymentMethodType,
+      amountInCents: transaction.amountInCents,
       currency: transaction.currency,
-      rawEvent: payload
+      rawEvent: { data: transaction }
     };
   }
 }
