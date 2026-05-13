@@ -64,20 +64,66 @@ test("WompiService rejects invalid event checksums", () => {
   env.wompi.eventsSecret = previousEventsSecret;
 });
 
-test("WompiService fetches transaction details by id", async () => {
-  const originalFetch = globalThis.fetch;
-  const previousEnvironment = env.wompi.environment;
+test("WompiService fetches transaction snapshots from redirect transaction id", async () => {
   const previousPublicKey = env.wompi.publicKey;
-  env.wompi.environment = "sandbox";
-  env.wompi.publicKey = "pub_test_123";
-  let requestedUrl = "";
-  let requestedAuthorization = "";
+  const previousEnvironment = env.wompi.environment;
+  const previousFetch = globalThis.fetch;
+  const requestedUrls: string[] = [];
+  const requestedAuthorizationHeaders: string[] = [];
 
-  globalThis.fetch = (async (input, init) => {
-    requestedUrl = String(input);
-    requestedAuthorization = String(new Headers(init?.headers).get("authorization"));
+  env.wompi.publicKey = "pub_test_123";
+  env.wompi.environment = "sandbox";
+  globalThis.fetch = (async (url, init) => {
+    requestedUrls.push(String(url));
+    requestedAuthorizationHeaders.push(String((init?.headers as Record<string, string>).Authorization));
 
     return {
+      ok: true,
+      json: async () => ({
+        data: {
+          id: "01-1531231271-19365",
+          reference: "MRY-123",
+          status: "APPROVED",
+          amount_in_cents: 4900000,
+          currency: "COP",
+          payment_method_type: "CARD"
+        }
+      })
+    } as Response;
+  }) as typeof fetch;
+
+  try {
+    const transaction = await new WompiService().fetchTransaction("01-1531231271-19365");
+
+    assert.deepEqual(transaction, {
+      id: "01-1531231271-19365",
+      reference: "MRY-123",
+      status: "APPROVED",
+      amountInCents: 4900000,
+      currency: "COP",
+      paymentMethodType: "CARD"
+    });
+    assert.equal(
+      requestedUrls[0],
+      "https://sandbox.wompi.co/v1/transactions/01-1531231271-19365"
+    );
+    assert.equal(requestedAuthorizationHeaders[0], "Bearer pub_test_123");
+  } finally {
+    globalThis.fetch = previousFetch;
+    env.wompi.publicKey = previousPublicKey;
+    env.wompi.environment = previousEnvironment;
+  }
+});
+
+test("WompiService keeps compatibility with event-shaped transaction lookup", async () => {
+  const previousPublicKey = env.wompi.publicKey;
+  const previousEnvironment = env.wompi.environment;
+  const previousFetch = globalThis.fetch;
+
+  env.wompi.publicKey = "pub_test_123";
+  env.wompi.environment = "sandbox";
+  globalThis.fetch = (async () =>
+    ({
       ok: true,
       json: async () => ({
         data: {
@@ -89,33 +135,32 @@ test("WompiService fetches transaction details by id", async () => {
           payment_method_type: "CARD"
         }
       })
-    } as Response;
-  }) as typeof fetch;
+    }) as Response) as typeof fetch;
 
-  const transaction = await new WompiService().fetchTransactionById("trx_test_123");
+  try {
+    const transaction = await new WompiService().fetchTransactionById("trx_test_123");
 
-  assert.equal(requestedUrl, "https://sandbox.wompi.co/v1/transactions/trx_test_123");
-  assert.equal(requestedAuthorization, "Bearer pub_test_123");
-  assert.deepEqual(transaction, {
-    reference: "MRY-123",
-    status: "APPROVED",
-    providerTransactionId: "trx_test_123",
-    providerPaymentMethod: "CARD",
-    amountInCents: 4900000,
-    currency: "COP",
-    rawEvent: {
-      data: {
-        id: "trx_test_123",
-        reference: "MRY-123",
-        status: "APPROVED",
-        amount_in_cents: 4900000,
-        currency: "COP",
-        payment_method_type: "CARD"
+    assert.deepEqual(transaction, {
+      reference: "MRY-123",
+      status: "APPROVED",
+      providerTransactionId: "trx_test_123",
+      providerPaymentMethod: "CARD",
+      amountInCents: 4900000,
+      currency: "COP",
+      rawEvent: {
+        data: {
+          id: "trx_test_123",
+          reference: "MRY-123",
+          status: "APPROVED",
+          amountInCents: 4900000,
+          currency: "COP",
+          paymentMethodType: "CARD"
+        }
       }
-    }
-  });
-
-  globalThis.fetch = originalFetch;
-  env.wompi.environment = previousEnvironment;
-  env.wompi.publicKey = previousPublicKey;
+    });
+  } finally {
+    globalThis.fetch = previousFetch;
+    env.wompi.publicKey = previousPublicKey;
+    env.wompi.environment = previousEnvironment;
+  }
 });

@@ -47,7 +47,12 @@
   <body>
     <%
     const currentPath = pageData?.currentPath || '';
-    const siteRootUrl = new URL('/', seo.canonicalUrl).href;
+    let siteRootUrl = '/';
+    try {
+      siteRootUrl = new URL('/', seo?.canonicalUrl || '/').href;
+    } catch (_error) {
+      siteRootUrl = '/';
+    }
     const sessionData = session || {};
     const authSession = sessionData.auth || null;
     const assessmentSession = sessionData.assessment || {};

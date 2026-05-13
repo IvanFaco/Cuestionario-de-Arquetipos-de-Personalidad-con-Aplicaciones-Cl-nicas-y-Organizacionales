@@ -26,6 +26,7 @@ app.set("trust proxy", 1);
 
 app.set("view engine", "ejs");
 app.set("views", viewsPath);
+app.locals.appVersion = env.appVersion;
 app.locals.assetVersion = env.assetVersion;
 app.locals.siteUrl = env.siteUrl;
 app.locals.appearance = getAppearanceSettings();

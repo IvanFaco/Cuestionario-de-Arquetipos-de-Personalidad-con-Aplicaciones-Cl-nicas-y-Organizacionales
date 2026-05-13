@@ -1,8 +1,8 @@
 import type { Request, Response } from "express";
 
-import { AuthError } from "../auth/auth.service.js";
 import { env } from "../../config/env.js";
 import { getAuthService } from "../auth/auth.container.js";
+import { AuthError } from "../auth/auth.service.js";
 import { resolveAssessmentJourneyPath } from "../assessment/assessment.journey.js";
 import { getAssessmentPersistenceService } from "../assessment/assessment.persistence.container.js";
 import { buildSeoMeta } from "../assessment/assessment.seo.js";
@@ -12,6 +12,8 @@ const authService = getAuthService();
 const assessmentPersistenceService = getAssessmentPersistenceService();
 const paymentsService = getPaymentsService();
 const wompiService = getWompiService();
+const isSandboxWompi = env.wompi.environment.toLowerCase() !== "production";
+const isDevelopmentWompiBypass = env.wompi.requestedEnvironment.toLowerCase() === "development";
 
 function hasBasicResult(req: Request): boolean {
   return Boolean(req.session.assessment?.hookOutcome);
@@ -39,6 +41,16 @@ function persistCurrentAssessment(req: Request): void {
   }
 
   assessmentPersistenceService.save(userId, assessment);
+}
+
+function grantDevelopmentBypassAndContinue(req: Request, res: Response) {
+  const userId = req.session.auth?.userId;
+
+  if (userId) {
+    paymentsService.ensureApprovedPremiumAccessForDevelopment(userId);
+  }
+
+  return res.redirect("/full-test?payment=development");
 }
 
 function renderPremiumAuthGate(
@@ -81,6 +93,10 @@ function renderPremiumCheckout(req: Request, res: Response) {
     return res.redirect(getJourneyPath(req));
   }
 
+  if (isDevelopmentWompiBypass) {
+    return grantDevelopmentBypassAndContinue(req, res);
+  }
+
   persistCurrentAssessment(req);
 
   if (paymentsService.hasApprovedPremiumAccess(req.session.auth.userId)) {
@@ -89,6 +105,7 @@ function renderPremiumCheckout(req: Request, res: Response) {
 
   const payment = paymentsService.createOrReusePendingPremiumPayment(req.session.auth.userId);
   const checkout = paymentsService.buildCheckout(payment);
+  const isCheckoutConfigured = paymentsService.isWompiCheckoutConfigured();
 
   return res.render("layouts/main", {
     title: "MiRealYo | Estudio profundo",
@@ -105,9 +122,10 @@ function renderPremiumCheckout(req: Request, res: Response) {
     pageData: {
       payment,
       checkout,
-      isConfigured: paymentsService.isWompiConfigured(),
-      allowLocalPaymentSimulation:
-        env.nodeEnv !== "production" && !paymentsService.isWompiConfigured()
+      isConfigured: isCheckoutConfigured,
+      isWebhookConfigured: paymentsService.isWompiConfigured(),
+      isSandboxForced: env.wompi.forcedSandbox,
+      allowLocalPaymentSimulation: env.nodeEnv !== "production" && !isCheckoutConfigured
     }
   });
 }
@@ -138,6 +156,10 @@ export function renderPremiumPaymentAuth(req: Request, res: Response) {
   }
 
   if (req.session.auth) {
+    if (isDevelopmentWompiBypass) {
+      return grantDevelopmentBypassAndContinue(req, res);
+    }
+
     return res.redirect(getJourneyPath(req));
   }
 
@@ -159,7 +181,7 @@ export async function registerForPremiumPayment(req: Request, res: Response) {
   if (!email.includes("@")) {
     return renderPremiumAuthGate(req, res.status(400), {
       email,
-      error: "Ingresa un correo electr\u00f3nico v\u00e1lido.",
+      error: "Ingresa un correo electronico valido.",
       activeMode: "register"
     });
   }
@@ -167,7 +189,7 @@ export async function registerForPremiumPayment(req: Request, res: Response) {
   if (password.length < 6) {
     return renderPremiumAuthGate(req, res.status(400), {
       email,
-      error: "La contrase\u00f1a debe tener al menos 6 caracteres.",
+      error: "La contrasena debe tener al menos 6 caracteres.",
       activeMode: "register"
     });
   }
@@ -179,6 +201,11 @@ export async function registerForPremiumPayment(req: Request, res: Response) {
       email: user.email
     };
     persistCurrentAssessment(req);
+
+    if (isDevelopmentWompiBypass) {
+      return grantDevelopmentBypassAndContinue(req, res);
+    }
+
     return res.redirect(getJourneyPath(req));
   } catch (error) {
     const message =
@@ -211,10 +238,15 @@ export async function loginForPremiumPayment(req: Request, res: Response) {
       email: user.email
     };
     persistCurrentAssessment(req);
+
+    if (isDevelopmentWompiBypass) {
+      return grantDevelopmentBypassAndContinue(req, res);
+    }
+
     return res.redirect(getJourneyPath(req));
   } catch (error) {
     const message =
-      error instanceof AuthError ? error.message : "No fue posible iniciar sesi\u00f3n.";
+      error instanceof AuthError ? error.message : "No fue posible iniciar sesion.";
 
     return renderPremiumAuthGate(req, res.status(400), {
       loginEmail: email,
@@ -233,12 +265,12 @@ function shouldPollPaymentStatus(
 
 export async function renderPaymentResponse(req: Request, res: Response) {
   const reference = String(req.query.reference ?? "");
-  const transactionId = String(req.query.id ?? req.query.transaction_id ?? "");
+  const transactionId = String(req.query.id ?? req.query.transaction_id ?? "").trim();
   let payment = reference ? paymentsService.findPaymentByReference(reference) : null;
 
   if (transactionId && (!payment || payment.status === "PENDING")) {
     try {
-      payment = (await paymentsService.syncPaymentStatusFromTransactionId(transactionId)) ?? payment;
+      payment = (await paymentsService.syncFromWompiTransaction(transactionId)) ?? payment;
     } catch {
       // Keep local state when remote validation is temporarily unavailable.
     }
@@ -250,13 +282,17 @@ export async function renderPaymentResponse(req: Request, res: Response) {
     return res.redirect("/full-test");
   }
 
+  if (isSandboxWompi && payment && isOwnPayment && payment.status === "PENDING") {
+    return res.redirect("/full-test?payment=pending");
+  }
+
   return res.render("layouts/main", {
     title: "MiRealYo | Estado del pago",
     page: "../pages/payments/payment-response",
     seo: buildSeoMeta(
       {
         title: "MiRealYo | Estado del pago",
-        description: "Consulta el estado de activaci\u00f3n de tu estudio profundo.",
+        description: "Consulta el estado de activacion de tu estudio profundo.",
         canonicalPath: "/pagos/respuesta",
         robots: "noindex,nofollow"
       },
@@ -273,7 +309,7 @@ export async function renderPaymentResponse(req: Request, res: Response) {
 }
 
 export function simulateApprovedPremiumPayment(req: Request, res: Response) {
-  if (env.nodeEnv === "production" || paymentsService.isWompiConfigured()) {
+  if (env.nodeEnv === "production" || paymentsService.isWompiCheckoutConfigured()) {
     return res.status(404).send("Not found");
   }
 
