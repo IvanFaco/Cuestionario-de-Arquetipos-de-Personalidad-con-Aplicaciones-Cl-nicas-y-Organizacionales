@@ -79,5 +79,20 @@ export const sqliteMigrations: SqliteMigration[] = [
       CREATE INDEX IF NOT EXISTS idx_payments_provider_transaction
         ON payments(provider_transaction_id);
     `
+  },
+  {
+    id: "005_create_sessions",
+    sql: `
+      CREATE TABLE IF NOT EXISTS sessions (
+        sid TEXT PRIMARY KEY,
+        data_json TEXT NOT NULL,
+        expires_at TEXT,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_sessions_expires_at
+        ON sessions(expires_at);
+    `
   }
 ];

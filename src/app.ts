@@ -5,6 +5,7 @@ import session from "express-session";
 
 import { env } from "./config/env.js";
 import { getDatabaseClient } from "./shared/database/database.factory.js";
+import { SqliteSessionStore } from "./shared/session/sqlite-session.store.js";
 import { getAppearanceSettings, getCurrentFontDescriptor } from "./modules/assessment/assessment.appearance.js";
 import { assessmentPlatformRouter } from "./modules/assessment/assessment.platform.routes.js";
 import { assessmentRouter } from "./modules/assessment/assessment.routes.js";
@@ -36,13 +37,16 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(
   session({
+    store: new SqliteSessionStore(databaseClient),
     secret: env.sessionSecret,
     resave: false,
     saveUninitialized: false,
+    proxy: true,
     cookie: {
       httpOnly: true,
+      maxAge: 1000 * 60 * 60 * 24 * 7,
       sameSite: "lax",
-      secure: env.nodeEnv === "production"
+      secure: env.nodeEnv === "production" ? "auto" : false
     }
   })
 );
