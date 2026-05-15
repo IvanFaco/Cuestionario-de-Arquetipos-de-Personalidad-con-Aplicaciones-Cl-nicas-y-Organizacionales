@@ -916,6 +916,8 @@ export function updateAdminAppearance(req: Request, res: Response) {
   updateAppearanceSettings({
     bootswatchTheme: String(req.body.bootswatchTheme ?? ""),
     fontOption: String(req.body.fontOption ?? ""),
+    colorMode: String(req.body.colorMode ?? ""),
+    pwaEnabled: String(req.body.pwaEnabled ?? ""),
     customFontCssHref: String(req.body.customFontCssHref ?? ""),
     customFontFamily: String(req.body.customFontFamily ?? ""),
     headingScale: String(req.body.headingScale ?? ""),

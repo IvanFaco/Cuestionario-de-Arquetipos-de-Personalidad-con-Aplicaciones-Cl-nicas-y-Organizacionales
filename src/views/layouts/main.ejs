@@ -42,7 +42,9 @@
     <meta name="twitter:card" content="summary" />
     <meta name="twitter:title" content="<%= seo.title %>" />
     <meta name="twitter:description" content="<%= seo.description %>" />
-    <link rel="manifest" href="/manifest.webmanifest" />
+    <% if (appearance?.pwaEnabled !== false) { %>
+      <link rel="manifest" href="/manifest.webmanifest" />
+    <% } %>
     <link rel="icon" type="image/png" href="/assets/logo-256.png" sizes="256x256" />
     <link rel="apple-touch-icon" href="/assets/logo-256.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -133,6 +135,8 @@
     <% } %>
     <script>
       (() => {
+        const homeNav = document.querySelector("[data-home-nav]");
+        const homeUrl = homeNav ? homeNav.getAttribute("data-home-url") : null;
         const storageKey = "mirealyo:color-mode";
         const root = document.documentElement;
         const body = document.body;
@@ -184,6 +188,12 @@
         const currentMode = getStoredMode() ?? defaultMode;
         applyMode(currentMode);
 
+        if (homeNav) {
+          homeNav.addEventListener("click", () => {
+            window.location.assign(homeUrl || "/");
+          });
+        }
+
         if (!toggle) {
           return;
         }
@@ -195,6 +205,30 @@
         });
       })();
     </script>
-    <script src="/scripts/pwa.js?v=<%= assetVersion %>" defer></script>
+    <% if (appearance?.pwaEnabled !== false) { %>
+      <script src="/scripts/pwa.js?v=<%= assetVersion %>" defer></script>
+    <% } else { %>
+      <script>
+        (() => {
+          const unregisterWorkers = async () => {
+            if ("caches" in window) {
+              const keys = await caches.keys();
+              await Promise.all(keys.map((key) => caches.delete(key)));
+            }
+
+            if ("serviceWorker" in navigator) {
+              const registrations = await navigator.serviceWorker.getRegistrations();
+              await Promise.all(registrations.map((registration) => registration.unregister()));
+            }
+          };
+
+          window.addEventListener("load", () => {
+            unregisterWorkers().catch(() => {
+              // PWA cleanup is best-effort.
+            });
+          });
+        })();
+      </script>
+    <% } %>
   </body>
 </html>

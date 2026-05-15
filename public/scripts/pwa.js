@@ -1,13 +1,5 @@
 (function () {
   var resetButton = document.querySelector("[data-reset-pwa-cache]");
-  var homeNav = document.querySelector("[data-home-nav]");
-  var homeUrl = homeNav ? homeNav.getAttribute("data-home-url") : null;
-
-  if (homeNav) {
-    homeNav.addEventListener("click", function () {
-      window.location.assign(homeUrl || "/");
-    });
-  }
 
   if (!("serviceWorker" in navigator)) {
     return;

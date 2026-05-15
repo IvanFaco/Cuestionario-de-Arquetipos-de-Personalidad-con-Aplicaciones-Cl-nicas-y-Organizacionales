@@ -44,6 +44,7 @@ export type AppearanceSettings = {
   bootswatchTheme: BootswatchTheme;
   fontOption: GoogleFontOption;
   colorMode: ColorMode;
+  pwaEnabled: boolean;
   customFontCssHref?: string;
   customFontFamily?: string;
   headingScale?: number;
@@ -132,6 +133,7 @@ const defaultAppearance: AppearanceSettings = {
   bootswatchTheme: "flatly",
   fontOption: "manrope",
   colorMode: "light",
+  pwaEnabled: true,
   customFontCssHref: "",
   customFontFamily: "",
   headingScale: 1,
@@ -162,6 +164,8 @@ function readAppearanceSettings(): AppearanceSettings {
     const parsedTheme = parsed.bootswatchTheme;
     const parsedFont = parsed.fontOption;
     const parsedColorMode = parsed.colorMode;
+    const parsedPwaEnabled =
+      typeof parsed.pwaEnabled === "boolean" ? parsed.pwaEnabled : defaultAppearance.pwaEnabled;
     const parsedCustomFontCssHref =
       typeof parsed.customFontCssHref === "string" ? parsed.customFontCssHref : "";
     const parsedCustomFontFamily =
@@ -189,6 +193,7 @@ function readAppearanceSettings(): AppearanceSettings {
       colorMode: isValidColorMode(String(parsedColorMode))
         ? (parsedColorMode as ColorMode)
         : defaultAppearance.colorMode,
+      pwaEnabled: parsedPwaEnabled,
       customFontCssHref: parsedCustomFontCssHref,
       customFontFamily: parsedCustomFontFamily,
       headingScale: parsedHeadingScale,
@@ -235,6 +240,7 @@ export function updateAppearanceSettings(input: {
   bootswatchTheme: string;
   fontOption: string;
   colorMode?: string;
+  pwaEnabled?: string;
   customFontCssHref?: string;
   customFontFamily?: string;
   headingScale?: string;
@@ -252,6 +258,8 @@ export function updateAppearanceSettings(input: {
   if (typeof input.colorMode === "string" && isValidColorMode(input.colorMode)) {
     currentAppearance.colorMode = input.colorMode;
   }
+
+  currentAppearance.pwaEnabled = input.pwaEnabled === "yes";
 
   const customFontCssHref = (input.customFontCssHref ?? "").trim();
   const customFontFamily = (input.customFontFamily ?? "").trim();

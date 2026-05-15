@@ -51,6 +51,29 @@
         </div>
 
         <div>
+          <label class="form-label form-label-sm fw-semibold" for="colorMode">Modo visual inicial</label>
+          <select class="form-select compact-control" id="colorMode" name="colorMode">
+            <option value="light" <%= pageData.appearance.colorMode === 'light' ? 'selected' : '' %>>Claro</option>
+            <option value="dark" <%= pageData.appearance.colorMode === 'dark' ? 'selected' : '' %>>Oscuro</option>
+          </select>
+        </div>
+
+        <label class="form-check form-switch">
+          <input
+            class="form-check-input"
+            type="checkbox"
+            role="switch"
+            id="pwaEnabled"
+            name="pwaEnabled"
+            value="yes"
+            <%= pageData.appearance.pwaEnabled ? 'checked' : '' %>
+          />
+          <span class="form-check-label fw-semibold" for="pwaEnabled">
+            Progressive Web App activa
+          </span>
+        </label>
+
+        <div>
           <label class="form-label form-label-sm fw-semibold" for="customFontCssHref">
             O pega el link CSS de Google Fonts que quieras usar
           </label>
@@ -156,6 +179,7 @@
 	      <div class="admin-status-list">
 	        <div class="surface-note">URL <strong>/admin</strong></div>
 	        <div class="surface-note">Tema <strong><%= pageData.appearance.bootswatchTheme %></strong></div>
+	        <div class="surface-note">PWA <strong><%= pageData.appearance.pwaEnabled ? 'activa' : 'desactivada' %></strong></div>
 	        <div class="surface-note">
 	          Fuente <strong><%= pageData.fontOptions.find((option) => option.value === pageData.appearance.fontOption)?.label %></strong>
 	        </div>
