@@ -1,4 +1,5 @@
 import path from "node:path";
+import os from "node:os";
 
 import express from "express";
 import session from "express-session";
@@ -52,6 +53,17 @@ app.use(
 );
 app.use(express.static(publicPath));
 app.use((req, res, next) => {
+  res.setHeader("X-App-Version", env.appVersion);
+  res.setHeader("X-App-Instance", os.hostname());
+  res.setHeader("X-App-Commit", env.assetVersion);
+
+  if (req.accepts("html")) {
+    res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+    res.setHeader("Pragma", "no-cache");
+    res.setHeader("Expires", "0");
+    res.setHeader("Surrogate-Control", "no-store");
+  }
+
   res.locals.session = req.session;
   next();
 });

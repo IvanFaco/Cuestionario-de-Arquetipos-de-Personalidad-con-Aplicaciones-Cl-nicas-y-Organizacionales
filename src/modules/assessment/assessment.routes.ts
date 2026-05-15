@@ -121,7 +121,10 @@ assessmentRouter.get("/health", (_req, res) => {
   res.json({
     status: "ok",
     service: "mi-real-yo-migration",
-    phase: "fase-4"
+    phase: "fase-4",
+    version: res.app.locals.appVersion,
+    assetVersion: res.app.locals.assetVersion,
+    instance: res.getHeader("X-App-Instance")
   });
 });
 
