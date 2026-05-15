@@ -705,16 +705,7 @@ span.app-sidebar__link.is-disabled {
 }
 
 .layout--test .question-actions {
-  position: sticky;
-  bottom: 0;
-  z-index: 9;
   margin-top: auto;
-  padding-bottom: calc(0.75rem + env(safe-area-inset-bottom));
-  background: linear-gradient(to top, rgba(255, 255, 255, 0.98) 70%, rgba(255, 255, 255, 0));
-}
-
-:root[data-bs-theme="dark"] .layout--test .question-actions {
-  background: linear-gradient(to top, rgba(15, 23, 36, 0.98) 70%, rgba(15, 23, 36, 0));
 }
 
 .layout--test.is-authenticated .app-stage__inner {
@@ -723,6 +714,48 @@ span.app-sidebar__link.is-disabled {
 
 .layout--default .app-stage__inner {
   padding-bottom: calc(var(--space-md) + env(safe-area-inset-bottom));
+}
+
+@media (min-width: 768px) {
+  .layout--test .app-stage {
+    flex: 0 1 auto;
+    aspect-ratio: auto;
+  }
+
+  .layout--test .app-stage__inner {
+    height: auto;
+    overflow-y: visible;
+  }
+
+  .layout--test .stage-page {
+    min-height: auto;
+  }
+
+  .layout--test .question-card-panel {
+    flex: 0 0 auto;
+  }
+
+  .layout--test .question-card-panel__body {
+    min-height: 12rem;
+  }
+
+  .layout--test .teaser-card .question-card-panel__body {
+    min-height: 17rem;
+  }
+}
+
+@media (max-width: 767px) {
+  .layout--test .question-actions {
+    position: sticky;
+    bottom: 0;
+    z-index: 9;
+    padding-bottom: calc(0.75rem + env(safe-area-inset-bottom));
+    background: linear-gradient(to top, rgba(255, 255, 255, 0.98) 70%, rgba(255, 255, 255, 0));
+  }
+
+  :root[data-bs-theme="dark"] .layout--test .question-actions {
+    background: linear-gradient(to top, rgba(15, 23, 36, 0.98) 70%, rgba(15, 23, 36, 0));
+  }
 }
 
 /* Archetype Image in results */
