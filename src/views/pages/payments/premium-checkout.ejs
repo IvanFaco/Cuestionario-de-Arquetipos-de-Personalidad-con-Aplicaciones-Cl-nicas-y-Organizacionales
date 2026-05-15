@@ -49,50 +49,16 @@
         Checkout habilitado. Falta <code>WOMPI_EVENTS_SECRET</code>, así que la confirmación por webhook no estará activa hasta configurarlo.
       </p>
     <% } %>
-    <div class="question-actions teaser-screen__actions">
-      <button
-        class="btn btn-primary app-cta question-actions__next"
-        type="button"
-        data-wompi-open
-        data-public-key="<%= pageData.checkout.publicKey %>"
-        data-currency="<%= pageData.checkout.currency %>"
-        data-amount-in-cents="<%= pageData.checkout.amountInCents %>"
-        data-reference="<%= pageData.checkout.reference %>"
-        data-signature="<%= pageData.checkout.signature %>"
-        data-redirect-url="<%= pageData.checkout.redirectUrl %>"
-      >
+    <form class="question-actions teaser-screen__actions" action="<%= pageData.checkout.checkoutUrl %>" method="get">
+      <input type="hidden" name="public-key" value="<%= pageData.checkout.publicKey %>">
+      <input type="hidden" name="currency" value="<%= pageData.checkout.currency %>">
+      <input type="hidden" name="amount-in-cents" value="<%= pageData.checkout.amountInCents %>">
+      <input type="hidden" name="reference" value="<%= pageData.checkout.reference %>">
+      <input type="hidden" name="signature:integrity" value="<%= pageData.checkout.signature %>">
+      <input type="hidden" name="redirect-url" value="<%= pageData.checkout.redirectUrl %>">
+      <button class="btn btn-primary app-cta question-actions__next" type="submit">
         Pagar con Wompi
       </button>
-    </div>
+    </form>
   <% } %>
 </section>
-
-<script src="https://checkout.wompi.co/widget.js"></script>
-<script>
-  (() => {
-    const button = document.querySelector("[data-wompi-open]");
-    if (!button || typeof WidgetCheckout === "undefined") return;
-
-    button.addEventListener("click", () => {
-      const checkout = new WidgetCheckout({
-        currency: button.dataset.currency,
-        amountInCents: Number(button.dataset.amountInCents),
-        reference: button.dataset.reference,
-        publicKey: button.dataset.publicKey,
-        signature: { integrity: button.dataset.signature },
-        redirectUrl: button.dataset.redirectUrl
-      });
-
-      checkout.open((result) => {
-        const redirectUrl = new URL(button.dataset.redirectUrl, window.location.origin);
-        const transactionId = result?.transaction?.id;
-
-        if (transactionId) {
-          redirectUrl.searchParams.set("id", transactionId);
-        }
-
-        window.location.href = redirectUrl.toString();
-      });
-    });
-  })();
-</script>

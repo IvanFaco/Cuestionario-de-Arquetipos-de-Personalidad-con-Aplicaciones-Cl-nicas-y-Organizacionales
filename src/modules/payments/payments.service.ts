@@ -94,6 +94,7 @@ export class PaymentsService {
     );
 
     return {
+      checkoutUrl: "https://checkout.wompi.co/p/",
       publicKey: env.wompi.publicKey,
       currency: payment.currency,
       amountInCents: payment.amountInCents,
