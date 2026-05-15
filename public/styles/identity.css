@@ -769,3 +769,52 @@ span.app-sidebar__link.is-disabled {
   margin: 0 auto;
   display: block;
 }
+
+@media (min-width: 768px) {
+  .teaser-screen--results {
+    flex: 0 0 auto;
+    min-height: auto;
+    justify-content: flex-start;
+    gap: 0.9rem;
+  }
+
+  .teaser-screen--results .teaser-carousel {
+    flex: 0 0 auto;
+    gap: 0.7rem;
+    padding: 0.85rem 0.9rem 0.75rem;
+  }
+
+  .teaser-screen--results .teaser-carousel .question-card-panel__body {
+    min-height: 0;
+  }
+
+  .teaser-screen--results .teaser-card__copy {
+    gap: 0.55rem;
+  }
+
+  .teaser-screen--results .teaser-card__headline {
+    font-size: clamp(1.45rem, 2.2vw, 1.75rem);
+  }
+
+  .teaser-screen--results .teaser-card__summary {
+    font-size: var(--type-md);
+  }
+
+  .teaser-screen--results .teaser-archetype-img {
+    width: clamp(11rem, 28vh, 16rem);
+    max-width: 100%;
+    margin-bottom: 0 !important;
+  }
+
+  .teaser-screen--results .teaser-carousel__footer {
+    margin-top: 0.1rem;
+  }
+
+  .teaser-screen--results .teaser-ranking {
+    margin-top: 0;
+  }
+
+  .teaser-screen--results > .question-actions {
+    margin-top: 0.25rem;
+  }
+}
