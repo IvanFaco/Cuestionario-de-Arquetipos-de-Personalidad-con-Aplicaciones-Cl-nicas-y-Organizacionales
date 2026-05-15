@@ -1,4 +1,5 @@
-<section class="stage-page question-screen <%= pageData.totalQuestions > 10 ? 'question-screen--premium' : '' %>">
+<% const isPremiumQuestion = Number(pageData.totalQuestions ?? 0) > 10; %>
+<section class="stage-page question-screen <%= isPremiumQuestion ? 'question-screen--premium' : '' %>">
   <header class="question-header">
     <p class="eyebrow mb-0"><%= pageData.stageLabel %></p>
     <div class="question-progress">
@@ -28,7 +29,7 @@
   <form
     action="<%= pageData.nextAction %>"
     method="post"
-    class="question-flow-form"
+    class="question-flow-form <%= isPremiumQuestion ? 'question-flow-form--premium' : '' %>"
     data-question-flow
     data-selected-index="<%= pageData.selectedIndex %>"
     data-selected-label="<%= pageData.selectedLabel ?? '' %>"
