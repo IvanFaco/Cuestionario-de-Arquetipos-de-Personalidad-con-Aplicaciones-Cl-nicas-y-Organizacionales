@@ -9,10 +9,6 @@
     <meta name="theme-color" content="#f5fbff" />
     <meta name="color-scheme" content="light dark" />
     <meta name="application-name" content="MiRealYo" />
-    <meta name="apple-mobile-web-app-title" content="MiRealYo" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <script>
       (() => {
         const defaultMode = "<%= appearance?.colorMode === 'dark' ? 'dark' : 'light' %>";
@@ -42,9 +38,6 @@
     <meta name="twitter:card" content="summary" />
     <meta name="twitter:title" content="<%= seo.title %>" />
     <meta name="twitter:description" content="<%= seo.description %>" />
-    <% if (appearance?.pwaEnabled !== false) { %>
-      <link rel="manifest" href="/manifest.webmanifest" />
-    <% } %>
     <link rel="icon" type="image/png" href="/assets/logo-256.png" sizes="256x256" />
     <link rel="apple-touch-icon" href="/assets/logo-256.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -205,30 +198,5 @@
         });
       })();
     </script>
-    <% if (appearance?.pwaEnabled !== false) { %>
-      <script src="/scripts/pwa.js?v=<%= assetVersion %>" defer></script>
-    <% } else { %>
-      <script>
-        (() => {
-          const unregisterWorkers = async () => {
-            if ("caches" in window) {
-              const keys = await caches.keys();
-              await Promise.all(keys.map((key) => caches.delete(key)));
-            }
-
-            if ("serviceWorker" in navigator) {
-              const registrations = await navigator.serviceWorker.getRegistrations();
-              await Promise.all(registrations.map((registration) => registration.unregister()));
-            }
-          };
-
-          window.addEventListener("load", () => {
-            unregisterWorkers().catch(() => {
-              // PWA cleanup is best-effort.
-            });
-          });
-        })();
-      </script>
-    <% } %>
   </body>
 </html>

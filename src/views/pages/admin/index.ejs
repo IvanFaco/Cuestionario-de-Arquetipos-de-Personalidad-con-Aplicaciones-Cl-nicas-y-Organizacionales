@@ -58,21 +58,6 @@
           </select>
         </div>
 
-        <label class="form-check form-switch">
-          <input
-            class="form-check-input"
-            type="checkbox"
-            role="switch"
-            id="pwaEnabled"
-            name="pwaEnabled"
-            value="yes"
-            <%= pageData.appearance.pwaEnabled ? 'checked' : '' %>
-          />
-          <span class="form-check-label fw-semibold" for="pwaEnabled">
-            Progressive Web App activa
-          </span>
-        </label>
-
         <div>
           <label class="form-label form-label-sm fw-semibold" for="customFontCssHref">
             O pega el link CSS de Google Fonts que quieras usar
@@ -179,7 +164,6 @@
 	      <div class="admin-status-list">
 	        <div class="surface-note">URL <strong>/admin</strong></div>
 	        <div class="surface-note">Tema <strong><%= pageData.appearance.bootswatchTheme %></strong></div>
-	        <div class="surface-note">PWA <strong><%= pageData.appearance.pwaEnabled ? 'activa' : 'desactivada' %></strong></div>
 	        <div class="surface-note">
 	          Fuente <strong><%= pageData.fontOptions.find((option) => option.value === pageData.appearance.fontOption)?.label %></strong>
 	        </div>
@@ -192,7 +176,6 @@
 	      </div>
 	      <div class="d-grid gap-2">
 	        <a class="btn btn-primary app-cta app-cta--compact" href="/migration">Ver estado de migracion</a>
-		        <button class="btn btn-outline w-full" type="button" data-reset-app-storage>Borrar cache local radicalmente</button>
 		      </div>
 		    </article>
 
@@ -273,109 +256,3 @@
 		    </article>
 		  </section>
 		</section>
-
-<script>
-  (() => {
-    const resetButton = document.querySelector("[data-reset-app-storage]");
-
-    if (!resetButton) {
-      return;
-    }
-
-    const clearCacheStorage = async () => {
-      if (!("caches" in window)) {
-        return;
-      }
-
-      const keys = await caches.keys();
-      await Promise.all(keys.map((key) => caches.delete(key)));
-    };
-
-    const unregisterServiceWorkers = async () => {
-      if (!("serviceWorker" in navigator)) {
-        return;
-      }
-
-      const registrations = await navigator.serviceWorker.getRegistrations();
-      await Promise.all(registrations.map((registration) => registration.unregister()));
-    };
-
-    const clearIndexedDb = async () => {
-      if (!("indexedDB" in window) || typeof indexedDB.databases !== "function") {
-        return;
-      }
-
-      const databases = await indexedDB.databases();
-      await Promise.all(
-        databases
-          .map((database) => database.name)
-          .filter(Boolean)
-          .map((name) =>
-            new Promise((resolve) => {
-              const request = indexedDB.deleteDatabase(name);
-              request.onsuccess = resolve;
-              request.onerror = resolve;
-              request.onblocked = resolve;
-            })
-          )
-      );
-    };
-
-    const clearWebStorage = () => {
-      try {
-        window.localStorage.clear();
-      } catch (_error) {
-        // Ignore storage failures.
-      }
-
-      try {
-        window.sessionStorage.clear();
-      } catch (_error) {
-        // Ignore storage failures.
-      }
-    };
-
-    const clearAccessibleCookies = () => {
-      const host = window.location.hostname;
-      const domainVariants = ["", `; domain=${host}`, host.startsWith(".") ? "" : `; domain=.${host}`];
-      const pathVariants = ["; path=/", `; path=${window.location.pathname || "/"}`];
-
-      document.cookie.split(";").forEach((cookie) => {
-        const name = cookie.split("=")[0]?.trim();
-
-        if (!name) {
-          return;
-        }
-
-        domainVariants.forEach((domain) => {
-          pathVariants.forEach((path) => {
-            document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; max-age=0${path}${domain}`;
-          });
-        });
-      });
-    };
-
-    resetButton.addEventListener("click", async () => {
-      const confirmed = window.confirm(
-        "Esto borrara service workers, caches, almacenamiento local, IndexedDB y cookies accesibles de esta app. Es posible que debas volver a iniciar sesion. Continuar?"
-      );
-
-      if (!confirmed) {
-        return;
-      }
-
-      resetButton.disabled = true;
-      resetButton.textContent = "Borrando...";
-
-      try {
-        await unregisterServiceWorkers();
-        await clearCacheStorage();
-        await clearIndexedDb();
-        clearWebStorage();
-        clearAccessibleCookies();
-      } finally {
-        window.location.replace(`/?cacheReset=${Date.now()}`);
-      }
-    });
-  })();
-</script>
