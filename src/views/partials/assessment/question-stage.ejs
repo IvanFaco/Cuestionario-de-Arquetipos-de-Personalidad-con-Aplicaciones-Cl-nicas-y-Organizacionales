@@ -1,4 +1,4 @@
-<section class="stage-page question-screen">
+<section class="stage-page question-screen <%= pageData.totalQuestions > 10 ? 'question-screen--premium' : '' %>">
   <header class="question-header">
     <p class="eyebrow mb-0"><%= pageData.stageLabel %></p>
     <div class="question-progress">

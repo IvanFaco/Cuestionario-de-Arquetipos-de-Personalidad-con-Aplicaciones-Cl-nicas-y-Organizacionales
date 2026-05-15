@@ -756,6 +756,10 @@ span.app-sidebar__link.is-disabled {
   :root[data-bs-theme="dark"] .layout--test .question-actions {
     background: linear-gradient(to top, rgba(15, 23, 36, 0.98) 70%, rgba(15, 23, 36, 0));
   }
+
+  .layout--test .question-screen--premium .rating-bar-container {
+    margin-bottom: calc(4.5rem + env(safe-area-inset-bottom));
+  }
 }
 
 /* Archetype Image in results */
