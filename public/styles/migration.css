@@ -377,10 +377,12 @@ body {
   justify-content: space-between;
   align-items: center;
   gap: 0.75rem;
+  min-width: 0;
 }
 
 .question-progress__bar {
   flex: 1 1 auto;
+  min-width: 0;
 }
 
 .soft-progress {
@@ -394,6 +396,7 @@ body {
 }
 
 .question-progress__count {
+  flex: 0 0 auto;
   color: #232a31;
   font-size: var(--type-sm);
   font-weight: 700;
@@ -487,11 +490,13 @@ body {
   gap: 0.875rem;
   margin-top: 0.65rem;
   margin-bottom: 0.85rem;
+  min-width: 0;
 }
 
 .bar-track {
   position: relative;
   width: 100%;
+  min-width: 0;
   min-height: 4rem;
   display: flex;
   align-items: center;
@@ -502,6 +507,7 @@ body {
   grid-template-columns: repeat(5, minmax(0, 1fr));
   align-items: center;
   width: 100%;
+  min-width: 0;
   min-height: 4rem;
   border-radius: 999px;
   overflow: hidden;
@@ -702,6 +708,7 @@ body {
   align-items: center;
   gap: 0.85rem;
   margin-top: 0.2rem;
+  min-width: 0;
 }
 
 .back-button,
@@ -1572,6 +1579,7 @@ body {
     gap: 0.65rem;
     margin-top: 0.55rem;
     margin-bottom: 0.7rem;
+    padding-inline: 0.35rem;
   }
 
   .bar-track,
@@ -1581,8 +1589,8 @@ body {
   }
 
   .selected-bubble {
-    width: 4.7rem;
-    height: 4.7rem;
+    width: 4.45rem;
+    height: 4.45rem;
   }
 
   .label-item {
@@ -1675,9 +1683,10 @@ body {
   }
 
   .app-stage {
-    width: min(50rem, calc(100vw - 1rem));
-    min-width: 25rem;
-    aspect-ratio: 16 / 9;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    aspect-ratio: auto;
   }
 
   .app-stage__inner {
@@ -1705,8 +1714,8 @@ body {
   }
 
   .selected-bubble {
-    width: 4.85rem;
-    height: 4.85rem;
+    width: 4.2rem;
+    height: 4.2rem;
   }
 
   .back-button,
