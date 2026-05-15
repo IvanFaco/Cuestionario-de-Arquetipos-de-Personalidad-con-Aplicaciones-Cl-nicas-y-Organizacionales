@@ -83,8 +83,15 @@
         redirectUrl: button.dataset.redirectUrl
       });
 
-      checkout.open(() => {
-        window.location.href = button.dataset.redirectUrl;
+      checkout.open((result) => {
+        const redirectUrl = new URL(button.dataset.redirectUrl, window.location.origin);
+        const transactionId = result?.transaction?.id;
+
+        if (transactionId) {
+          redirectUrl.searchParams.set("id", transactionId);
+        }
+
+        window.location.href = redirectUrl.toString();
       });
     });
   })();
