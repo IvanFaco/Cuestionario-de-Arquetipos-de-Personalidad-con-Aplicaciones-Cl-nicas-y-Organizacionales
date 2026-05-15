@@ -1,6 +1,5 @@
-const CACHE_NAME = "mirealyo-pwa-v1";
+const CACHE_NAME = "mirealyo-pwa-v0.6.1";
 const APP_SHELL = [
-  "/",
   "/manifest.webmanifest",
   "/styles/migration.css",
   "/styles/identity.css",
@@ -44,8 +43,7 @@ self.addEventListener("fetch", (event) => {
 
   if (event.request.mode === "navigate") {
     event.respondWith(
-      fetch(event.request)
-        .catch(() => caches.match("/"))
+      fetch(event.request, { cache: "no-store" })
     );
     return;
   }
