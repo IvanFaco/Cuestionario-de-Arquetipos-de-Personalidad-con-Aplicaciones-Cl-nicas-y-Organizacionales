@@ -303,7 +303,9 @@ export async function renderPaymentResponse(req: Request, res: Response) {
       transactionId,
       payment,
       isOwnPayment,
-      shouldPoll: shouldPollPaymentStatus(payment, isOwnPayment)
+      shouldPoll: shouldPollPaymentStatus(payment, isOwnPayment),
+      isDevelopmentBypass: isDevelopmentWompiBypass,
+      effectiveWompiEnv: env.wompi.environment
     }
   });
 }

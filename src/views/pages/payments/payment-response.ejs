@@ -28,6 +28,12 @@
     </div>
   </article>
 
+  <% if (pageData.isDevelopmentBypass) { %>
+    <p class="surface-note surface-note--tight payment-dev-bypass-note">
+      Simulacion local activa (sin cobro real). Entorno efectivo: <strong><%= pageData.effectiveWompiEnv %></strong>.
+    </p>
+  <% } %>
+
   <div class="question-actions teaser-screen__actions">
     <% if (pageData.payment && pageData.payment.status === "APPROVED" && pageData.isOwnPayment) { %>
       <a class="btn btn-primary app-cta question-actions__next" href="/full-test">Continuar estudio</a>

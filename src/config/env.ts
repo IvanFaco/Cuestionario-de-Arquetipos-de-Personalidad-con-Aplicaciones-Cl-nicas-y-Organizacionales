@@ -4,16 +4,18 @@ import path from "node:path";
 type EnvFileValues = Record<string, string>;
 
 const packageJsonPath = path.join(process.cwd(), "package.json");
+const appVersionConfigPath = path.join(process.cwd(), "config", "version.json");
 const envFilePath = path.join(process.cwd(), ".env");
 const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf8")) as {
   version?: string;
 };
+const versionConfig = readVersionConfig();
 const fileEnv = readEnvFile();
 const getEnv = (key: string, fallback = "") => process.env[key] ?? fileEnv[key] ?? fallback;
 
 const port = Number.parseInt(getEnv("PORT", "3000"), 10);
 const nodeEnv = getEnv("NODE_ENV", "development");
-const appVersion = getEnv("APP_VERSION", packageJson.version ?? "0.0.0");
+const appVersion = versionConfig.appVersion || getEnv("APP_VERSION", packageJson.version ?? "0.0.0");
 const assetVersion =
   process.env.ASSET_VERSION ??
   process.env.SOURCE_COMMIT ??
@@ -73,7 +75,6 @@ export const env = {
 };
 
 export const editableEnvVariables = [
-  { name: "APP_VERSION", secret: false, restartRequired: false },
   { name: "SITE_URL", secret: false, restartRequired: false },
   { name: "WOMPI_ENV", secret: false, restartRequired: false },
   { name: "WOMPI_PUBLIC_KEY", secret: true, restartRequired: false },
@@ -113,6 +114,21 @@ function readEnvFile(): EnvFileValues {
   }
 
   return parseEnvContent(fs.readFileSync(envFilePath, "utf8"));
+}
+
+function readVersionConfig() {
+  if (!fs.existsSync(appVersionConfigPath)) {
+    return { appVersion: "" };
+  }
+
+  try {
+    const parsed = JSON.parse(fs.readFileSync(appVersionConfigPath, "utf8")) as {
+      appVersion?: unknown;
+    };
+    return { appVersion: typeof parsed.appVersion === "string" ? parsed.appVersion.trim() : "" };
+  } catch {
+    return { appVersion: "" };
+  }
 }
 
 function parseEnvContent(content: string): EnvFileValues {
@@ -162,7 +178,6 @@ function applyRuntimeEnv(values: EnvFileValues) {
     process.env[key] = value;
   }
 
-  if (values.APP_VERSION !== undefined) env.appVersion = values.APP_VERSION;
   if (values.SITE_URL !== undefined) env.siteUrl = values.SITE_URL;
   if (values.WOMPI_PUBLIC_KEY !== undefined) env.wompi.publicKey = values.WOMPI_PUBLIC_KEY;
   if (values.WOMPI_INTEGRITY_SECRET !== undefined) env.wompi.integritySecret = values.WOMPI_INTEGRITY_SECRET;

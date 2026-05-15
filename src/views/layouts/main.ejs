@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" data-color-mode="<%= appearance?.colorMode === 'dark' ? 'dark' : 'light' %>">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
@@ -7,11 +7,29 @@
     <meta name="description" content="<%= seo.description %>" />
     <meta name="robots" content="<%= seo.robots %>" />
     <meta name="theme-color" content="#f5fbff" />
-    <meta name="color-scheme" content="light" />
+    <meta name="color-scheme" content="light dark" />
     <meta name="application-name" content="MiRealYo" />
     <meta name="apple-mobile-web-app-title" content="MiRealYo" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <script>
+      (() => {
+        const defaultMode = "<%= appearance?.colorMode === 'dark' ? 'dark' : 'light' %>";
+        const storageKey = "mirealyo:color-mode";
+        let resolvedMode = defaultMode;
+
+        try {
+          const storedMode = window.localStorage.getItem(storageKey);
+          if (storedMode === "light" || storedMode === "dark") {
+            resolvedMode = storedMode;
+          }
+        } catch (_error) {
+          resolvedMode = defaultMode;
+        }
+
+        document.documentElement.setAttribute("data-color-mode", resolvedMode);
+      })();
+    </script>
     <link rel="canonical" href="<%= seo.canonicalUrl %>" />
     <meta property="og:locale" content="es_CO" />
     <meta property="og:type" content="<%= seo.ogType %>" />
@@ -44,7 +62,7 @@
       }
     </style>
   </head>
-  <body>
+  <body data-default-color-mode="<%= appearance?.colorMode === 'dark' ? 'dark' : 'light' %>">
     <%
     const currentPath = pageData?.currentPath || '';
     let siteRootUrl = '/';
@@ -111,6 +129,7 @@
         </form>
       </div>
     <% } %>
+    <script src="/scripts/theme-toggle.js?v=<%= assetVersion %>" defer></script>
     <script src="/scripts/pwa.js?v=<%= assetVersion %>" defer></script>
   </body>
 </html>

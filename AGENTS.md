@@ -25,13 +25,72 @@
 - Hacer commit de los cambios dentro de su rama correspondiente.
 - Si ya se está sobre una rama base, detenerse y crear una rama de trabajo antes de implementar.
 
+## Modelo de dos agentes (Frontend / Backend)
+
+- Se permite y recomienda operar con dos agentes especializados:
+  - `frontend-agent`: responsable exclusivo de UI/UX.
+  - `backend-agent`: responsable exclusivo de lógica de negocio, APIs y datos.
+
+### Ownership por agente
+
+- `frontend-agent`:
+  - `src/views/**`
+  - `public/styles/**`
+  - `public/scripts/**` (solo comportamiento de interfaz)
+  - `public/assets/**` (cuando aplique a presentación)
+- `backend-agent`:
+  - `src/modules/**`
+  - `src/shared/**`
+  - `src/config/**`
+  - `src/types/**`
+  - migraciones, repositorios y persistencia
+
+### Reglas de coordinación
+
+- No editar archivos propiedad del otro agente salvo instrucción explícita del usuario.
+- Definir contrato de integración antes de implementar:
+  - nombres y forma de `pageData`,
+  - estados de flujo (`loading`, `error`, `success`),
+  - rutas y redirects esperados.
+- Si un cambio requiere tocar ambos lados, dividir en dos commits:
+  - primero backend (contrato),
+  - luego frontend (consumo visual del contrato).
+
+### Orquestación obligatoria por agente principal
+
+- El agente principal (orquestador) debe coordinar, supervisar e integrar el trabajo de `frontend-agent` y `backend-agent`.
+- El agente principal no delega la decisión final de arquitectura, integración ni calidad.
+- Flujo obligatorio:
+  1. definir objetivo y alcance del cambio,
+  2. dividir trabajo por ownership (frontend/backend),
+  3. ejecutar ambos sub-agentes en paralelo cuando no haya bloqueo cruzado,
+  4. consolidar cambios y resolver conflictos,
+  5. correr validaciones técnicas,
+  6. entregar resultado final al usuario.
+- Cada sub-agente debe reportar:
+  - archivos modificados,
+  - contrato afectado (`pageData`, rutas, payloads, estados),
+  - riesgos o supuestos.
+- El agente principal debe bloquear merge/push si:
+  - hay solapamiento de ownership sin justificación,
+  - no hay validación mínima,
+  - el contrato entre frontend y backend es inconsistente.
+- La respuesta final al usuario siempre la emite el agente principal.
+
+### Validación mínima antes de merge
+
+- `backend-agent`: `npm run verify` obligatorio.
+- `frontend-agent`: smoke visual/manual de rutas afectadas + `npm run build`.
+- Integración final: validar journey completo E2E de la funcionalidad tocada.
+
 ## Versionado semantico y variable de entorno
 
 - A partir de ahora, todo cierre de cambio debe evaluar versionado semantico en formato `MAYOR.MENOR.FIX`.
 - `MAYOR`: cambios incompatibles, ruptura de API/flujo, migraciones destructivas o cambios operativos que requieran accion manual.
 - `MENOR`: nuevas funcionalidades compatibles hacia atras o mejoras funcionales sin ruptura.
 - `FIX`: correcciones compatibles, ajustes internos o fixes sin nueva funcionalidad.
-- La fuente de verdad de la version debe vivir en un archivo versionado por git (`VERSION`, `package.json`, `pyproject.toml` u otro manifiesto propio del repo).
-- `APP_VERSION` es la variable de entorno runtime/deploy que debe reflejar esa version; no usar `.env` como fuente de verdad porque normalmente no se versiona ni se despliega por git.
-- Si el repo ya usa una variable de version especifica, mantenerla solo si el usuario lo confirma; por defecto exponer tambien `APP_VERSION`.
-- Antes de cerrar, commitear, mergear o desplegar una rama, reportar el bump recomendado y el valor esperado de `APP_VERSION`.
+- La fuente de verdad de la version debe vivir en un archivo versionado por git y empaquetado en el build/deploy (ejemplo recomendado: `config/version.json`).
+- La app debe leer la version desde ese archivo versionado en runtime; no depender de `.env` para mostrar version en UI.
+- `APP_VERSION` puede existir como variable de entorno de soporte, pero no debe ser la fuente primaria para version visible en producto.
+- En cada cambio que implique bump de version, se debe actualizar ese archivo versionado y confirmar que viaja en el artefacto desplegado.
+- Antes de cerrar, commitear, mergear o desplegar una rama, reportar el bump recomendado y el valor esperado de version en archivo + `APP_VERSION` (si aplica).

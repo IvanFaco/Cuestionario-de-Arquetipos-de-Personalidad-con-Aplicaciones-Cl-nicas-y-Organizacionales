@@ -38,9 +38,12 @@ export type GoogleFontOption =
   | "merriweather"
   | "roboto-slab";
 
+export type ColorMode = "light" | "dark";
+
 export type AppearanceSettings = {
   bootswatchTheme: BootswatchTheme;
   fontOption: GoogleFontOption;
+  colorMode: ColorMode;
   customFontCssHref?: string;
   customFontFamily?: string;
   headingScale?: number;
@@ -128,6 +131,7 @@ const fontOptions = [
 const defaultAppearance: AppearanceSettings = {
   bootswatchTheme: "flatly",
   fontOption: "manrope",
+  colorMode: "light",
   customFontCssHref: "",
   customFontFamily: "",
   headingScale: 1,
@@ -143,6 +147,10 @@ function isValidFont(value: string): value is GoogleFontOption {
   return fontOptions.some((option) => option.value === value);
 }
 
+function isValidColorMode(value: string): value is ColorMode {
+  return value === "light" || value === "dark";
+}
+
 function readAppearanceSettings(): AppearanceSettings {
   try {
     if (!fs.existsSync(appearanceDataPath)) {
@@ -153,6 +161,7 @@ function readAppearanceSettings(): AppearanceSettings {
     const parsed = JSON.parse(raw) as Partial<AppearanceSettings>;
     const parsedTheme = parsed.bootswatchTheme;
     const parsedFont = parsed.fontOption;
+    const parsedColorMode = parsed.colorMode;
     const parsedCustomFontCssHref =
       typeof parsed.customFontCssHref === "string" ? parsed.customFontCssHref : "";
     const parsedCustomFontFamily =
@@ -177,6 +186,9 @@ function readAppearanceSettings(): AppearanceSettings {
       fontOption: isValidFont(String(parsedFont))
         ? (parsedFont as GoogleFontOption)
         : defaultAppearance.fontOption,
+      colorMode: isValidColorMode(String(parsedColorMode))
+        ? (parsedColorMode as ColorMode)
+        : defaultAppearance.colorMode,
       customFontCssHref: parsedCustomFontCssHref,
       customFontFamily: parsedCustomFontFamily,
       headingScale: parsedHeadingScale,
@@ -222,6 +234,7 @@ export function getCurrentFontDescriptor() {
 export function updateAppearanceSettings(input: {
   bootswatchTheme: string;
   fontOption: string;
+  colorMode?: string;
   customFontCssHref?: string;
   customFontFamily?: string;
   headingScale?: string;
@@ -234,6 +247,10 @@ export function updateAppearanceSettings(input: {
 
   if (isValidFont(input.fontOption)) {
     currentAppearance.fontOption = input.fontOption;
+  }
+
+  if (typeof input.colorMode === "string" && isValidColorMode(input.colorMode)) {
+    currentAppearance.colorMode = input.colorMode;
   }
 
   const customFontCssHref = (input.customFontCssHref ?? "").trim();

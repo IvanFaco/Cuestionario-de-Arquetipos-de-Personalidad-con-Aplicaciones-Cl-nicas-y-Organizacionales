@@ -837,6 +837,11 @@ body {
   font-size: var(--type-md);
 }
 
+.payment-dev-bypass-note {
+  margin-top: 0.25rem;
+  text-align: center;
+}
+
 .teaser-card__insight {
   background: linear-gradient(180deg, #f6f8fb 0%, #eef2f6 100%);
 }

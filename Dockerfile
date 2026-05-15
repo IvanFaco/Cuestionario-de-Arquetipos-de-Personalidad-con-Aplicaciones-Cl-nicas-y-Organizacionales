@@ -11,6 +11,7 @@ WORKDIR /app
 
 COPY --from=deps /app/node_modules ./node_modules
 COPY package.json package-lock.json tsconfig.json ./
+COPY config ./config
 COPY src ./src
 COPY public ./public
 RUN npm run build
@@ -26,6 +27,7 @@ COPY package.json package-lock.json ./
 RUN npm ci --omit=dev
 
 COPY --from=build /app/dist ./dist
+COPY --from=build /app/config ./config
 COPY src/views ./src/views
 COPY public ./public
 
