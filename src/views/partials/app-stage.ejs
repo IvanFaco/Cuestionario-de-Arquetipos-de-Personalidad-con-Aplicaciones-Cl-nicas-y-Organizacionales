@@ -1,4 +1,4 @@
-  <div class="app-stage-shell">
+  <div class="app-stage-shell <%= isTestUx ? 'app-stage-shell--test' : 'app-stage-shell--default' %>">
     <header class="app-header">
       <div class="app-header__home" data-home-nav data-home-url="<%= siteRootUrl %>">
         <img src="/assets/logo-256.png" alt="MiRealYo" class="app-header__logo" />

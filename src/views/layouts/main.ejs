@@ -64,6 +64,7 @@
     const hasLeadName = sessionLead || currentPath === '/empezar' || currentPath.startsWith('/quick-test') || currentPath.startsWith('/quick-results') || currentPath.startsWith('/onboarding') || currentPath.startsWith('/full-test') || currentPath.startsWith('/full-results') || currentPath === '/registro';
     const hasQuickResult = sessionQuickResult || currentPath.startsWith('/quick-results') || currentPath.startsWith('/onboarding') || currentPath.startsWith('/full-test') || currentPath.startsWith('/full-results') || currentPath === '/registro';
     const hasFullResult = sessionFullResult || currentPath.startsWith('/full-results') || currentPath === '/registro';
+    const isTestUx = currentPath.startsWith('/quick-test') || currentPath.startsWith('/full-test') || currentPath.startsWith('/quick-results') || page.includes('/quick-test/') || page.includes('/full-test/');
     %>
     <aside class="app-sidebar">
       <nav class="app-sidebar__nav">
@@ -95,8 +96,8 @@
         <% } %>
       </nav>
     </aside>
-    <main class="app-frame">
-      <%- include("../partials/app-stage", { page, pageData, siteRootUrl }) %>
+    <main class="app-frame <%= isTestUx ? 'layout--test' : 'layout--default' %> <%= authSession ? 'is-authenticated' : 'is-guest' %>">
+      <%- include("../partials/app-stage", { page, pageData, siteRootUrl, isTestUx }) %>
     </main>
     <% if (authSession) { %>
       <div class="app-session-badge">
