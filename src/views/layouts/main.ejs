@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es" data-color-mode="<%= appearance?.colorMode === 'dark' ? 'dark' : 'light' %>">
+<html lang="es" data-bs-theme="<%= appearance?.colorMode === 'dark' ? 'dark' : 'light' %>" data-color-mode="<%= appearance?.colorMode === 'dark' ? 'dark' : 'light' %>">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
@@ -28,6 +28,7 @@
           resolvedMode = defaultMode;
         }
 
+        document.documentElement.setAttribute("data-bs-theme", resolvedMode);
         document.documentElement.setAttribute("data-color-mode", resolvedMode);
       })();
     </script>
@@ -152,6 +153,7 @@
 
         const applyMode = (mode) => {
           const resolved = mode === "dark" ? "dark" : "light";
+          root.setAttribute("data-bs-theme", resolved);
           root.setAttribute("data-color-mode", resolved);
 
           if (themeMeta) {
@@ -187,7 +189,7 @@
         }
 
         toggle.addEventListener("click", () => {
-          const nextMode = root.getAttribute("data-color-mode") === "dark" ? "light" : "dark";
+          const nextMode = root.getAttribute("data-bs-theme") === "dark" ? "light" : "dark";
           applyMode(nextMode);
           persistMode(nextMode);
         });

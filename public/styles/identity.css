@@ -67,7 +67,7 @@
   --page-bg-end: #eaf2f8;
 }
 
-:root[data-color-mode="dark"] {
+:root[data-bs-theme="dark"] {
   --color-primary: #0f1724;
   --color-surface: #152033;
   --color-border: #2a3a55;
@@ -701,7 +701,7 @@ span.app-sidebar__link.is-disabled {
   background: linear-gradient(to top, rgba(255, 255, 255, 0.98) 70%, rgba(255, 255, 255, 0));
 }
 
-:root[data-color-mode="dark"] .layout--test .question-actions {
+:root[data-bs-theme="dark"] .layout--test .question-actions {
   background: linear-gradient(to top, rgba(15, 23, 36, 0.98) 70%, rgba(15, 23, 36, 0));
 }
 
