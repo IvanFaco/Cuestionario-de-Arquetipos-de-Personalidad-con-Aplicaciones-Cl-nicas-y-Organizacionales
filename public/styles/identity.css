@@ -871,6 +871,27 @@ span.app-sidebar__link.is-disabled {
     font-size: var(--type-md);
   }
 
+  .teaser-screen--results .teaser-card__copy--unlock {
+    gap: 0.45rem;
+  }
+
+  .teaser-screen--results .teaser-card__headline--unlock {
+    font-size: clamp(1.25rem, 1.8vw, 1.55rem);
+  }
+
+  .teaser-screen--results .teaser-card__summary--unlock {
+    font-size: var(--type-sm);
+  }
+
+  .teaser-screen--results .teaser-unlock-list {
+    gap: 0.35rem;
+  }
+
+  .teaser-screen--results .teaser-unlock-list__item {
+    font-size: var(--type-sm);
+    line-height: 1.2;
+  }
+
   .teaser-screen--results .teaser-archetype-img {
     width: clamp(11rem, 28vh, 16rem);
     max-width: 100%;

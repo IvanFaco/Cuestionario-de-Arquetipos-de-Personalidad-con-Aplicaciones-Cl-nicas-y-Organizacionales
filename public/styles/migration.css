@@ -244,12 +244,32 @@ body {
 }
 
 .consent-check__input {
+  appearance: none;
+  display: grid;
+  place-content: center;
   width: 1.15rem;
   height: 1.15rem;
   margin-top: 0.1rem;
   flex: 0 0 auto;
+  border: 1px solid rgba(43, 99, 140, 0.28);
+  border-radius: 0.35rem;
+  background: #ffffff;
   accent-color: var(--color-accent-violet);
   cursor: pointer;
+}
+
+.consent-check__input::before {
+  content: "";
+  width: 0.58rem;
+  height: 0.58rem;
+  border-radius: 0.18rem;
+  background: var(--color-accent-violet);
+  transform: scale(0);
+  transition: transform 120ms ease;
+}
+
+.consent-check__input:checked::before {
+  transform: scale(1);
 }
 
 .consent-check__copy {
@@ -819,6 +839,45 @@ body {
 .teaser-card__summary {
   color: #597083;
   font-size: var(--type-md);
+}
+
+.teaser-card__copy--unlock {
+  align-items: stretch;
+  gap: 0.65rem;
+  text-align: left;
+}
+
+.teaser-card__headline--unlock {
+  text-align: center;
+  font-size: clamp(1.25rem, 6vw, 1.6rem);
+  line-height: 1.12;
+}
+
+.teaser-card__summary--unlock {
+  text-align: center;
+  line-height: 1.25;
+}
+
+.teaser-unlock-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.teaser-unlock-list__item {
+  color: #3d566b;
+  font-size: clamp(0.86rem, 3.6vw, 0.98rem);
+  line-height: 1.24;
+}
+
+.teaser-unlock-list__item strong {
+  color: #17344a;
+}
+
+.teaser-unlock-list__item--gift {
+  margin-top: 0.1rem;
+  padding-top: 0.55rem;
+  border-top: 1px solid var(--border-soft);
 }
 
 .payment-dev-bypass-note {
