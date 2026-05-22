@@ -1,0 +1,274 @@
+import { deflateSync } from "node:zlib";
+
+import type { ArchetypeScore } from "./assessment.types.js";
+
+type Color = {
+  r: number;
+  g: number;
+  b: number;
+  a?: number;
+};
+
+type Point = {
+  x: number;
+  y: number;
+};
+
+const pngSignature = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
+const crcTable = new Uint32Array(256).map((_, index) => {
+  let crc = index;
+
+  for (let bit = 0; bit < 8; bit += 1) {
+    crc = crc & 1 ? 0xedb88320 ^ (crc >>> 1) : crc >>> 1;
+  }
+
+  return crc >>> 0;
+});
+
+class Bitmap {
+  readonly pixels: Buffer;
+
+  constructor(readonly width: number, readonly height: number, background: Color) {
+    this.pixels = Buffer.alloc(width * height * 4);
+    this.fillRect(0, 0, width, height, background);
+  }
+
+  fillRect(x: number, y: number, width: number, height: number, color: Color) {
+    const startX = Math.max(0, Math.floor(x));
+    const startY = Math.max(0, Math.floor(y));
+    const endX = Math.min(this.width, Math.ceil(x + width));
+    const endY = Math.min(this.height, Math.ceil(y + height));
+
+    for (let row = startY; row < endY; row += 1) {
+      for (let col = startX; col < endX; col += 1) {
+        this.setPixel(col, row, color);
+      }
+    }
+  }
+
+  drawLine(start: Point, end: Point, color: Color, thickness = 1) {
+    const dx = end.x - start.x;
+    const dy = end.y - start.y;
+    const steps = Math.max(Math.abs(dx), Math.abs(dy), 1);
+
+    for (let step = 0; step <= steps; step += 1) {
+      const t = step / steps;
+      this.fillCircle(start.x + dx * t, start.y + dy * t, thickness / 2, color);
+    }
+  }
+
+  fillCircle(cx: number, cy: number, radius: number, color: Color) {
+    const minX = Math.floor(cx - radius);
+    const maxX = Math.ceil(cx + radius);
+    const minY = Math.floor(cy - radius);
+    const maxY = Math.ceil(cy + radius);
+    const radiusSquared = radius * radius;
+
+    for (let y = minY; y <= maxY; y += 1) {
+      for (let x = minX; x <= maxX; x += 1) {
+        const dx = x - cx;
+        const dy = y - cy;
+
+        if (dx * dx + dy * dy <= radiusSquared) {
+          this.setPixel(x, y, color);
+        }
+      }
+    }
+  }
+
+  fillPolygon(points: Point[], color: Color) {
+    if (points.length < 3) {
+      return;
+    }
+
+    const minY = Math.floor(Math.min(...points.map((point) => point.y)));
+    const maxY = Math.ceil(Math.max(...points.map((point) => point.y)));
+
+    for (let y = minY; y <= maxY; y += 1) {
+      const intersections: number[] = [];
+
+      for (let index = 0; index < points.length; index += 1) {
+        const current = points[index];
+        const next = points[(index + 1) % points.length];
+        const crosses = (current.y <= y && next.y > y) || (next.y <= y && current.y > y);
+
+        if (crosses) {
+          const x = current.x + ((y - current.y) * (next.x - current.x)) / (next.y - current.y);
+          intersections.push(x);
+        }
+      }
+
+      intersections.sort((left, right) => left - right);
+
+      for (let index = 0; index < intersections.length; index += 2) {
+        const startX = intersections[index];
+        const endX = intersections[index + 1];
+
+        if (endX !== undefined) {
+          this.fillRect(startX, y, endX - startX, 1, color);
+        }
+      }
+    }
+  }
+
+  private setPixel(x: number, y: number, color: Color) {
+    const col = Math.floor(x);
+    const row = Math.floor(y);
+
+    if (col < 0 || row < 0 || col >= this.width || row >= this.height) {
+      return;
+    }
+
+    const index = (row * this.width + col) * 4;
+    const alpha = (color.a ?? 255) / 255;
+    const inverse = 1 - alpha;
+
+    this.pixels[index] = Math.round(color.r * alpha + this.pixels[index] * inverse);
+    this.pixels[index + 1] = Math.round(color.g * alpha + this.pixels[index + 1] * inverse);
+    this.pixels[index + 2] = Math.round(color.b * alpha + this.pixels[index + 2] * inverse);
+    this.pixels[index + 3] = 255;
+  }
+}
+
+function crc32(buffer: Buffer): number {
+  let crc = 0xffffffff;
+
+  for (const byte of buffer) {
+    crc = crcTable[(crc ^ byte) & 0xff] ^ (crc >>> 8);
+  }
+
+  return (crc ^ 0xffffffff) >>> 0;
+}
+
+function pngChunk(type: string, data: Buffer): Buffer {
+  const typeBuffer = Buffer.from(type, "ascii");
+  const length = Buffer.alloc(4);
+  const crc = Buffer.alloc(4);
+  const payload = Buffer.concat([typeBuffer, data]);
+
+  length.writeUInt32BE(data.length, 0);
+  crc.writeUInt32BE(crc32(payload), 0);
+
+  return Buffer.concat([length, payload, crc]);
+}
+
+function encodePng(bitmap: Bitmap): Buffer {
+  const header = Buffer.alloc(13);
+  header.writeUInt32BE(bitmap.width, 0);
+  header.writeUInt32BE(bitmap.height, 4);
+  header[8] = 8;
+  header[9] = 6;
+  header[10] = 0;
+  header[11] = 0;
+  header[12] = 0;
+
+  const rowLength = bitmap.width * 4;
+  const raw = Buffer.alloc((rowLength + 1) * bitmap.height);
+
+  for (let y = 0; y < bitmap.height; y += 1) {
+    const rawRow = y * (rowLength + 1);
+    raw[rawRow] = 0;
+    bitmap.pixels.copy(raw, rawRow + 1, y * rowLength, (y + 1) * rowLength);
+  }
+
+  return Buffer.concat([
+    pngSignature,
+    pngChunk("IHDR", header),
+    pngChunk("IDAT", deflateSync(raw)),
+    pngChunk("IEND", Buffer.alloc(0))
+  ]);
+}
+
+function drawRoundedBar(bitmap: Bitmap, x: number, y: number, width: number, height: number, color: Color) {
+  const radius = height / 2;
+
+  bitmap.fillRect(x + radius, y, Math.max(0, width - radius * 2), height, color);
+  bitmap.fillCircle(x + radius, y + radius, radius, color);
+  bitmap.fillCircle(x + width - radius, y + radius, radius, color);
+}
+
+export function createArchetypeBarChartPng(scores: ArchetypeScore[]): Buffer {
+  const width = 1000;
+  const height = 520;
+  const bitmap = new Bitmap(width, height, { r: 248, g: 246, b: 252 });
+  const chartX = 120;
+  const chartY = 58;
+  const chartWidth = 790;
+  const rowHeight = 28;
+  const rowGap = 11;
+  const maxScore = 7.5;
+  const colors: Color[] = [
+    { r: 46, g: 122, b: 255 },
+    { r: 118, g: 88, b: 196 },
+    { r: 77, g: 196, b: 201 },
+    { r: 243, g: 142, b: 84 }
+  ];
+
+  for (let grid = 1; grid <= 5; grid += 1) {
+    const x = chartX + (chartWidth * grid) / 5;
+    bitmap.drawLine({ x, y: 34 }, { x, y: height - 44 }, { r: 224, g: 220, b: 235 }, 2);
+  }
+
+  scores.slice(0, 12).forEach((item, index) => {
+    const y = chartY + index * (rowHeight + rowGap);
+    const normalizedWidth = Math.max(12, Math.min(chartWidth, (item.score / maxScore) * chartWidth));
+    const color = colors[index % colors.length];
+
+    drawRoundedBar(bitmap, chartX, y, chartWidth, rowHeight, { r: 235, g: 239, b: 247 });
+    drawRoundedBar(bitmap, chartX, y, normalizedWidth, rowHeight, color);
+    bitmap.fillCircle(chartX - 45, y + rowHeight / 2, 13, color);
+    bitmap.fillCircle(chartX - 45, y + rowHeight / 2, 5, { r: 255, g: 255, b: 255 });
+  });
+
+  return encodePng(bitmap);
+}
+
+export function createStructureRadarChartPng(values: {
+  persona: number;
+  shadowBase: number;
+  shadowTotal: number;
+}): Buffer {
+  const width = 760;
+  const height = 560;
+  const bitmap = new Bitmap(width, height, { r: 248, g: 246, b: 252 });
+  const center = { x: width / 2, y: 275 };
+  const radius = 205;
+  const axes = [
+    { value: values.persona, angle: -90 },
+    { value: values.shadowBase, angle: 30 },
+    { value: values.shadowTotal, angle: 150 }
+  ];
+
+  const pointAt = (angle: number, scale: number): Point => {
+    const radians = (angle * Math.PI) / 180;
+    return {
+      x: center.x + Math.cos(radians) * radius * scale,
+      y: center.y + Math.sin(radians) * radius * scale
+    };
+  };
+
+  for (let ring = 1; ring <= 5; ring += 1) {
+    const scale = ring / 5;
+    const ringPoints = axes.map((axis) => pointAt(axis.angle, scale));
+
+    ringPoints.forEach((point, index) => {
+      bitmap.drawLine(point, ringPoints[(index + 1) % ringPoints.length], { r: 224, g: 220, b: 235 }, 2);
+    });
+  }
+
+  axes.forEach((axis) => {
+    bitmap.drawLine(center, pointAt(axis.angle, 1), { r: 204, g: 209, b: 222 }, 2);
+  });
+
+  const valuePoints = axes.map((axis) => pointAt(axis.angle, Math.max(0, Math.min(5, axis.value)) / 5));
+  bitmap.fillPolygon(valuePoints, { r: 46, g: 122, b: 255, a: 64 });
+
+  valuePoints.forEach((point, index) => {
+    const next = valuePoints[(index + 1) % valuePoints.length];
+    bitmap.drawLine(point, next, { r: 46, g: 122, b: 255 }, 6);
+    bitmap.fillCircle(point.x, point.y, 10, { r: 118, g: 88, b: 196 });
+    bitmap.fillCircle(point.x, point.y, 4, { r: 255, g: 255, b: 255 });
+  });
+
+  return encodePng(bitmap);
+}

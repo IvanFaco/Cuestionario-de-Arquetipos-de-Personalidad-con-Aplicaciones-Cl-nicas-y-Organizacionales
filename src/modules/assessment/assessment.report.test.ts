@@ -3,24 +3,14 @@ import assert from "node:assert/strict";
 import { createRequire } from "node:module";
 
 import { buildDemoProfile, buildHookOutcome, buildPremiumOutcome } from "./assessment.domain.js";
+import { buildAiReportUserMessage, requestAiReport } from "./assessment.ai-report.service.js";
 import { buildExecutiveReportPdf, getShadowLabel } from "./assessment.report.service.js";
 
 const require = createRequire(import.meta.url);
 const { PDFDocument } = require("pdf-lib") as any;
 
-test("getShadowLabel matches dashboard messaging", () => {
-  assert.equal(
-    getShadowLabel(4),
-    "Alto nivel de represion. Conviene integrar vulnerabilidad antes del burnout."
-  );
-  assert.equal(
-    getShadowLabel(3),
-    "Relacion sana con los impulsos. La autenticidad aparece como un recurso disponible."
-  );
-});
-
-test("buildExecutiveReportPdf returns a valid pdf buffer", async () => {
-  const pdf = await buildExecutiveReportPdf({
+function buildReportInput() {
+  return {
     demo: buildDemoProfile({
       nombre: "Camila",
       objetivo: "relationships"
@@ -54,10 +44,69 @@ test("buildExecutiveReportPdf returns a valid pdf buffer", async () => {
       p14: 3,
       p15: 3
     })
+  };
+}
+
+test("getShadowLabel matches dashboard messaging", () => {
+  assert.equal(
+    getShadowLabel(4),
+    "Alto nivel de represion. Conviene integrar vulnerabilidad antes del burnout."
+  );
+  assert.equal(
+    getShadowLabel(3),
+    "Relacion sana con los impulsos. La autenticidad aparece como un recurso disponible."
+  );
+});
+
+test("buildAiReportUserMessage includes the complete test result payload", () => {
+  const userMessage = buildAiReportUserMessage(buildReportInput());
+
+  assert.match(userMessage, /Resultado del test en JSON/);
+  assert.match(userMessage, /"name": "Camila"/);
+  assert.match(userMessage, /"archetypeRanking"/);
+  assert.match(userMessage, /"shadowTotal": 3/);
+});
+
+test("requestAiReport sends userMessage and reads agentMessage", async () => {
+  const report = await requestAiReport(buildReportInput(), {
+    webhookUrl: "https://example.test/report",
+    fetchImpl: async (_url, init) => {
+      const body = JSON.parse(String(init?.body)) as { userMessage?: unknown };
+      assert.equal(typeof body.userMessage, "string");
+      assert.match(String(body.userMessage), /Camila/);
+
+      return new Response(JSON.stringify({ agentMessage: "Informe generado por agente." }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" }
+      });
+    }
+  });
+
+  assert.equal(report.source, "webhook");
+  assert.equal(report.text, "Informe generado por agente.");
+});
+
+test("requestAiReport falls back when webhook response is invalid", async () => {
+  const report = await requestAiReport(buildReportInput(), {
+    webhookUrl: "https://example.test/report",
+    fetchImpl: async () => new Response(JSON.stringify({}), {
+      status: 200,
+      headers: { "Content-Type": "application/json" }
+    })
+  });
+
+  assert.equal(report.source, "fallback");
+  assert.match(report.text, /Informe interpretativo para Camila/);
+});
+
+test("buildExecutiveReportPdf returns a valid pdf buffer", async () => {
+  const pdf = await buildExecutiveReportPdf(buildReportInput(), {
+    reportText: "Informe generado para validar el PDF con graficas.",
+    reportSource: "webhook"
   });
   const parsed = await PDFDocument.load(pdf);
 
   assert.ok(pdf.length > 1000);
   assert.equal(pdf.subarray(0, 4).toString(), "%PDF");
-  assert.equal(parsed.getPageCount(), 2);
+  assert.ok(parsed.getPageCount() >= 2);
 });
