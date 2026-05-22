@@ -1,7 +1,7 @@
 <section class="stage-page teaser-screen teaser-screen--results teaser-screen--full-results">
   <header class="question-header teaser-screen__header">
     <p class="eyebrow">Lectura profunda</p>
-    <h3 class="question-title teaser-screen__title">Tu estructura completa</h3>
+    <h3 class="question-title teaser-screen__title">Tu resultado completo</h3>
   </header>
 
   <article class="question-card-panel teaser-card teaser-carousel" data-full-carousel>
@@ -10,30 +10,30 @@
         <section class="teaser-carousel__slide is-active" data-full-slide>
           <div class="question-card-panel__body teaser-card__body">
             <div class="teaser-card__copy">
-              <% 
-                const archetypeMap = {
-                  'Gobernante': 'gobernante',
-                  'Sabio': 'sabio',
-                  'Cuidador': 'cuidador',
-                  'Explorador': 'explorador',
-                  'Mago': 'mago',
-                  'Huerfano': 'huerfano',
-                  'Creador': 'creador',
-                  'Guerrero': 'guerrero',
-                  'Buscador': 'buscador',
-                  'Amante': 'amante',
-                  'Rebelde': 'rebelde',
-                  'Bufón': 'bufon'
-                };
-                const archetypeFile = archetypeMap[pageData.dominantArchetype] || pageData.dominantArchetype.toLowerCase();
-              %>
-              <p class="teaser-card__kicker mb-0">Tu perfil principal</p>
+              <p class="teaser-card__kicker mb-0">Eje principal</p>
               <h2 class="teaser-card__headline mb-0"><%= pageData.dominantArchetype %></h2>
-              <p class="teaser-card__summary mb-0">
-                Tu triada se ordena como
-                <strong><%= pageData.topThree.join(", ") %></strong>.
-              </p>
-              <img src="/assets/<%= archetypeFile %>.png" alt="<%= pageData.dominantArchetype %>" class="teaser-archetype-img mb-3" />
+              <p class="teaser-card__summary mb-0"><%= pageData.interpretation.quickSummary %></p>
+              <img src="/assets/<%= pageData.dominantArchetypeSlug %>.png" alt="<%= pageData.dominantArchetype %>" class="teaser-archetype-img mb-3" />
+            </div>
+          </div>
+        </section>
+
+        <section class="teaser-carousel__slide" data-full-slide>
+          <div class="question-card-panel__body teaser-card__body">
+            <div class="teaser-card__copy">
+              <p class="teaser-card__kicker mb-0">Mapa de puntajes</p>
+              <div class="result-score-list">
+                <% pageData.scores.slice(0, 5).forEach((item, index) => { %>
+                  <article class="result-score">
+                    <span class="result-score__rank">#<%= index + 1 %></span>
+                    <strong class="result-score__name"><%= item.displayName %></strong>
+                    <span class="result-score__bar" aria-hidden="true">
+                      <span class="result-score__fill" style="width: <%= Math.min(100, (item.score / 7.5) * 100).toFixed(0) %>%"></span>
+                    </span>
+                    <span class="result-score__value"><%= item.score.toFixed(1) %></span>
+                  </article>
+                <% }) %>
+              </div>
             </div>
           </div>
         </section>
@@ -45,15 +45,39 @@
               <div class="teaser-metrics">
                 <article class="teaser-metric">
                   <span class="teaser-metric__rank">Persona</span>
-                  <strong class="teaser-metric__name"><%= pageData.persona %>/5</strong>
+                  <strong class="teaser-metric__name">Imagen publica</strong>
+                  <span class="teaser-metric__score"><%= pageData.persona.toFixed(1) %>/5</span>
                 </article>
                 <article class="teaser-metric">
                   <span class="teaser-metric__rank">Sombra base</span>
-                  <strong class="teaser-metric__name"><%= pageData.sombraBase %>/5</strong>
+                  <strong class="teaser-metric__name">Impulso inicial</strong>
+                  <span class="teaser-metric__score"><%= pageData.sombraBase.toFixed(1) %>/5</span>
                 </article>
                 <article class="teaser-metric">
                   <span class="teaser-metric__rank">Sombra total</span>
-                  <strong class="teaser-metric__name"><%= pageData.sombraTotal %>/5</strong>
+                  <strong class="teaser-metric__name"><%= pageData.interpretation.shadow.label %></strong>
+                  <span class="teaser-metric__score"><%= pageData.sombraTotal.toFixed(1) %>/5</span>
+                </article>
+              </div>
+              <p class="teaser-card__summary mb-0"><%= pageData.interpretation.shadow.summary %></p>
+            </div>
+          </div>
+        </section>
+
+        <section class="teaser-carousel__slide" data-full-slide>
+          <div class="question-card-panel__body teaser-card__body">
+            <div class="teaser-card__copy">
+              <p class="teaser-card__kicker mb-0">Decision y etapa vital</p>
+              <div class="result-insight-grid">
+                <article class="result-insight">
+                  <span class="result-insight__label">Keirsey</span>
+                  <strong class="result-insight__title"><%= pageData.keirsey %></strong>
+                  <p class="result-insight__copy mb-0"><%= pageData.interpretation.keirsey.summary %></p>
+                </article>
+                <article class="result-insight">
+                  <span class="result-insight__label">Campbell</span>
+                  <strong class="result-insight__title"><%= pageData.campbell %></strong>
+                  <p class="result-insight__copy mb-0"><%= pageData.interpretation.campbell.summary %></p>
                 </article>
               </div>
             </div>
@@ -63,27 +87,14 @@
         <section class="teaser-carousel__slide" data-full-slide>
           <div class="question-card-panel__body teaser-card__body">
             <div class="teaser-card__copy">
-              <p class="teaser-card__kicker mb-0">Lectura estructural</p>
-              <p class="teaser-card__summary mb-0">
-                <strong><%= pageData.shadowLabel %></strong>
-              </p>
-            </div>
-          </div>
-        </section>
-
-        <section class="teaser-carousel__slide" data-full-slide>
-          <div class="question-card-panel__body teaser-card__body">
-            <div class="teaser-card__copy">
-              <p class="teaser-card__kicker mb-0">Clasificaciones</p>
-              <div class="teaser-metrics">
-                <article class="teaser-metric">
-                  <span class="teaser-metric__rank">Keirsey</span>
-                  <strong class="teaser-metric__name"><%= pageData.keirsey %></strong>
-                </article>
-                <article class="teaser-metric">
-                  <span class="teaser-metric__rank">Campbell</span>
-                  <strong class="teaser-metric__name"><%= pageData.campbell %></strong>
-                </article>
+              <p class="teaser-card__kicker mb-0">Que hacer ahora</p>
+              <div class="result-action-list">
+                <% pageData.interpretation.actionPlan.forEach((item, index) => { %>
+                  <article class="result-action">
+                    <span class="result-action__index"><%= index + 1 %></span>
+                    <p class="result-action__copy mb-0"><%= item %></p>
+                  </article>
+                <% }) %>
               </div>
             </div>
           </div>
@@ -92,16 +103,17 @@
     </div>
 
     <div class="teaser-carousel__footer">
-      <div class="teaser-carousel__dots" role="tablist" aria-label="Secciones del diagnóstico">
-        <button class="teaser-carousel__dot is-active" type="button" data-full-dot aria-label="Perfil"></button>
+      <div class="teaser-carousel__dots" role="tablist" aria-label="Secciones del resultado completo">
+        <button class="teaser-carousel__dot is-active" type="button" data-full-dot aria-label="Eje principal"></button>
+        <button class="teaser-carousel__dot" type="button" data-full-dot aria-label="Puntajes"></button>
         <button class="teaser-carousel__dot" type="button" data-full-dot aria-label="Estructura"></button>
-        <button class="teaser-carousel__dot" type="button" data-full-dot aria-label="Lectura"></button>
-        <button class="teaser-carousel__dot" type="button" data-full-dot aria-label="Clasificaciones"></button>
+        <button class="teaser-carousel__dot" type="button" data-full-dot aria-label="Decision"></button>
+        <button class="teaser-carousel__dot" type="button" data-full-dot aria-label="Accion"></button>
       </div>
 
       <div class="teaser-carousel__controls">
-        <button class="teaser-carousel__control" type="button" data-full-prev aria-label="Anterior">←</button>
-        <button class="teaser-carousel__control" type="button" data-full-next aria-label="Siguiente">→</button>
+        <button class="teaser-carousel__control" type="button" data-full-prev aria-label="Anterior">&larr;</button>
+        <button class="teaser-carousel__control" type="button" data-full-next aria-label="Siguiente">&rarr;</button>
       </div>
     </div>
   </article>
@@ -116,7 +128,7 @@
   </section>
 
   <footer class="question-actions">
-    <a class="btn btn-primary app-cta" href="/registro?intent=download">Obtener informe completo</a>
+    <a class="btn btn-primary app-cta" href="/full-results/pdf">Descargar informe completo</a>
   </footer>
 </section>
 

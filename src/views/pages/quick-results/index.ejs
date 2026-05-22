@@ -1,7 +1,7 @@
 <section class="stage-page teaser-screen teaser-screen--results">
   <header class="question-header teaser-screen__header">
     <p class="eyebrow">Lectura inicial</p>
-    <h3 class="question-title teaser-screen__title">Tu mapa visible ya asom&oacute;</h3>
+    <h3 class="question-title teaser-screen__title">Tu mapa visible ya tiene forma</h3>
   </header>
 
   <article class="question-card-panel teaser-card teaser-carousel" data-teaser-carousel>
@@ -9,27 +9,31 @@
       <div class="teaser-carousel__track">
         <section class="teaser-carousel__slide is-active" data-teaser-slide>
           <div class="question-card-panel__body teaser-card__body">
-            <div class="teaser-card__copy teaser-card__copy--unlock">
-              <h2 class="teaser-card__headline teaser-card__headline--unlock mb-0">🔓 Desbloquea tu Mapa Clínico</h2>
-              <p class="teaser-card__summary teaser-card__summary--unlock mb-0">
-                Tu perfil está incompleto. Accede a la Calibración Profunda y descubre:
+            <div class="teaser-card__copy">
+              <p class="teaser-card__kicker mb-0">Perfil parcial identificado</p>
+              <h2 class="teaser-card__headline mb-0"><%= pageData.dominantArchetype %> al frente</h2>
+              <p class="teaser-card__summary mb-0">
+                <strong><%= pageData.name %></strong>, tu triada visible se ordena como
+                <strong><%= pageData.topThree.join(", ") %></strong>.
               </p>
-              <div class="teaser-unlock-list" aria-label="Beneficios de la Calibración Profunda">
-                <p class="teaser-unlock-list__item mb-0">
-                  <strong>🕸️ Radar de 12 Ejes:</strong> El mapa visual de tus arquetipos dominantes y reprimidos.
-                </p>
-                <p class="teaser-unlock-list__item mb-0">
-                  <strong>🌑 Tu Sombra Oculta:</strong> Qué te autosabotea bajo estrés y cómo integrarlo.
-                </p>
-                <p class="teaser-unlock-list__item mb-0">
-                  <strong>🧬 Matriz Keirsey:</strong> Tu sistema operativo para tomar decisiones bajo presión.
-                </p>
-                <p class="teaser-unlock-list__item mb-0">
-                  <strong>⚔️ El Viaje del Héroe:</strong> Tu etapa evolutiva actual y tu próximo paso a dar.
-                </p>
-                <p class="teaser-unlock-list__item teaser-unlock-list__item--gift mb-0">
-                  <strong>🎁 INCLUYE:</strong> Reporte PDF Ejecutivo (3 Páginas). Tus gráficas y plan de acción inmediato. Sin relleno; directo al grano.
-                </p>
+              <img src="/assets/<%= pageData.dominantArchetypeSlug %>.png" alt="<%= pageData.dominantArchetype %>" class="teaser-archetype-img mb-3" />
+            </div>
+          </div>
+        </section>
+
+        <section class="teaser-carousel__slide" data-teaser-slide>
+          <div class="question-card-panel__body teaser-card__body">
+            <div class="teaser-card__copy">
+              <p class="teaser-card__kicker mb-0">Lectura humana</p>
+              <div class="result-insight-grid">
+                <article class="result-insight">
+                  <span class="result-insight__label">Que te mueve</span>
+                  <p class="result-insight__copy mb-0"><%= pageData.interpretation.dominant.motivation %></p>
+                </article>
+                <article class="result-insight">
+                  <span class="result-insight__label">Que te potencia</span>
+                  <p class="result-insight__copy mb-0"><%= pageData.interpretation.dominant.strength %></p>
+                </article>
               </div>
             </div>
           </div>
@@ -38,30 +42,20 @@
         <section class="teaser-carousel__slide" data-teaser-slide>
           <div class="question-card-panel__body teaser-card__body">
             <div class="teaser-card__copy">
-              <%
-                const archetypeMap = {
-                  'Gobernante': 'gobernante',
-                  'Sabio': 'sabio',
-                  'Cuidador': 'cuidador',
-                  'Explorador': 'explorador',
-                  'Mago': 'mago',
-                  'Huerfano': 'huerfano',
-                  'Creador': 'creador',
-                  'Guerrero': 'guerrero',
-                  'Buscador': 'buscador',
-                  'Amante': 'amante',
-                  'Rebelde': 'rebelde',
-                  'Bufón': 'bufon'
-                };
-                const archetypeFile = archetypeMap[pageData.dominantArchetype] || pageData.dominantArchetype.toLowerCase();
-              %>
-              <p class="teaser-card__kicker mb-0">Perfil parcial identificado</p>
-              <h2 class="teaser-card__headline mb-0"><%= pageData.dominantArchetype %> al frente</h2>
-              <p class="teaser-card__summary mb-0">
-                <strong><%= pageData.name %></strong>, la triada visible se ordena como
-                <strong><%= pageData.topThree.join(", ") %></strong>.
-              </p>
-              <img src="/assets/<%= archetypeFile %>.png" alt="<%= pageData.dominantArchetype %>" class="teaser-archetype-img mb-3" />
+              <p class="teaser-card__kicker mb-0">Bajo presion</p>
+              <p class="teaser-card__summary mb-0"><%= pageData.interpretation.dominant.stress %></p>
+              <div class="teaser-metrics">
+                <article class="teaser-metric">
+                  <span class="teaser-metric__rank">Persona</span>
+                  <strong class="teaser-metric__name">Imagen publica</strong>
+                  <span class="teaser-metric__score"><%= pageData.persona.toFixed(1) %>/5</span>
+                </article>
+                <article class="teaser-metric">
+                  <span class="teaser-metric__rank">Sombra base</span>
+                  <strong class="teaser-metric__name">Impulso retenido</strong>
+                  <span class="teaser-metric__score"><%= pageData.sombraBase.toFixed(1) %>/5</span>
+                </article>
+              </div>
             </div>
           </div>
         </section>
@@ -69,12 +63,12 @@
         <section class="teaser-carousel__slide" data-teaser-slide>
           <div class="question-card-panel__body teaser-card__body">
             <div class="teaser-card__copy">
-              <p class="teaser-card__kicker mb-0">Valores del resultado</p>
+              <p class="teaser-card__kicker mb-0">Puntajes principales</p>
               <div class="teaser-metrics">
                 <% pageData.topScores.forEach((item, index) => { %>
                   <article class="teaser-metric">
                     <span class="teaser-metric__rank">#<%= index + 1 %></span>
-                    <strong class="teaser-metric__name"><%= item.name %></strong>
+                    <strong class="teaser-metric__name"><%= item.displayName %></strong>
                     <span class="teaser-metric__score"><%= item.score.toFixed(1) %></span>
                   </article>
                 <% }) %>
@@ -85,33 +79,24 @@
 
         <section class="teaser-carousel__slide" data-teaser-slide>
           <div class="question-card-panel__body teaser-card__body">
-            <div class="teaser-card__copy">
-              <p class="teaser-card__kicker mb-0">Interpretaci&oacute;n por grupos de resultado</p>
-              <p class="teaser-card__summary mb-0">
-                Tu lectura parcial sugiere una personalidad que hoy se organiza principalmente desde
-                <strong><%= pageData.dominantArchetype %></strong> como eje visible.
+            <div class="teaser-card__copy teaser-card__copy--unlock">
+              <p class="teaser-card__kicker mb-0">Lectura profunda</p>
+              <h2 class="teaser-card__headline teaser-card__headline--unlock mb-0">Lo que falta por desbloquear</h2>
+              <p class="teaser-card__summary teaser-card__summary--unlock mb-0">
+                La calibracion completa cruza tu arquetipo visible con sombra, temperamento y etapa vital.
               </p>
-              <p class="teaser-card__summary mb-0">
-                En estructuras internas, tu <strong>Persona</strong> marca <strong><%= pageData.persona.toFixed(1) %>/5</strong>
-                y tu <strong>Sombra base</strong> marca <strong><%= pageData.sombraBase.toFixed(1) %>/5</strong>.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        <section class="teaser-carousel__slide" data-teaser-slide>
-          <div class="question-card-panel__body teaser-card__body">
-            <div class="teaser-card__copy">
-              <p class="teaser-card__kicker mb-0">Recomendaciones generales</p>
-              <div class="teaser-recommendations">
-                <p class="teaser-card__summary mb-0">
-                  Observa cu&aacute;ndo tu arquetipo dominante se vuelve recurso y cu&aacute;ndo empieza a rigidizarse.
+              <div class="teaser-unlock-list" aria-label="Beneficios de la lectura profunda">
+                <p class="teaser-unlock-list__item mb-0">
+                  <strong>Mapa de 12 ejes:</strong> ranking visual de tus arquetipos dominantes y secundarios.
                 </p>
-                <p class="teaser-card__summary mb-0">
-                  Toma tu objetivo actual como filtro de lectura: <strong><%= pageData.objective %></strong>.
+                <p class="teaser-unlock-list__item mb-0">
+                  <strong>Sombra bajo estres:</strong> que patron puede sabotearte cuando aumenta la presion.
                 </p>
-                <p class="teaser-card__summary mb-0">
-                  La lectura profunda te ayudar&aacute; a distinguir mejor entre imagen consciente, sombra y direcci&oacute;n vital.
+                <p class="teaser-unlock-list__item mb-0">
+                  <strong>Temperamento de decision:</strong> como ordenar criterio, emocion y accion.
+                </p>
+                <p class="teaser-unlock-list__item teaser-unlock-list__item--gift mb-0">
+                  <strong>Informe descargable:</strong> texto interpretativo con graficas para convertir insight en accion.
                 </p>
               </div>
             </div>
@@ -121,35 +106,26 @@
     </div>
 
     <div class="teaser-carousel__footer">
-      <div class="teaser-carousel__dots" role="tablist" aria-label="Secciones del diagnostico parcial">
-        <button class="teaser-carousel__dot is-active" type="button" data-teaser-dot aria-label="Desbloquea tu mapa clinico"></button>
-        <button class="teaser-carousel__dot" type="button" data-teaser-dot aria-label="Perfil parcial"></button>
-        <button class="teaser-carousel__dot" type="button" data-teaser-dot aria-label="Valores"></button>
-        <button class="teaser-carousel__dot" type="button" data-teaser-dot aria-label="Interpretaci&oacute;n"></button>
-        <button class="teaser-carousel__dot" type="button" data-teaser-dot aria-label="Recomendaciones"></button>
+      <div class="teaser-carousel__dots" role="tablist" aria-label="Secciones de la lectura inicial">
+        <button class="teaser-carousel__dot is-active" type="button" data-teaser-dot aria-label="Perfil"></button>
+        <button class="teaser-carousel__dot" type="button" data-teaser-dot aria-label="Lectura humana"></button>
+        <button class="teaser-carousel__dot" type="button" data-teaser-dot aria-label="Bajo presion"></button>
+        <button class="teaser-carousel__dot" type="button" data-teaser-dot aria-label="Puntajes"></button>
+        <button class="teaser-carousel__dot" type="button" data-teaser-dot aria-label="Lectura profunda"></button>
       </div>
 
       <div class="teaser-carousel__controls">
-        <button class="teaser-carousel__control" type="button" data-teaser-prev aria-label="Anterior">&#8592;</button>
-        <button class="teaser-carousel__control" type="button" data-teaser-next aria-label="Siguiente">&#8594;</button>
+        <button class="teaser-carousel__control" type="button" data-teaser-prev aria-label="Anterior">&larr;</button>
+        <button class="teaser-carousel__control" type="button" data-teaser-next aria-label="Siguiente">&rarr;</button>
       </div>
     </div>
   </article>
-
-  <!-- section class="teaser-ranking" aria-label="Triada visible">
-    <% pageData.topThree.forEach((item, index) => { %>
-      <article class="teaser-ranking__item">
-        <span class="teaser-ranking__position">#<%= index + 1 %></span>
-        <strong class="teaser-ranking__name"><%= item %></strong>
-      </article>
-    <% }) %>
-  </section -->
 
   <form action="/pagos/estudio-profundo" method="get" class="question-actions teaser-screen__actions">
     <span class="question-actions__back question-actions__back--ghost"></span>
     <div class="flex-grow-1">
       <button class="btn btn-primary app-cta question-actions__next" type="submit">
-        Profundizar en mi auto-descubrimiento
+        Profundizar mi lectura
       </button>
     </div>
   </form>
