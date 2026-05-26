@@ -124,11 +124,16 @@ export async function requestAiReport(input: ReportInput, options: {
     };
   }
 
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), options.timeoutMs ?? env.aiReport.timeoutMs);
+  const timeoutMs = options.timeoutMs ?? env.aiReport.timeoutMs;
+  const controller = timeoutMs > 0 ? new AbortController() : undefined;
   const fetchImpl = options.fetchImpl ?? fetch;
+  let timeout: ReturnType<typeof setTimeout> | undefined;
 
   try {
+    if (controller) {
+      timeout = setTimeout(() => controller.abort(), timeoutMs);
+    }
+
     const response = await fetchImpl(webhookUrl, {
       method: "POST",
       headers: {
@@ -138,7 +143,7 @@ export async function requestAiReport(input: ReportInput, options: {
       body: JSON.stringify({
         userMessage: buildAiReportUserMessage(input)
       }),
-      signal: controller.signal
+      signal: controller?.signal
     });
 
     if (!response.ok) {
@@ -163,6 +168,8 @@ export async function requestAiReport(input: ReportInput, options: {
       error: getErrorMessage(error)
     };
   } finally {
-    clearTimeout(timeout);
+    if (timeout) {
+      clearTimeout(timeout);
+    }
   }
 }

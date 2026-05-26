@@ -23,7 +23,7 @@ const assetVersion =
   (nodeEnv === "production" ? `${Date.now()}` : "dev");
 const normalizedPort = Number.isNaN(port) ? 3000 : port;
 const premiumAmountInCents = Number.parseInt(getEnv("WOMPI_PREMIUM_AMOUNT_CENTS", "4900000"), 10);
-const aiReportTimeoutMs = Number.parseInt(getEnv("AI_REPORT_TIMEOUT_MS", "20000"), 10);
+const aiReportTimeoutMs = Number.parseInt(getEnv("AI_REPORT_TIMEOUT_MS", "60000"), 10);
 
 function isLocalSiteUrl(value: string) {
   try {
@@ -75,7 +75,7 @@ export const env = {
   },
   aiReport: {
     webhookUrl: getEnv("AI_REPORT_WEBHOOK_URL", "https://n8n.agenttic.ai/webhook/agente-informe-ia"),
-    timeoutMs: Number.isNaN(aiReportTimeoutMs) ? 20000 : aiReportTimeoutMs
+    timeoutMs: Number.isNaN(aiReportTimeoutMs) ? 60000 : aiReportTimeoutMs
   }
 };
 

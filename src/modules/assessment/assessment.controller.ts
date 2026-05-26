@@ -1590,6 +1590,7 @@ export async function downloadDashboardPdf(req: Request, res: Response) {
     hook: session.hookOutcome,
     premium: session.premiumOutcome
   };
+
   const report = await requestAiReport(reportInput);
   const pdfBuffer = await buildExecutiveReportPdf(reportInput, {
     reportText: report.text,

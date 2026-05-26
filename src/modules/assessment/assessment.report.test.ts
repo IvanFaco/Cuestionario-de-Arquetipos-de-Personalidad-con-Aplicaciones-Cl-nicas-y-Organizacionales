@@ -86,6 +86,25 @@ test("requestAiReport sends userMessage and reads agentMessage", async () => {
   assert.equal(report.text, "Informe generado por agente.");
 });
 
+test("requestAiReport waits for agentMessage before returning", async () => {
+  const startedAt = Date.now();
+  const report = await requestAiReport(buildReportInput(), {
+    webhookUrl: "https://example.test/report",
+    fetchImpl: async () => {
+      await new Promise((resolve) => setTimeout(resolve, 60));
+
+      return new Response(JSON.stringify({ agentMessage: "Informe demorado generado por agente." }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" }
+      });
+    }
+  });
+
+  assert.equal(report.source, "webhook");
+  assert.equal(report.text, "Informe demorado generado por agente.");
+  assert.ok(Date.now() - startedAt >= 50);
+});
+
 test("requestAiReport falls back when webhook response is invalid", async () => {
   const report = await requestAiReport(buildReportInput(), {
     webhookUrl: "https://example.test/report",
@@ -96,7 +115,30 @@ test("requestAiReport falls back when webhook response is invalid", async () => 
   });
 
   assert.equal(report.source, "fallback");
+  assert.match(report.error ?? "", /agentMessage valido/);
   assert.match(report.text, /Informe interpretativo para Camila/);
+});
+
+test("requestAiReport waits until timeout before fallback", async () => {
+  const startedAt = Date.now();
+  const report = await requestAiReport(buildReportInput(), {
+    webhookUrl: "https://example.test/report",
+    timeoutMs: 60,
+    fetchImpl: async (_url, init) => {
+      await new Promise((_resolve, reject) => {
+        init?.signal?.addEventListener("abort", () => reject(new Error("request aborted")));
+      });
+
+      return new Response(JSON.stringify({ agentMessage: "Nunca llega." }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" }
+      });
+    }
+  });
+
+  assert.equal(report.source, "fallback");
+  assert.match(report.text, /Informe interpretativo para Camila/);
+  assert.ok(Date.now() - startedAt >= 50);
 });
 
 test("buildExecutiveReportPdf returns a valid pdf buffer", async () => {
