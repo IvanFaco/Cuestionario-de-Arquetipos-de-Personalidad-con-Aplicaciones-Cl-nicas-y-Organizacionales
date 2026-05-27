@@ -272,3 +272,118 @@ export function createStructureRadarChartPng(values: {
 
   return encodePng(bitmap);
 }
+
+export function createKeirseyMatrixChartPng(activeLabel: string): Buffer {
+  const width = 900;
+  const height = 360;
+  const bitmap = new Bitmap(width, height, { r: 248, g: 246, b: 252 });
+  const columns = [
+    { label: "Racional / Estratega (NT)", color: { r: 46, g: 122, b: 255 } },
+    { label: "Guardian / Logistico (SJ)", color: { r: 77, g: 196, b: 201 } },
+    { label: "Idealista / Diplomatico (NF)", color: { r: 118, g: 88, b: 196 } }
+  ];
+  const startX = 95;
+  const columnWidth = 200;
+  const gap = 55;
+  const baseY = 265;
+
+  bitmap.drawLine({ x: 60, y: baseY }, { x: width - 60, y: baseY }, { r: 224, g: 220, b: 235 }, 3);
+
+  columns.forEach((column, index) => {
+    const active = activeLabel === column.label;
+    const x = startX + index * (columnWidth + gap);
+    const heightScale = active ? 1 : 0.58;
+    const columnHeight = 190 * heightScale;
+    const y = baseY - columnHeight;
+
+    drawRoundedBar(bitmap, x, y, columnWidth, columnHeight, {
+      ...column.color,
+      a: active ? 235 : 95
+    });
+    bitmap.fillCircle(x + columnWidth / 2, y - 28, active ? 24 : 17, {
+      ...column.color,
+      a: active ? 255 : 145
+    });
+    bitmap.fillCircle(x + columnWidth / 2, y - 28, active ? 9 : 6, { r: 255, g: 255, b: 255 });
+  });
+
+  return encodePng(bitmap);
+}
+
+export function createJourneyStageChartPng(activeStage: string): Buffer {
+  const width = 1000;
+  const height = 300;
+  const bitmap = new Bitmap(width, height, { r: 248, g: 246, b: 252 });
+  const stages = [
+    "La Llamada a la Aventura",
+    "El Cruce del Umbral",
+    "La Prueba Suprema",
+    "El Retorno con el Elixir",
+    "Maestro de Dos Mundos"
+  ];
+  const activeIndex = Math.max(0, stages.findIndex((stage) => stage === activeStage));
+  const y = 145;
+  const startX = 115;
+  const gap = 190;
+
+  bitmap.drawLine({ x: startX, y }, { x: startX + gap * (stages.length - 1), y }, { r: 224, g: 220, b: 235 }, 8);
+
+  stages.forEach((_stage, index) => {
+    const x = startX + index * gap;
+    const complete = index <= activeIndex;
+    const active = index === activeIndex;
+    const color = active
+      ? { r: 243, g: 142, b: 84 }
+      : complete
+        ? { r: 77, g: 196, b: 201 }
+        : { r: 198, g: 205, b: 218 };
+
+    if (index > 0 && index <= activeIndex) {
+      bitmap.drawLine({ x: startX + (index - 1) * gap, y }, { x, y }, { r: 77, g: 196, b: 201 }, 8);
+    }
+
+    bitmap.fillCircle(x, y, active ? 31 : 24, color);
+    bitmap.fillCircle(x, y, active ? 13 : 9, { r: 255, g: 255, b: 255 });
+    bitmap.fillCircle(x, y - 68, active ? 9 : 5, color);
+  });
+
+  return encodePng(bitmap);
+}
+
+export function createActionPlanChartPng(stepCount = 4): Buffer {
+  const width = 900;
+  const height = 360;
+  const bitmap = new Bitmap(width, height, { r: 248, g: 246, b: 252 });
+  const startX = 115;
+  const baseY = 285;
+  const stepWidth = 145;
+  const stepHeight = 42;
+  const gap = 35;
+  const colors: Color[] = [
+    { r: 46, g: 122, b: 255 },
+    { r: 77, g: 196, b: 201 },
+    { r: 118, g: 88, b: 196 },
+    { r: 243, g: 142, b: 84 }
+  ];
+
+  for (let index = 0; index < stepCount; index += 1) {
+    const x = startX + index * (stepWidth + gap);
+    const y = baseY - index * 45;
+    const color = colors[index % colors.length];
+
+    drawRoundedBar(bitmap, x, y, stepWidth, stepHeight, { ...color, a: 230 });
+    bitmap.fillCircle(x + stepWidth / 2, y - 34, 20, color);
+    bitmap.fillCircle(x + stepWidth / 2, y - 34, 7, { r: 255, g: 255, b: 255 });
+
+    if (index < stepCount - 1) {
+      bitmap.drawLine(
+        { x: x + stepWidth, y: y + stepHeight / 2 },
+        { x: x + stepWidth + gap, y: y - 45 + stepHeight / 2 },
+        { r: 198, g: 205, b: 218 },
+        5
+      );
+    }
+  }
+
+  return encodePng(bitmap);
+}

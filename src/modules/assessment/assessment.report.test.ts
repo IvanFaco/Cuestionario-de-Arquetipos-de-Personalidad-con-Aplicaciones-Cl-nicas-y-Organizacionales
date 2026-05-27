@@ -116,7 +116,8 @@ test("requestAiReport falls back when webhook response is invalid", async () => 
 
   assert.equal(report.source, "fallback");
   assert.match(report.error ?? "", /agentMessage valido/);
-  assert.match(report.text, /Informe interpretativo para Camila/);
+  assert.match(report.text, /INFORME AMPLIADO DE PERSONALIDAD/);
+  assert.match(report.text, /Apertura y Espejo/);
 });
 
 test("requestAiReport waits until timeout before fallback", async () => {
@@ -137,7 +138,8 @@ test("requestAiReport waits until timeout before fallback", async () => {
   });
 
   assert.equal(report.source, "fallback");
-  assert.match(report.text, /Informe interpretativo para Camila/);
+  assert.match(report.text, /INFORME AMPLIADO DE PERSONALIDAD/);
+  assert.match(report.text, /Plan de Accion Tactico/);
   assert.ok(Date.now() - startedAt >= 50);
 });
 
@@ -150,5 +152,5 @@ test("buildExecutiveReportPdf returns a valid pdf buffer", async () => {
 
   assert.ok(pdf.length > 1000);
   assert.equal(pdf.subarray(0, 4).toString(), "%PDF");
-  assert.ok(parsed.getPageCount() >= 2);
+  assert.ok(parsed.getPageCount() >= 6);
 });

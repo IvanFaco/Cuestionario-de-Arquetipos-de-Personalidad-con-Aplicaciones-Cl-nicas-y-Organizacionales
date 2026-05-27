@@ -7,7 +7,10 @@ import {
   mapScoresForDisplay
 } from "./assessment.interpretation.js";
 import {
+  createActionPlanChartPng,
   createArchetypeBarChartPng,
+  createJourneyStageChartPng,
+  createKeirseyMatrixChartPng,
   createStructureRadarChartPng
 } from "./assessment.report-charts.js";
 import type { ArchetypeScore, DemoProfile, HookOutcome, PremiumOutcome } from "./assessment.types.js";
@@ -33,7 +36,29 @@ type PdfContext = {
   bodyColor: unknown;
   titleColor: unknown;
   mutedColor: unknown;
+  accentColor: unknown;
 };
+
+type ReportSection = {
+  number: string;
+  title: string;
+  subtitle: string;
+  body: string;
+  questionLabel: string;
+  question: string;
+  chart: Buffer;
+  chartWidth: number;
+  chartHeight: number;
+  metrics: { label: string; value: string }[];
+};
+
+type StructuredReport = {
+  intro: string;
+  sections: ReportSection[];
+};
+
+const pageWidth = 595.28;
+const pageHeight = 841.89;
 
 export function getShadowLabel(shadowTotal: number): string {
   return shadowTotal >= 3.5
@@ -42,37 +67,8 @@ export function getShadowLabel(shadowTotal: number): string {
 }
 
 function addPage(context: PdfContext) {
-  context.page = context.doc.addPage([595.28, 841.89]);
+  context.page = context.doc.addPage([pageWidth, pageHeight]);
   context.currentY = context.marginTop;
-}
-
-function ensureSpace(context: PdfContext, requiredHeight: number) {
-  if (context.currentY - requiredHeight < context.marginBottom) {
-    addPage(context);
-  }
-}
-
-function drawTextLine(
-  context: PdfContext,
-  text: string,
-  options: {
-    size?: number;
-    font?: any;
-    color?: unknown;
-    x?: number;
-  } = {}
-) {
-  const size = options.size ?? 10.5;
-
-  ensureSpace(context, size + 8);
-  context.page.drawText(text, {
-    x: options.x ?? context.marginX,
-    y: context.currentY,
-    size,
-    font: options.font ?? context.regularFont,
-    color: options.color ?? context.bodyColor
-  });
-  context.currentY -= size + 6;
 }
 
 function splitText(text: string, font: any, size: number, maxWidth: number): string[] {
@@ -99,161 +95,380 @@ function splitText(text: string, font: any, size: number, maxWidth: number): str
   return lines;
 }
 
-function drawParagraph(
+function drawWrappedTextAt(
   context: PdfContext,
   text: string,
   options: {
+    x: number;
+    y: number;
+    width: number;
     size?: number;
     font?: any;
     color?: unknown;
-    indent?: number;
-    gapAfter?: number;
-  } = {}
-) {
+    lineGap?: number;
+  }
+): number {
   const size = options.size ?? 10.5;
   const font = options.font ?? context.regularFont;
-  const indent = options.indent ?? 0;
-  const maxWidth = 595.28 - context.marginX * 2 - indent;
-  const lines = splitText(text, font, size, maxWidth);
+  const lineGap = options.lineGap ?? 4;
+  let y = options.y;
 
-  for (const line of lines) {
-    drawTextLine(context, line, {
+  for (const line of splitText(text, font, size, options.width)) {
+    context.page.drawText(line, {
+      x: options.x,
+      y,
       size,
       font,
-      color: options.color,
-      x: context.marginX + indent
+      color: options.color ?? context.bodyColor
     });
+    y -= size + lineGap;
   }
 
-  context.currentY -= options.gapAfter ?? 4;
+  return y;
 }
 
-function normalizeReportBlocks(reportText: string): string[] {
-  return reportText
-    .replace(/\r/g, "")
-    .split(/\n{2,}|\n(?=(?:#{1,3}\s|[-*]\s|\d+\.\s))/)
-    .map((block) => block.trim())
-    .filter(Boolean);
+function normalizeText(text: string): string {
+  return text
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^\w\s:.]/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
 }
 
-function stripMarkdownHeading(block: string): string {
-  return block.replace(/^#{1,6}\s*/, "").replace(/\*\*/g, "").trim();
+function lineHas(line: string, needle: string): boolean {
+  return normalizeText(line).includes(normalizeText(needle));
 }
 
-function drawReportText(context: PdfContext, reportText: string) {
-  for (const block of normalizeReportBlocks(reportText)) {
-    const cleaned = stripMarkdownHeading(block);
-    const isHeading = /^#{1,6}\s/.test(block) || /^[A-Z][^.!?]{1,54}$/.test(cleaned);
-    const isBullet = /^[-*]\s+/.test(cleaned) || /^\d+\.\s+/.test(cleaned);
+function extractBlock(reportText: string, start: string, endMarkers: string[]): string {
+  const lines = reportText.replace(/\r/g, "").split("\n");
+  const startIndex = lines.findIndex((line) => lineHas(line, start));
 
-    if (isHeading) {
-      context.currentY -= 4;
-      drawParagraph(context, cleaned, {
-        size: 13,
-        font: context.boldFont,
-        color: context.titleColor,
-        gapAfter: 2
-      });
-      continue;
+  if (startIndex < 0) {
+    return "";
+  }
+
+  let endIndex = lines.length;
+  for (let index = startIndex + 1; index < lines.length; index += 1) {
+    if (endMarkers.some((marker) => lineHas(lines[index], marker))) {
+      endIndex = index;
+      break;
     }
-
-    drawParagraph(context, cleaned.replace(/^[-*]\s+/, "- "), {
-      size: 10.5,
-      indent: isBullet ? 10 : 0,
-      gapAfter: isBullet ? 1 : 6
-    });
   }
+
+  return lines
+    .slice(startIndex + 1, endIndex)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .join("\n");
 }
 
-function drawHeader(context: PdfContext, title: string, subtitle: string) {
-  drawParagraph(context, title, {
-    size: 21,
+function cleanSectionBody(text: string, labels: string[]): string {
+  const lines = text
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .filter((line) => !labels.some((label) => lineHas(line, label)))
+    .filter((line) => !lineHas(line, "pregunta metacognitiva"))
+    .filter((line) => !lineHas(line, "pregunta guia"));
+
+  return lines.join(" ").replace(/\s+/g, " ").trim();
+}
+
+function extractQuestion(text: string, fallback: string): string {
+  const lines = text.split("\n").map((line) => line.trim()).filter(Boolean);
+  const questionLine = lines.find((line) => lineHas(line, "pregunta metacognitiva") || lineHas(line, "pregunta guia"));
+
+  if (!questionLine) {
+    return fallback;
+  }
+
+  return questionLine.replace(/^.*?:\s*/, "").trim() || fallback;
+}
+
+function firstUseful(agentValue: string, fallback: string, maxLength = 860): string {
+  const value = agentValue.replace(/\s+/g, " ").trim();
+  const selected = value.length >= 40 ? value : fallback;
+
+  return selected.length > maxLength ? `${selected.slice(0, maxLength).trim()}...` : selected;
+}
+
+function buildLocalReport(input: ReportInput): StructuredReport {
+  const interpretation = buildResultInterpretation(input);
+  const ranking = mapScoresForDisplay(input.hook.ranking);
+  const topThree = ranking.slice(0, 3).map((item) => `${item.displayName} (${item.score.toFixed(1)})`).join(", ");
+
+  return {
+    intro:
+      `${input.demo.nombre}, esta lectura integra tu mapa de arquetipos, estructura interna, respuesta bajo estres y etapa evolutiva actual. ` +
+      "No busca encerrarte en una etiqueta: funciona como un espejo para reconocer fuerzas dominantes, tensiones ocultas y acciones concretas.",
+    sections: [
+      {
+        number: "1",
+        title: "Tu Mapa Visual: La Fortaleza de la Triada",
+        subtitle: "Apertura y Espejo",
+        body:
+          `${interpretation.quickSummary} La triada principal (${topThree}) sugiere que tu energia vital se organiza alrededor de ${interpretation.dominant.displayName}: ` +
+          `${interpretation.dominant.motivation} Tu fortaleza aparece cuando ${interpretation.dominant.strength.toLowerCase()}`,
+        questionLabel: "Pregunta metacognitiva",
+        question: "Que parte de esta triada estas usando como recurso y cual podria estar ocupando demasiado espacio en tus decisiones?",
+        chart: createArchetypeBarChartPng(input.hook.ranking),
+        chartWidth: 500,
+        chartHeight: 255,
+        metrics: ranking.slice(0, 3).map((item, index) => ({
+          label: `Top ${index + 1}`,
+          value: `${item.displayName} ${item.score.toFixed(1)}`
+        }))
+      },
+      {
+        number: "2",
+        title: "Tu Sombra Oculta",
+        subtitle: "Profundidad y Autosabotaje",
+        body:
+          `Persona marca ${input.hook.estructuras.Persona.toFixed(1)}/5, Sombra base ${input.hook.estructuras.Sombra_Base.toFixed(1)}/5 y Sombra total ${input.premium.Sombra_Total.toFixed(1)}/5. ` +
+          `${interpretation.shadow.summary} Bajo estres, el autosabotaje puede aparecer como exceso de control, retirada emocional, juicio interno o dificultad para pedir apoyo antes del limite.`,
+        questionLabel: "Pregunta metacognitiva",
+        question: "Que emocion o necesidad estas intentando mantener fuera de escena para conservar una imagen de fortaleza?",
+        chart: createStructureRadarChartPng({
+          persona: input.hook.estructuras.Persona,
+          shadowBase: input.hook.estructuras.Sombra_Base,
+          shadowTotal: input.premium.Sombra_Total
+        }),
+        chartWidth: 360,
+        chartHeight: 265,
+        metrics: [
+          { label: "Persona", value: `${input.hook.estructuras.Persona.toFixed(1)} / 5` },
+          { label: "Sombra base", value: `${input.hook.estructuras.Sombra_Base.toFixed(1)} / 5` },
+          { label: "Sombra total", value: `${input.premium.Sombra_Total.toFixed(1)} / 5` }
+        ]
+      },
+      {
+        number: "3",
+        title: "El Sistema Operativo: Matriz Keirsey",
+        subtitle: input.premium.Keirsey,
+        body:
+          `${input.premium.Keirsey}. ${interpretation.keirsey?.summary ?? ""} Esta matriz describe como tiendes a ordenar informacion y decidir cuando aumenta la presion. ` +
+          `${interpretation.keirsey?.nextStep ?? ""}`,
+        questionLabel: "Pregunta metacognitiva",
+        question: "Bajo estres, que criterio usas primero: eficiencia, seguridad, armonia o coherencia interna?",
+        chart: createKeirseyMatrixChartPng(input.premium.Keirsey),
+        chartWidth: 500,
+        chartHeight: 200,
+        metrics: [
+          { label: "Perfil", value: input.premium.Keirsey },
+          { label: "Decision", value: "Bajo estres" },
+          { label: "Clave", value: "Criterio consciente" }
+        ]
+      },
+      {
+        number: "4",
+        title: "El Horizonte Evolutivo: El Viaje del Heroe",
+        subtitle: input.premium.Campbell,
+        body:
+          `${input.premium.Campbell}. ${interpretation.campbell?.summary ?? ""} Esta etapa senala el tipo de umbral que estas atravesando: no solo que debes resolver, sino que version de ti necesita madurar para sostener el siguiente tramo.`,
+        questionLabel: "Pregunta metacognitiva",
+        question: "Cual es la prueba real de esta etapa: actuar, soltar, pedir ayuda, sostener un limite o confiar en tu criterio?",
+        chart: createJourneyStageChartPng(input.premium.Campbell),
+        chartWidth: 500,
+        chartHeight: 150,
+        metrics: [
+          { label: "Etapa", value: input.premium.Campbell },
+          { label: "Movimiento", value: "Umbral vital" },
+          { label: "Foco", value: "Integracion" }
+        ]
+      },
+      {
+        number: "5",
+        title: "Siguientes Pasos: Plan de Accion Tactico",
+        subtitle: "Accion concreta",
+        body: interpretation.actionPlan.map((item, index) => `${index + 1}. ${item}`).join(" "),
+        questionLabel: "Pregunta guia",
+        question: "Que accion pequena puedes ejecutar en las proximas 24 horas para que este informe deje de ser informacion y se vuelva movimiento?",
+        chart: createActionPlanChartPng(interpretation.actionPlan.length),
+        chartWidth: 500,
+        chartHeight: 205,
+        metrics: interpretation.actionPlan.slice(0, 3).map((item, index) => ({
+          label: `Paso ${index + 1}`,
+          value: item.length > 24 ? `${item.slice(0, 24)}...` : item
+        }))
+      }
+    ]
+  };
+}
+
+function mergeAgentReport(input: ReportInput, reportText: string): StructuredReport {
+  const local = buildLocalReport(input);
+  const introBlock = extractBlock(reportText, "Resumen Introduccion", ["1. Tu Mapa Visual"]);
+  const sectionStarts = [
+    "1. Tu Mapa Visual",
+    "2. Tu Sombra Oculta",
+    "3. El Sistema Operativo",
+    "4. El Horizonte Evolutivo",
+    "5. Siguientes Pasos"
+  ];
+
+  return {
+    intro: firstUseful(cleanSectionBody(introBlock, ["Resumen Introduccion"]), local.intro, 720),
+    sections: local.sections.map((section, index) => {
+      const block = extractBlock(reportText, sectionStarts[index], sectionStarts.slice(index + 1));
+      const body = cleanSectionBody(block, [section.title, section.subtitle]);
+      const question = extractQuestion(block, section.question);
+
+      return {
+        ...section,
+        body: firstUseful(body, section.body),
+        question
+      };
+    })
+  };
+}
+
+function drawSectionMarker(context: PdfContext, section: ReportSection) {
+  context.page.drawCircle({
+    x: context.marginX + 18,
+    y: context.currentY - 14,
+    size: 18,
+    color: context.accentColor
+  });
+  context.page.drawText(section.number, {
+    x: context.marginX + 12,
+    y: context.currentY - 20,
+    size: 14,
     font: context.boldFont,
-    color: context.titleColor,
-    gapAfter: 0
+    color: rgb(1, 1, 1)
   });
-  drawParagraph(context, subtitle, {
+  context.page.drawText(section.title, {
+    x: context.marginX + 48,
+    y: context.currentY - 4,
+    size: 16,
+    font: context.boldFont,
+    color: context.titleColor
+  });
+  context.page.drawText(section.subtitle, {
+    x: context.marginX + 48,
+    y: context.currentY - 22,
     size: 10,
-    color: context.mutedColor,
-    gapAfter: 10
+    font: context.boldFont,
+    color: context.mutedColor
   });
+  context.currentY -= 54;
 }
 
-function drawMetricRow(context: PdfContext, metrics: { label: string; value: string }[]) {
-  const cardWidth = (595.28 - context.marginX * 2 - 16) / 3;
-  const y = context.currentY - 54;
+function drawMetricCards(context: PdfContext, metrics: { label: string; value: string }[]) {
+  const visibleMetrics = metrics.slice(0, 3);
+  const gap = 8;
+  const cardWidth = (pageWidth - context.marginX * 2 - gap * 2) / 3;
+  const y = context.currentY - 45;
 
-  ensureSpace(context, 64);
-
-  metrics.forEach((metric, index) => {
-    const x = context.marginX + index * (cardWidth + 8);
+  visibleMetrics.forEach((metric, index) => {
+    const x = context.marginX + index * (cardWidth + gap);
     context.page.drawRectangle({
       x,
       y,
       width: cardWidth,
-      height: 46,
+      height: 42,
       color: rgb(0.97, 0.98, 1),
-      borderColor: rgb(0.86, 0.87, 0.92),
+      borderColor: rgb(0.87, 0.88, 0.93),
       borderWidth: 1
     });
     context.page.drawText(metric.label, {
-      x: x + 10,
-      y: y + 28,
-      size: 7.8,
+      x: x + 9,
+      y: y + 25,
+      size: 7.5,
       font: context.boldFont,
       color: context.mutedColor
     });
-    context.page.drawText(metric.value, {
-      x: x + 10,
+    drawWrappedTextAt(context, metric.value, {
+      x: x + 9,
       y: y + 11,
-      size: 11,
+      width: cardWidth - 18,
+      size: 8,
       font: context.boldFont,
-      color: context.bodyColor
+      color: context.bodyColor,
+      lineGap: 2
     });
   });
 
-  context.currentY = y - 14;
+  context.currentY = y - 18;
 }
 
-async function drawChartImage(context: PdfContext, png: Buffer, width: number, height: number) {
-  ensureSpace(context, height + 10);
-  const image = await context.doc.embedPng(png);
-  context.page.drawImage(image, {
+function drawQuestionBox(context: PdfContext, section: ReportSection) {
+  const boxHeight = 70;
+  const y = context.marginBottom + 26;
+
+  context.page.drawRectangle({
     x: context.marginX,
-    y: context.currentY - height,
-    width,
-    height
+    y,
+    width: pageWidth - context.marginX * 2,
+    height: boxHeight,
+    color: rgb(0.93, 0.96, 1),
+    borderColor: rgb(0.76, 0.84, 0.96),
+    borderWidth: 1
   });
-  context.currentY -= height + 12;
+  context.page.drawText(section.questionLabel, {
+    x: context.marginX + 14,
+    y: y + boxHeight - 22,
+    size: 9,
+    font: context.boldFont,
+    color: context.titleColor
+  });
+  drawWrappedTextAt(context, section.question, {
+    x: context.marginX + 14,
+    y: y + boxHeight - 40,
+    width: pageWidth - context.marginX * 2 - 28,
+    size: 10,
+    color: context.bodyColor,
+    lineGap: 3
+  });
 }
 
-function drawRankingLegend(context: PdfContext, scores: ArchetypeScore[]) {
-  const displayScores = mapScoresForDisplay(scores).slice(0, 6);
-  const left = displayScores.slice(0, 3);
-  const right = displayScores.slice(3, 6);
-
-  left.forEach((item, index) => {
-    drawTextLine(context, `${index + 1}. ${item.displayName}: ${item.score.toFixed(1)} puntos`, {
-      size: 9.5
-    });
+async function drawSectionPage(context: PdfContext, section: ReportSection) {
+  addPage(context);
+  context.page.drawRectangle({
+    x: 0,
+    y: pageHeight - 112,
+    width: pageWidth,
+    height: 112,
+    color: rgb(0.94, 0.98, 1)
   });
+  drawSectionMarker(context, section);
 
-  const startY = context.currentY + (left.length * 15);
-  right.forEach((item, index) => {
-    context.page.drawText(`${index + 4}. ${item.displayName}: ${item.score.toFixed(1)} puntos`, {
-      x: context.marginX + 250,
-      y: startY - index * 15,
-      size: 9.5,
-      font: context.regularFont,
-      color: context.bodyColor
-    });
+  const chartX = context.marginX + (pageWidth - context.marginX * 2 - section.chartWidth) / 2;
+  const chartImage = await context.doc.embedPng(section.chart);
+  context.page.drawImage(chartImage, {
+    x: chartX,
+    y: context.currentY - section.chartHeight,
+    width: section.chartWidth,
+    height: section.chartHeight
   });
+  context.currentY -= section.chartHeight + 18;
+  drawMetricCards(context, section.metrics);
+
+  context.page.drawRectangle({
+    x: context.marginX,
+    y: context.marginBottom + 116,
+    width: pageWidth - context.marginX * 2,
+    height: Math.max(160, context.currentY - context.marginBottom - 126),
+    color: rgb(1, 1, 1),
+    borderColor: rgb(0.88, 0.89, 0.94),
+    borderWidth: 1
+  });
+  drawWrappedTextAt(context, section.body, {
+    x: context.marginX + 16,
+    y: context.currentY - 8,
+    width: pageWidth - context.marginX * 2 - 32,
+    size: 10.4,
+    color: context.bodyColor,
+    lineGap: 4
+  });
+  drawQuestionBox(context, section);
 }
 
 function drawFooter(doc: any, regularFont: any) {
   doc.getPages().forEach((page: any, index: number) => {
     page.drawText("MiRealYo - Lectura interpretativa y educativa. No sustituye evaluacion clinica profesional.", {
-      x: 48,
+      x: 42,
       y: 28,
       size: 7.8,
       font: regularFont,
@@ -269,6 +484,81 @@ function drawFooter(doc: any, regularFont: any) {
   });
 }
 
+function drawCover(context: PdfContext, input: ReportInput, report: StructuredReport, source: "webhook" | "fallback") {
+  context.page.drawRectangle({
+    x: 0,
+    y: pageHeight - 260,
+    width: pageWidth,
+    height: 260,
+    color: rgb(0.92, 0.97, 1)
+  });
+  context.page.drawCircle({
+    x: pageWidth - 88,
+    y: pageHeight - 96,
+    size: 34,
+    color: rgb(0.29, 0.77, 0.79)
+  });
+  context.page.drawCircle({
+    x: pageWidth - 128,
+    y: pageHeight - 132,
+    size: 24,
+    color: rgb(0.46, 0.35, 0.77)
+  });
+  context.page.drawText("INFORME AMPLIADO", {
+    x: context.marginX,
+    y: pageHeight - 96,
+    size: 24,
+    font: context.boldFont,
+    color: context.titleColor
+  });
+  context.page.drawText("DE PERSONALIDAD", {
+    x: context.marginX,
+    y: pageHeight - 124,
+    size: 24,
+    font: context.boldFont,
+    color: context.titleColor
+  });
+  context.page.drawText(`Preparado para ${input.demo.nombre}`, {
+    x: context.marginX,
+    y: pageHeight - 158,
+    size: 11,
+    font: context.boldFont,
+    color: context.mutedColor
+  });
+  context.page.drawText(source === "webhook" ? "Fuente narrativa: agente IA" : "Fuente narrativa: lectura local", {
+    x: context.marginX,
+    y: pageHeight - 176,
+    size: 9,
+    font: context.regularFont,
+    color: context.mutedColor
+  });
+
+  context.currentY = pageHeight - 310;
+  context.page.drawText("Resumen Introduccion", {
+    x: context.marginX,
+    y: context.currentY,
+    size: 15,
+    font: context.boldFont,
+    color: context.titleColor
+  });
+  context.currentY -= 24;
+  drawWrappedTextAt(context, report.intro, {
+    x: context.marginX,
+    y: context.currentY,
+    width: pageWidth - context.marginX * 2,
+    size: 11,
+    color: context.bodyColor,
+    lineGap: 5
+  });
+
+  context.currentY -= 108;
+  drawMetricCards(context, [
+    { label: "Arquetipo", value: formatArchetypeName(input.hook.ranking[0].name) },
+    { label: "Keirsey", value: input.premium.Keirsey },
+    { label: "Campbell", value: input.premium.Campbell }
+  ]);
+}
+
 export async function buildExecutiveReportPdf(
   input: ReportInput,
   options: {
@@ -279,76 +569,28 @@ export async function buildExecutiveReportPdf(
   const doc = await PDFDocument.create();
   const boldFont = await doc.embedFont(StandardFonts.HelveticaBold);
   const regularFont = await doc.embedFont(StandardFonts.Helvetica);
-  const interpretation = buildResultInterpretation(input);
   const reportText = options.reportText?.trim() || buildFallbackReportText(input);
-  const ranking = input.hook.ranking;
+  const report = mergeAgentReport(input, reportText);
   const context: PdfContext = {
     doc,
-    page: doc.addPage([595.28, 841.89]),
+    page: doc.addPage([pageWidth, pageHeight]),
     regularFont,
     boldFont,
-    marginX: 48,
-    marginTop: 792,
+    marginX: 42,
+    marginTop: 790,
     marginBottom: 58,
-    currentY: 792,
+    currentY: 790,
     bodyColor: rgb(0.14, 0.18, 0.28),
     titleColor: rgb(0.13, 0.19, 0.36),
-    mutedColor: rgb(0.38, 0.42, 0.52)
+    mutedColor: rgb(0.38, 0.42, 0.52),
+    accentColor: rgb(0.18, 0.48, 1)
   };
 
-  drawHeader(
-    context,
-    "Informe premium MiRealYo",
-    `Resultado interpretativo para ${input.demo.nombre} - fuente: ${options.reportSource === "webhook" ? "agente IA" : "lectura local"}`
-  );
-  drawParagraph(context, interpretation.quickSummary, {
-    size: 10.8,
-    gapAfter: 6
-  });
-  drawMetricRow(context, [
-    { label: "Arquetipo", value: interpretation.dominant.displayName },
-    { label: "Triada", value: ranking.slice(0, 3).map((item) => formatArchetypeName(item.name)).join(" / ") },
-    { label: "Objetivo", value: input.demo.objetivo_label.slice(0, 24) }
-  ]);
+  drawCover(context, input, report, options.reportSource ?? "fallback");
 
-  drawParagraph(context, "Grafica de arquetipos", {
-    size: 14,
-    font: boldFont,
-    color: context.titleColor,
-    gapAfter: 2
-  });
-  await drawChartImage(context, createArchetypeBarChartPng(ranking), 499, 260);
-  drawRankingLegend(context, ranking);
-
-  addPage(context);
-  drawHeader(context, "Mapa interno", "Persona, sombra base y sombra total en escala de 1 a 5.");
-  await drawChartImage(
-    context,
-    createStructureRadarChartPng({
-      persona: input.hook.estructuras.Persona,
-      shadowBase: input.hook.estructuras.Sombra_Base,
-      shadowTotal: input.premium.Sombra_Total
-    }),
-    360,
-    265
-  );
-  drawMetricRow(context, [
-    { label: "Persona", value: `${input.hook.estructuras.Persona.toFixed(1)} / 5` },
-    { label: "Sombra base", value: `${input.hook.estructuras.Sombra_Base.toFixed(1)} / 5` },
-    { label: "Sombra total", value: `${input.premium.Sombra_Total.toFixed(1)} / 5` }
-  ]);
-  drawParagraph(context, interpretation.shadow.summary, {
-    size: 10.8,
-    gapAfter: 8
-  });
-
-  drawParagraph(context, "Informe interpretativo", {
-    size: 15,
-    font: boldFont,
-    color: context.titleColor,
-    gapAfter: 4
-  });
-  drawReportText(context, reportText);
+  for (const section of report.sections) {
+    await drawSectionPage(context, section);
+  }
 
   drawFooter(doc, regularFont);
   const bytes = await doc.save({
