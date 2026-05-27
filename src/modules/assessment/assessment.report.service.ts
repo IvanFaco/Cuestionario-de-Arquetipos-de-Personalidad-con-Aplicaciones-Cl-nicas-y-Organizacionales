@@ -7,13 +7,31 @@ import {
   mapScoresForDisplay
 } from "./assessment.interpretation.js";
 import {
+  REPORT_ACTION_STEP_COUNT,
+  REPORT_INTRO_RULE,
+  REPORT_INTRO_TITLE,
+  REPORT_RENDER_RULES,
+  REPORT_SECTIONS,
+  REPORT_SOURCE_LABEL,
+  REPORT_TITLE,
+  calculateDominantArchetypes,
+  calculateRepressedArchetypes,
+  enforceActionStepCount,
+  isIntroNarrativeValid,
+  isNarrativeBodyValid,
+  normalizeHeroJourney,
+  normalizeKeirsey,
+  normalizeShadow,
+  sanitizeNarrativeText
+} from "./assessment.report-contract.js";
+import {
   createActionPlanChartPng,
   createArchetypeBarChartPng,
   createJourneyStageChartPng,
   createKeirseyMatrixChartPng,
   createStructureRadarChartPng
 } from "./assessment.report-charts.js";
-import type { ArchetypeScore, DemoProfile, HookOutcome, PremiumOutcome } from "./assessment.types.js";
+import type { DemoProfile, HookOutcome, PremiumOutcome } from "./assessment.types.js";
 
 const require = createRequire(import.meta.url);
 const { PDFDocument, StandardFonts, rgb } = require("pdf-lib") as any;
@@ -40,12 +58,14 @@ type PdfContext = {
 };
 
 type ReportSection = {
+  id: string;
   number: string;
   title: string;
   subtitle: string;
   body: string;
   questionLabel: string;
   question: string;
+  actionSteps?: string[];
   chart: Buffer;
   chartWidth: number;
   chartHeight: number;
@@ -57,8 +77,8 @@ type StructuredReport = {
   sections: ReportSection[];
 };
 
-const pageWidth = 595.28;
-const pageHeight = 841.89;
+const pageWidth = REPORT_RENDER_RULES.page.width;
+const pageHeight = REPORT_RENDER_RULES.page.height;
 
 export function getShadowLabel(shadowTotal: number): string {
   return shadowTotal >= 3.5
@@ -188,16 +208,86 @@ function extractQuestion(text: string, fallback: string): string {
 }
 
 function firstUseful(agentValue: string, fallback: string, maxLength = 860): string {
-  const value = agentValue.replace(/\s+/g, " ").trim();
+  const value = sanitizeNarrativeText(agentValue);
   const selected = value.length >= 40 ? value : fallback;
 
   return selected.length > maxLength ? `${selected.slice(0, maxLength).trim()}...` : selected;
 }
 
+function findSectionRule(index: number) {
+  const rule = REPORT_SECTIONS[index];
+
+  if (!rule) {
+    throw new Error(`Regla de informe no configurada para la seccion ${index + 1}.`);
+  }
+
+  return rule;
+}
+
+function formatScoreList(items: { displayName: string; score: number }[], limit = 3): string {
+  return items
+    .slice(0, limit)
+    .map((item) => `${item.displayName} ${item.score.toFixed(1)}`)
+    .join(" / ");
+}
+
+function abbreviate(value: string, maxLength: number): string {
+  return value.length > maxLength ? `${value.slice(0, maxLength).trim()}...` : value;
+}
+
+function extractActionSteps(text: string): string[] {
+  const normalized = text.replace(/\r/g, "\n");
+  const matches = [...normalized.matchAll(/(?:^|\n|\s)(?:\d{1,2}[.)]\s+)(.*?)(?=(?:\n|\s)\d{1,2}[.)]\s+|$)/gs)]
+    .map((match) => sanitizeNarrativeText(match[1]))
+    .filter(Boolean);
+
+  if (matches.length) {
+    return matches;
+  }
+
+  return normalized
+    .split("\n")
+    .map((line) => line.replace(/^\s*[-*]\s+/, "").trim())
+    .map(sanitizeNarrativeText)
+    .filter(Boolean);
+}
+
+function pickIntro(agentValue: string, fallback: string): string {
+  const cleaned = sanitizeNarrativeText(agentValue);
+
+  if (isIntroNarrativeValid(cleaned)) {
+    return firstUseful(cleaned, fallback, REPORT_INTRO_RULE.maxChars);
+  }
+
+  return fallback;
+}
+
+function pickSectionBody(index: number, agentValue: string, fallback: string): string {
+  const rule = findSectionRule(index);
+  const cleaned = sanitizeNarrativeText(agentValue);
+
+  if (isNarrativeBodyValid(rule, cleaned)) {
+    return firstUseful(cleaned, fallback, rule.maxChars);
+  }
+
+  return fallback;
+}
+
 function buildLocalReport(input: ReportInput): StructuredReport {
   const interpretation = buildResultInterpretation(input);
   const ranking = mapScoresForDisplay(input.hook.ranking);
+  const dominantArchetypes = mapScoresForDisplay(calculateDominantArchetypes(input.hook.ranking));
+  const repressedArchetypes = mapScoresForDisplay(calculateRepressedArchetypes(input.hook.ranking));
+  const normalizedShadow = normalizeShadow({
+    persona: input.hook.estructuras.Persona,
+    shadowBase: input.hook.estructuras.Sombra_Base,
+    shadowTotal: input.premium.Sombra_Total
+  });
+  const normalizedKeirsey = normalizeKeirsey(input.premium.Keirsey);
+  const normalizedJourney = normalizeHeroJourney(input.premium.Campbell);
+  const actionSteps = enforceActionStepCount(interpretation.actionPlan, interpretation.actionPlan);
   const topThree = ranking.slice(0, 3).map((item) => `${item.displayName} (${item.score.toFixed(1)})`).join(", ");
+  const [mapRule, shadowRule, keirseyRule, heroRule, actionRule] = REPORT_SECTIONS;
 
   return {
     intro:
@@ -205,90 +295,97 @@ function buildLocalReport(input: ReportInput): StructuredReport {
       "No busca encerrarte en una etiqueta: funciona como un espejo para reconocer fuerzas dominantes, tensiones ocultas y acciones concretas.",
     sections: [
       {
-        number: "1",
-        title: "Tu Mapa Visual: La Fortaleza de la Triada",
-        subtitle: "Apertura y Espejo",
+        id: mapRule.id,
+        number: mapRule.number,
+        title: mapRule.title,
+        subtitle: mapRule.subtitle,
         body:
           `${interpretation.quickSummary} La triada principal (${topThree}) sugiere que tu energia vital se organiza alrededor de ${interpretation.dominant.displayName}: ` +
           `${interpretation.dominant.motivation} Tu fortaleza aparece cuando ${interpretation.dominant.strength.toLowerCase()}`,
-        questionLabel: "Pregunta metacognitiva",
+        questionLabel: mapRule.questionLabel,
         question: "Que parte de esta triada estas usando como recurso y cual podria estar ocupando demasiado espacio en tus decisiones?",
         chart: createArchetypeBarChartPng(input.hook.ranking),
-        chartWidth: 500,
-        chartHeight: 255,
-        metrics: ranking.slice(0, 3).map((item, index) => ({
-          label: `Top ${index + 1}`,
-          value: `${item.displayName} ${item.score.toFixed(1)}`
-        }))
-      },
-      {
-        number: "2",
-        title: "Tu Sombra Oculta",
-        subtitle: "Profundidad y Autosabotaje",
-        body:
-          `Persona marca ${input.hook.estructuras.Persona.toFixed(1)}/5, Sombra base ${input.hook.estructuras.Sombra_Base.toFixed(1)}/5 y Sombra total ${input.premium.Sombra_Total.toFixed(1)}/5. ` +
-          `${interpretation.shadow.summary} Bajo estres, el autosabotaje puede aparecer como exceso de control, retirada emocional, juicio interno o dificultad para pedir apoyo antes del limite.`,
-        questionLabel: "Pregunta metacognitiva",
-        question: "Que emocion o necesidad estas intentando mantener fuera de escena para conservar una imagen de fortaleza?",
-        chart: createStructureRadarChartPng({
-          persona: input.hook.estructuras.Persona,
-          shadowBase: input.hook.estructuras.Sombra_Base,
-          shadowTotal: input.premium.Sombra_Total
-        }),
-        chartWidth: 360,
-        chartHeight: 265,
+        chartWidth: REPORT_RENDER_RULES.chartSizes.archetypes.width,
+        chartHeight: REPORT_RENDER_RULES.chartSizes.archetypes.height,
         metrics: [
-          { label: "Persona", value: `${input.hook.estructuras.Persona.toFixed(1)} / 5` },
-          { label: "Sombra base", value: `${input.hook.estructuras.Sombra_Base.toFixed(1)} / 5` },
-          { label: "Sombra total", value: `${input.premium.Sombra_Total.toFixed(1)} / 5` }
+          { label: "Dominantes", value: formatScoreList(dominantArchetypes) },
+          { label: "Reprimidos", value: formatScoreList(repressedArchetypes) },
+          { label: "Rango total", value: `${ranking[0].score.toFixed(1)} a ${ranking[ranking.length - 1].score.toFixed(1)}` }
         ]
       },
       {
-        number: "3",
-        title: "El Sistema Operativo: Matriz Keirsey",
+        id: shadowRule.id,
+        number: shadowRule.number,
+        title: shadowRule.title,
+        subtitle: shadowRule.subtitle,
+        body:
+          `Persona marca ${input.hook.estructuras.Persona.toFixed(1)}/5, Sombra base ${input.hook.estructuras.Sombra_Base.toFixed(1)}/5 y Sombra total ${input.premium.Sombra_Total.toFixed(1)}/5. ` +
+          `${interpretation.shadow.summary} Bajo estres, el autosabotaje puede aparecer como exceso de control, retirada emocional, juicio interno o dificultad para pedir apoyo antes del limite.`,
+        questionLabel: shadowRule.questionLabel,
+        question: "Que emocion o necesidad estas intentando mantener fuera de escena para conservar una imagen de fortaleza?",
+        chart: createStructureRadarChartPng({
+          persona: normalizedShadow.persona,
+          shadowBase: normalizedShadow.shadowBase,
+          shadowTotal: normalizedShadow.shadowTotal
+        }),
+        chartWidth: REPORT_RENDER_RULES.chartSizes.shadow.width,
+        chartHeight: REPORT_RENDER_RULES.chartSizes.shadow.height,
+        metrics: [
+          { label: "Persona", value: `${normalizedShadow.persona.toFixed(1)} / 5` },
+          { label: "Sombra total", value: `${normalizedShadow.shadowTotal.toFixed(1)} / 5 (${normalizedShadow.load})` },
+          { label: "Integracion", value: `${normalizedShadow.integrationIndex.toFixed(1)} / 5` }
+        ]
+      },
+      {
+        id: keirseyRule.id,
+        number: keirseyRule.number,
+        title: keirseyRule.title,
         subtitle: input.premium.Keirsey,
         body:
           `${input.premium.Keirsey}. ${interpretation.keirsey?.summary ?? ""} Esta matriz describe como tiendes a ordenar informacion y decidir cuando aumenta la presion. ` +
           `${interpretation.keirsey?.nextStep ?? ""}`,
-        questionLabel: "Pregunta metacognitiva",
+        questionLabel: keirseyRule.questionLabel,
         question: "Bajo estres, que criterio usas primero: eficiencia, seguridad, armonia o coherencia interna?",
         chart: createKeirseyMatrixChartPng(input.premium.Keirsey),
-        chartWidth: 500,
-        chartHeight: 200,
+        chartWidth: REPORT_RENDER_RULES.chartSizes.keirsey.width,
+        chartHeight: REPORT_RENDER_RULES.chartSizes.keirsey.height,
         metrics: [
-          { label: "Perfil", value: input.premium.Keirsey },
-          { label: "Decision", value: "Bajo estres" },
-          { label: "Clave", value: "Criterio consciente" }
+          { label: "Perfil", value: normalizedKeirsey.normalized },
+          { label: "Codigo", value: normalizedKeirsey.code },
+          { label: "Bajo estres", value: abbreviate(normalizedKeirsey.stressResponse, 42) }
         ]
       },
       {
-        number: "4",
-        title: "El Horizonte Evolutivo: El Viaje del Heroe",
+        id: heroRule.id,
+        number: heroRule.number,
+        title: heroRule.title,
         subtitle: input.premium.Campbell,
         body:
           `${input.premium.Campbell}. ${interpretation.campbell?.summary ?? ""} Esta etapa senala el tipo de umbral que estas atravesando: no solo que debes resolver, sino que version de ti necesita madurar para sostener el siguiente tramo.`,
-        questionLabel: "Pregunta metacognitiva",
+        questionLabel: heroRule.questionLabel,
         question: "Cual es la prueba real de esta etapa: actuar, soltar, pedir ayuda, sostener un limite o confiar en tu criterio?",
         chart: createJourneyStageChartPng(input.premium.Campbell),
-        chartWidth: 500,
-        chartHeight: 150,
+        chartWidth: REPORT_RENDER_RULES.chartSizes.heroJourney.width,
+        chartHeight: REPORT_RENDER_RULES.chartSizes.heroJourney.height,
         metrics: [
           { label: "Etapa", value: input.premium.Campbell },
-          { label: "Movimiento", value: "Umbral vital" },
-          { label: "Foco", value: "Integracion" }
+          { label: "Posicion", value: `${normalizedJourney.position} de ${normalizedJourney.total}` },
+          { label: "Progreso", value: `${Math.round(normalizedJourney.progress * 100)}% del arco` }
         ]
       },
       {
-        number: "5",
-        title: "Siguientes Pasos: Plan de Accion Tactico",
-        subtitle: "Accion concreta",
-        body: interpretation.actionPlan.map((item, index) => `${index + 1}. ${item}`).join(" "),
-        questionLabel: "Pregunta guia",
+        id: actionRule.id,
+        number: actionRule.number,
+        title: actionRule.title,
+        subtitle: actionRule.subtitle,
+        body: actionSteps.map((item, index) => `${index + 1}. ${item}`).join(" "),
+        actionSteps,
+        questionLabel: actionRule.questionLabel,
         question: "Que accion pequena puedes ejecutar en las proximas 24 horas para que este informe deje de ser informacion y se vuelva movimiento?",
-        chart: createActionPlanChartPng(interpretation.actionPlan.length),
-        chartWidth: 500,
-        chartHeight: 205,
-        metrics: interpretation.actionPlan.slice(0, 3).map((item, index) => ({
+        chart: createActionPlanChartPng(REPORT_ACTION_STEP_COUNT),
+        chartWidth: REPORT_RENDER_RULES.chartSizes.actionPlan.width,
+        chartHeight: REPORT_RENDER_RULES.chartSizes.actionPlan.height,
+        metrics: actionSteps.map((item, index) => ({
           label: `Paso ${index + 1}`,
           value: item.length > 24 ? `${item.slice(0, 24)}...` : item
         }))
@@ -299,25 +396,34 @@ function buildLocalReport(input: ReportInput): StructuredReport {
 
 function mergeAgentReport(input: ReportInput, reportText: string): StructuredReport {
   const local = buildLocalReport(input);
-  const introBlock = extractBlock(reportText, "Resumen Introduccion", ["1. Tu Mapa Visual"]);
-  const sectionStarts = [
-    "1. Tu Mapa Visual",
-    "2. Tu Sombra Oculta",
-    "3. El Sistema Operativo",
-    "4. El Horizonte Evolutivo",
-    "5. Siguientes Pasos"
-  ];
+  const introBlock = extractBlock(reportText, REPORT_INTRO_TITLE, [REPORT_SECTIONS[0].startMarker]);
+  const sectionStarts = REPORT_SECTIONS.map((section) => section.startMarker);
 
   return {
-    intro: firstUseful(cleanSectionBody(introBlock, ["Resumen Introduccion"]), local.intro, 720),
+    intro: pickIntro(cleanSectionBody(introBlock, [REPORT_INTRO_TITLE]), local.intro),
     sections: local.sections.map((section, index) => {
       const block = extractBlock(reportText, sectionStarts[index], sectionStarts.slice(index + 1));
       const body = cleanSectionBody(block, [section.title, section.subtitle]);
       const question = extractQuestion(block, section.question);
 
+      if (section.id === "pasos") {
+        const actionSteps = enforceActionStepCount(extractActionSteps(block), section.actionSteps ?? []);
+
+        return {
+          ...section,
+          body: actionSteps.map((item, stepIndex) => `${stepIndex + 1}. ${item}`).join(" "),
+          actionSteps,
+          metrics: actionSteps.map((item, stepIndex) => ({
+            label: `Paso ${stepIndex + 1}`,
+            value: abbreviate(item, 27)
+          })),
+          question
+        };
+      }
+
       return {
         ...section,
-        body: firstUseful(body, section.body),
+        body: pickSectionBody(index, body, section.body),
         question
       };
     })
@@ -359,7 +465,8 @@ function drawMetricCards(context: PdfContext, metrics: { label: string; value: s
   const visibleMetrics = metrics.slice(0, 3);
   const gap = 8;
   const cardWidth = (pageWidth - context.marginX * 2 - gap * 2) / 3;
-  const y = context.currentY - 45;
+  const cardHeight = 56;
+  const y = context.currentY - cardHeight;
 
   visibleMetrics.forEach((metric, index) => {
     const x = context.marginX + index * (cardWidth + gap);
@@ -367,21 +474,21 @@ function drawMetricCards(context: PdfContext, metrics: { label: string; value: s
       x,
       y,
       width: cardWidth,
-      height: 42,
+      height: cardHeight,
       color: rgb(0.97, 0.98, 1),
       borderColor: rgb(0.87, 0.88, 0.93),
       borderWidth: 1
     });
     context.page.drawText(metric.label, {
       x: x + 9,
-      y: y + 25,
+      y: y + cardHeight - 18,
       size: 7.5,
       font: context.boldFont,
       color: context.mutedColor
     });
     drawWrappedTextAt(context, metric.value, {
       x: x + 9,
-      y: y + 11,
+      y: y + cardHeight - 34,
       width: cardWidth - 18,
       size: 8,
       font: context.boldFont,
@@ -394,7 +501,7 @@ function drawMetricCards(context: PdfContext, metrics: { label: string; value: s
 }
 
 function drawQuestionBox(context: PdfContext, section: ReportSection) {
-  const boxHeight = 70;
+  const boxHeight = REPORT_RENDER_RULES.questionBox.height;
   const y = context.marginBottom + 26;
 
   context.page.drawRectangle({
@@ -449,7 +556,7 @@ async function drawSectionPage(context: PdfContext, section: ReportSection) {
     x: context.marginX,
     y: context.marginBottom + 116,
     width: pageWidth - context.marginX * 2,
-    height: Math.max(160, context.currentY - context.marginBottom - 126),
+    height: Math.max(REPORT_RENDER_RULES.body.minBoxHeight, context.currentY - context.marginBottom - 126),
     color: rgb(1, 1, 1),
     borderColor: rgb(0.88, 0.89, 0.94),
     borderWidth: 1
@@ -458,9 +565,9 @@ async function drawSectionPage(context: PdfContext, section: ReportSection) {
     x: context.marginX + 16,
     y: context.currentY - 8,
     width: pageWidth - context.marginX * 2 - 32,
-    size: 10.4,
+    size: REPORT_RENDER_RULES.body.fontSize,
     color: context.bodyColor,
-    lineGap: 4
+    lineGap: REPORT_RENDER_RULES.body.lineGap
   });
   drawQuestionBox(context, section);
 }
@@ -484,7 +591,7 @@ function drawFooter(doc: any, regularFont: any) {
   });
 }
 
-function drawCover(context: PdfContext, input: ReportInput, report: StructuredReport, source: "webhook" | "fallback") {
+function drawCover(context: PdfContext, input: ReportInput, report: StructuredReport) {
   context.page.drawRectangle({
     x: 0,
     y: pageHeight - 260,
@@ -504,17 +611,17 @@ function drawCover(context: PdfContext, input: ReportInput, report: StructuredRe
     size: 24,
     color: rgb(0.46, 0.35, 0.77)
   });
-  context.page.drawText("INFORME AMPLIADO", {
+  context.page.drawText("INFORME AMPLIADO DE", {
     x: context.marginX,
     y: pageHeight - 96,
-    size: 24,
+    size: 22,
     font: context.boldFont,
     color: context.titleColor
   });
-  context.page.drawText("DE PERSONALIDAD", {
+  context.page.drawText("PERSONALIDAD", {
     x: context.marginX,
     y: pageHeight - 124,
-    size: 24,
+    size: 26,
     font: context.boldFont,
     color: context.titleColor
   });
@@ -525,7 +632,7 @@ function drawCover(context: PdfContext, input: ReportInput, report: StructuredRe
     font: context.boldFont,
     color: context.mutedColor
   });
-  context.page.drawText(source === "webhook" ? "Fuente narrativa: agente IA" : "Fuente narrativa: lectura local", {
+  context.page.drawText(REPORT_SOURCE_LABEL, {
     x: context.marginX,
     y: pageHeight - 176,
     size: 9,
@@ -567,6 +674,9 @@ export async function buildExecutiveReportPdf(
   } = {}
 ): Promise<Buffer> {
   const doc = await PDFDocument.create();
+  doc.setTitle(REPORT_TITLE);
+  doc.setSubject("Informe premium MiRealYo");
+  doc.setCreator("MiRealYo");
   const boldFont = await doc.embedFont(StandardFonts.HelveticaBold);
   const regularFont = await doc.embedFont(StandardFonts.Helvetica);
   const reportText = options.reportText?.trim() || buildFallbackReportText(input);
@@ -576,17 +686,17 @@ export async function buildExecutiveReportPdf(
     page: doc.addPage([pageWidth, pageHeight]),
     regularFont,
     boldFont,
-    marginX: 42,
-    marginTop: 790,
-    marginBottom: 58,
-    currentY: 790,
+    marginX: REPORT_RENDER_RULES.margins.x,
+    marginTop: REPORT_RENDER_RULES.margins.top,
+    marginBottom: REPORT_RENDER_RULES.margins.bottom,
+    currentY: REPORT_RENDER_RULES.margins.top,
     bodyColor: rgb(0.14, 0.18, 0.28),
     titleColor: rgb(0.13, 0.19, 0.36),
     mutedColor: rgb(0.38, 0.42, 0.52),
     accentColor: rgb(0.18, 0.48, 1)
   };
 
-  drawCover(context, input, report, options.reportSource ?? "fallback");
+  drawCover(context, input, report);
 
   for (const section of report.sections) {
     await drawSectionPage(context, section);

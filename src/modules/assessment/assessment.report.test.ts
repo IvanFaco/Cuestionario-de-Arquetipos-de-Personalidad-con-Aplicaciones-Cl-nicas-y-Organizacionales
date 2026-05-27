@@ -4,6 +4,11 @@ import { createRequire } from "node:module";
 
 import { buildDemoProfile, buildHookOutcome, buildPremiumOutcome } from "./assessment.domain.js";
 import { buildAiReportUserMessage, requestAiReport } from "./assessment.ai-report.service.js";
+import {
+  REPORT_ACTION_STEP_COUNT,
+  enforceActionStepCount,
+  hasProhibitedNarrativePattern
+} from "./assessment.report-contract.js";
 import { buildExecutiveReportPdf, getShadowLabel } from "./assessment.report.service.js";
 
 const require = createRequire(import.meta.url);
@@ -65,6 +70,26 @@ test("buildAiReportUserMessage includes the complete test result payload", () =>
   assert.match(userMessage, /"name": "Camila"/);
   assert.match(userMessage, /"archetypeRanking"/);
   assert.match(userMessage, /"shadowTotal": 3/);
+  assert.match(userMessage, /solo debe devolver prosa interpretativa/);
+  assert.match(userMessage, /MiRealYo renderiza las graficas con los datos locales del test/);
+  assert.match(userMessage, /exactamente 3 pasos/);
+  assert.doesNotMatch(userMessage, /4 acciones/);
+});
+
+test("report contract enforces exactly three action steps and prohibited patterns", () => {
+  const steps = enforceActionStepCount(
+    [
+      "Define una accion pequena, observable y medible para hoy.",
+      "Pide retroalimentacion concreta antes de decidir el siguiente movimiento.",
+      "Separa impulso, dato y necesidad antes de actuar bajo presion.",
+      "Este paso extra no debe llegar al informe."
+    ],
+    []
+  );
+
+  assert.equal(steps.length, REPORT_ACTION_STEP_COUNT);
+  assert.equal(steps[2], "Separa impulso, dato y necesidad antes de actuar bajo presion.");
+  assert.equal(hasProhibitedNarrativePattern("Fuente narrativa: agente IA"), true);
 });
 
 test("requestAiReport sends userMessage and reads agentMessage", async () => {

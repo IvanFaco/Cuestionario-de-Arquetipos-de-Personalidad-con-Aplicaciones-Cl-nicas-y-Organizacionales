@@ -1,5 +1,17 @@
 import { env } from "../../config/env.js";
 import { buildResultInterpretation, mapScoresForDisplay } from "./assessment.interpretation.js";
+import {
+  REPORT_ACTION_STEP_COUNT,
+  REPORT_INTRO_TITLE,
+  REPORT_SECTIONS,
+  REPORT_TITLE,
+  calculateDominantArchetypes,
+  calculateRepressedArchetypes,
+  enforceActionStepCount,
+  normalizeHeroJourney,
+  normalizeKeirsey,
+  normalizeShadow
+} from "./assessment.report-contract.js";
 import type { DemoProfile, HookOutcome, PremiumOutcome } from "./assessment.types.js";
 
 type ReportInput = {
@@ -18,6 +30,22 @@ type FetchLike = typeof fetch;
 
 function buildReportPayload(input: ReportInput) {
   const interpretation = buildResultInterpretation(input);
+  const dominantArchetypes = mapScoresForDisplay(calculateDominantArchetypes(input.hook.ranking)).map((item) => ({
+    name: item.displayName,
+    score: Number(item.score.toFixed(1))
+  }));
+  const repressedArchetypes = mapScoresForDisplay(calculateRepressedArchetypes(input.hook.ranking)).map((item) => ({
+    name: item.displayName,
+    score: Number(item.score.toFixed(1))
+  }));
+  const normalizedShadow = normalizeShadow({
+    persona: input.hook.estructuras.Persona,
+    shadowBase: input.hook.estructuras.Sombra_Base,
+    shadowTotal: input.premium.Sombra_Total
+  });
+  const normalizedKeirsey = normalizeKeirsey(input.premium.Keirsey);
+  const normalizedHeroJourney = normalizeHeroJourney(input.premium.Campbell);
+  const actionPlan = enforceActionStepCount(interpretation.actionPlan, interpretation.actionPlan);
 
   return {
     profile: {
@@ -27,6 +55,8 @@ function buildReportPayload(input: ReportInput) {
     },
     results: {
       dominantArchetype: interpretation.dominant.displayName,
+      dominantArchetypes,
+      repressedArchetypes,
       triad: interpretation.triad,
       archetypeRanking: mapScoresForDisplay(input.hook.ranking).map((item) => ({
         name: item.displayName,
@@ -37,8 +67,11 @@ function buildReportPayload(input: ReportInput) {
         shadowBase: input.hook.estructuras.Sombra_Base,
         shadowTotal: Number(input.premium.Sombra_Total.toFixed(1))
       },
+      normalizedShadow,
       keirsey: input.premium.Keirsey,
-      campbell: input.premium.Campbell
+      normalizedKeirsey,
+      campbell: input.premium.Campbell,
+      normalizedHeroJourney
     },
     interpretationSeed: {
       whatMovesYou: interpretation.dominant.motivation,
@@ -47,32 +80,29 @@ function buildReportPayload(input: ReportInput) {
       shadow: interpretation.shadow,
       keirsey: interpretation.keirsey,
       campbell: interpretation.campbell,
-      actionPlan: interpretation.actionPlan
+      actionPlan
     }
   };
 }
 
 export function buildAiReportUserMessage(input: ReportInput): string {
+  const sectionLines = REPORT_SECTIONS.flatMap((section) => [
+    `${section.number}. ${section.title}`,
+    section.subtitle,
+    `${section.questionLabel}:`
+  ]).filter(Boolean);
+
   return [
     "Genera el informe premium descargable de MiRealYo a partir del resultado del test.",
-    "Devuelve solo texto crudo del informe, sin JSON.",
+    "El agente solo debe devolver prosa interpretativa. Devuelve solo texto crudo del informe, sin JSON.",
+    "No generes graficas, imagenes, tablas ni instrucciones visuales: MiRealYo renderiza las graficas con los datos locales del test.",
     "El informe debe seguir exactamente esta estructura y usar estos encabezados:",
-    "Titulo: INFORME AMPLIADO DE PERSONALIDAD",
-    "Resumen Introduccion",
-    "1. Tu Mapa Visual: La Fortaleza de la Triada",
-    "Apertura y Espejo",
-    "Pregunta metacognitiva:",
-    "2. Tu Sombra Oculta",
-    "Profundidad y Autosabotaje",
-    "Pregunta metacognitiva:",
-    "3. El Sistema Operativo: Matriz Keirsey",
-    "Pregunta metacognitiva:",
-    "4. El Horizonte Evolutivo: El Viaje del Heroe",
-    "Pregunta metacognitiva:",
-    "5. Siguientes Pasos: Plan de Accion Tactico",
-    "Pregunta guia:",
+    `Titulo: ${REPORT_TITLE}`,
+    REPORT_INTRO_TITLE,
+    ...sectionLines,
     "El informe debe ser claro, calido, directo, accionable y visualmente pensado para un PDF premium.",
-    "Cada seccion debe tener entre 90 y 130 palabras, excepto el plan tactico, que debe tener 4 acciones concretas.",
+    "Cada seccion narrativa debe tener entre 90 y 130 palabras.",
+    `El plan tactico debe tener exactamente ${REPORT_ACTION_STEP_COUNT} pasos numerados, sin pasos extra.`,
     "Traduce los puntajes a narrativa vital; no entregues solo etiquetas.",
     "Evita promesas clinicas absolutas y aclara que es una lectura interpretativa y educativa.",
     "Resultado del test en JSON:",
@@ -84,34 +114,35 @@ export function buildFallbackReportText(input: ReportInput): string {
   const interpretation = buildResultInterpretation(input);
   const ranking = mapScoresForDisplay(input.hook.ranking);
   const topThree = ranking.slice(0, 3).map((item) => `${item.displayName} (${item.score.toFixed(1)})`).join(", ");
+  const actionPlan = enforceActionStepCount(interpretation.actionPlan, interpretation.actionPlan);
 
   return [
-    "INFORME AMPLIADO DE PERSONALIDAD",
+    REPORT_TITLE,
     "",
-    "Resumen Introduccion",
+    REPORT_INTRO_TITLE,
     `${input.demo.nombre}, esta lectura integra tu mapa de arquetipos, estructura interna, respuesta bajo estres y etapa evolutiva actual. No busca encerrarte en una etiqueta: funciona como un espejo para reconocer fuerzas dominantes, tensiones ocultas y acciones concretas para avanzar con mas conciencia.`,
     "",
-    "1. Tu Mapa Visual: La Fortaleza de la Triada",
-    "Apertura y Espejo",
+    `1. ${REPORT_SECTIONS[0].title}`,
+    REPORT_SECTIONS[0].subtitle,
     `${interpretation.quickSummary} La triada principal (${topThree}) sugiere que tu energia vital se organiza alrededor de ${interpretation.dominant.displayName}: ${interpretation.dominant.motivation} En terminos practicos, esta fortaleza se expresa cuando conviertes tu energia dominante en decisiones, limites y acciones observables.`,
-    "Pregunta metacognitiva: Que parte de esta triada estas usando como recurso y cual podria estar ocupando demasiado espacio en tus decisiones?",
+    `${REPORT_SECTIONS[0].questionLabel}: Que parte de esta triada estas usando como recurso y cual podria estar ocupando demasiado espacio en tus decisiones?`,
     "",
-    "2. Tu Sombra Oculta",
-    "Profundidad y Autosabotaje",
+    `2. ${REPORT_SECTIONS[1].title}`,
+    REPORT_SECTIONS[1].subtitle,
     `Persona marca ${input.hook.estructuras.Persona.toFixed(1)}/5, Sombra base ${input.hook.estructuras.Sombra_Base.toFixed(1)}/5 y Sombra total ${input.premium.Sombra_Total.toFixed(1)}/5. ${interpretation.shadow.summary} Bajo estres, el autosabotaje puede aparecer como exceso de control, retirada emocional, juicio interno o dificultad para pedir apoyo antes de llegar al limite.`,
-    "Pregunta metacognitiva: Que emocion o necesidad estas intentando mantener fuera de escena para conservar una imagen de fortaleza?",
+    `${REPORT_SECTIONS[1].questionLabel}: Que emocion o necesidad estas intentando mantener fuera de escena para conservar una imagen de fortaleza?`,
     "",
-    "3. El Sistema Operativo: Matriz Keirsey",
+    `3. ${REPORT_SECTIONS[2].title}`,
     `${input.premium.Keirsey}. ${interpretation.keirsey?.summary ?? ""} Esta matriz describe como tiendes a ordenar informacion y decidir cuando aumenta la presion. ${interpretation.keirsey?.nextStep ?? ""}`,
-    "Pregunta metacognitiva: Bajo estres, que criterio usas primero: eficiencia, seguridad, armonia o coherencia interna?",
+    `${REPORT_SECTIONS[2].questionLabel}: Bajo estres, que criterio usas primero: eficiencia, seguridad, armonia o coherencia interna?`,
     "",
-    "4. El Horizonte Evolutivo: El Viaje del Heroe",
+    `4. ${REPORT_SECTIONS[3].title}`,
     `${input.premium.Campbell}. ${interpretation.campbell?.summary ?? ""} Esta etapa senala el tipo de umbral que estas atravesando: no solo que debes resolver, sino que version de ti necesita madurar para sostener el siguiente tramo.`,
-    "Pregunta metacognitiva: Cual es la prueba real de esta etapa: actuar, soltar, pedir ayuda, sostener un limite o confiar en tu propio criterio?",
+    `${REPORT_SECTIONS[3].questionLabel}: Cual es la prueba real de esta etapa: actuar, soltar, pedir ayuda, sostener un limite o confiar en tu propio criterio?`,
     "",
-    "5. Siguientes Pasos: Plan de Accion Tactico",
-    ...interpretation.actionPlan.map((item, index) => `${index + 1}. ${item}`),
-    `Pregunta guia: Que accion pequena puedes ejecutar en las proximas 24 horas para que este informe deje de ser informacion y se vuelva movimiento?`
+    `5. ${REPORT_SECTIONS[4].title}`,
+    ...actionPlan.map((item, index) => `${index + 1}. ${item}`),
+    `${REPORT_SECTIONS[4].questionLabel}: Que accion pequena puedes ejecutar en las proximas 24 horas para que este informe deje de ser informacion y se vuelva movimiento?`
   ].join("\n");
 }
 
