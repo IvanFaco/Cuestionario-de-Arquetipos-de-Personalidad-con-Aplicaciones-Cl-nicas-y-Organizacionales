@@ -199,13 +199,97 @@ function drawRoundedBar(bitmap: Bitmap, x: number, y: number, width: number, hei
   bitmap.fillCircle(x + width - radius, y + radius, radius, color);
 }
 
+const glyphs: Record<string, string[]> = {
+  A: ["01110", "10001", "10001", "11111", "10001", "10001", "10001"],
+  B: ["11110", "10001", "10001", "11110", "10001", "10001", "11110"],
+  C: ["01111", "10000", "10000", "10000", "10000", "10000", "01111"],
+  D: ["11110", "10001", "10001", "10001", "10001", "10001", "11110"],
+  E: ["11111", "10000", "10000", "11110", "10000", "10000", "11111"],
+  F: ["11111", "10000", "10000", "11110", "10000", "10000", "10000"],
+  G: ["01111", "10000", "10000", "10011", "10001", "10001", "01111"],
+  H: ["10001", "10001", "10001", "11111", "10001", "10001", "10001"],
+  I: ["11111", "00100", "00100", "00100", "00100", "00100", "11111"],
+  J: ["00111", "00010", "00010", "00010", "10010", "10010", "01100"],
+  K: ["10001", "10010", "10100", "11000", "10100", "10010", "10001"],
+  L: ["10000", "10000", "10000", "10000", "10000", "10000", "11111"],
+  M: ["10001", "11011", "10101", "10101", "10001", "10001", "10001"],
+  N: ["10001", "11001", "10101", "10011", "10001", "10001", "10001"],
+  O: ["01110", "10001", "10001", "10001", "10001", "10001", "01110"],
+  P: ["11110", "10001", "10001", "11110", "10000", "10000", "10000"],
+  Q: ["01110", "10001", "10001", "10001", "10101", "10010", "01101"],
+  R: ["11110", "10001", "10001", "11110", "10100", "10010", "10001"],
+  S: ["01111", "10000", "10000", "01110", "00001", "00001", "11110"],
+  T: ["11111", "00100", "00100", "00100", "00100", "00100", "00100"],
+  U: ["10001", "10001", "10001", "10001", "10001", "10001", "01110"],
+  V: ["10001", "10001", "10001", "10001", "10001", "01010", "00100"],
+  W: ["10001", "10001", "10001", "10101", "10101", "10101", "01010"],
+  X: ["10001", "10001", "01010", "00100", "01010", "10001", "10001"],
+  Y: ["10001", "10001", "01010", "00100", "00100", "00100", "00100"],
+  Z: ["11111", "00001", "00010", "00100", "01000", "10000", "11111"],
+  "0": ["01110", "10001", "10011", "10101", "11001", "10001", "01110"],
+  "1": ["00100", "01100", "00100", "00100", "00100", "00100", "01110"],
+  "2": ["01110", "10001", "00001", "00010", "00100", "01000", "11111"],
+  "3": ["11110", "00001", "00001", "01110", "00001", "00001", "11110"],
+  "4": ["10010", "10010", "10010", "11111", "00010", "00010", "00010"],
+  "5": ["11111", "10000", "10000", "11110", "00001", "00001", "11110"],
+  "6": ["01111", "10000", "10000", "11110", "10001", "10001", "01110"],
+  "7": ["11111", "00001", "00010", "00100", "01000", "01000", "01000"],
+  "8": ["01110", "10001", "10001", "01110", "10001", "10001", "01110"],
+  "9": ["01110", "10001", "10001", "01111", "00001", "00001", "11110"],
+  ".": ["00000", "00000", "00000", "00000", "00000", "01100", "01100"],
+  "/": ["00001", "00010", "00010", "00100", "01000", "01000", "10000"],
+  "(": ["00010", "00100", "01000", "01000", "01000", "00100", "00010"],
+  ")": ["01000", "00100", "00010", "00010", "00010", "00100", "01000"],
+  ":": ["00000", "01100", "01100", "00000", "01100", "01100", "00000"],
+  "-": ["00000", "00000", "00000", "11111", "00000", "00000", "00000"],
+  "%": ["11001", "11010", "00010", "00100", "01000", "01011", "10011"]
+};
+
+function normalizeChartText(text: string): string {
+  return text
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/Ñ/g, "N")
+    .replace(/ñ/g, "n")
+    .toUpperCase()
+    .replace(/[^A-Z0-9.\/():% -]/g, "");
+}
+
+function drawBitmapText(bitmap: Bitmap, text: string, x: number, y: number, color: Color, scale = 2) {
+  let cursorX = x;
+
+  for (const char of normalizeChartText(text)) {
+    if (char === " ") {
+      cursorX += 4 * scale;
+      continue;
+    }
+
+    const glyph = glyphs[char];
+
+    if (!glyph) {
+      cursorX += 4 * scale;
+      continue;
+    }
+
+    glyph.forEach((row, rowIndex) => {
+      [...row].forEach((pixel, columnIndex) => {
+        if (pixel === "1") {
+          bitmap.fillRect(cursorX + columnIndex * scale, y + rowIndex * scale, scale, scale, color);
+        }
+      });
+    });
+
+    cursorX += 6 * scale;
+  }
+}
+
 export function createArchetypeBarChartPng(scores: ArchetypeScore[]): Buffer {
   const width = 1000;
   const height = 520;
   const bitmap = new Bitmap(width, height, brand.background);
-  const chartX = 120;
+  const chartX = 205;
   const chartY = 58;
-  const chartWidth = 790;
+  const chartWidth = 690;
   const rowHeight = 28;
   const rowGap = 11;
   const maxScore = 7.5;
@@ -226,10 +310,10 @@ export function createArchetypeBarChartPng(scores: ArchetypeScore[]): Buffer {
     const normalizedWidth = Math.max(12, Math.min(chartWidth, (item.score / maxScore) * chartWidth));
     const color = colors[index % colors.length];
 
+    drawBitmapText(bitmap, `${index + 1}. ${item.name}`, 22, y + 7, { r: 36, g: 48, b: 76 }, 2);
     drawRoundedBar(bitmap, chartX, y, chartWidth, rowHeight, { ...brand.muted, a: 150 });
     drawRoundedBar(bitmap, chartX, y, normalizedWidth, rowHeight, color);
-    bitmap.fillCircle(chartX - 45, y + rowHeight / 2, 13, color);
-    bitmap.fillCircle(chartX - 45, y + rowHeight / 2, 5, { r: 255, g: 255, b: 255 });
+    drawBitmapText(bitmap, item.score.toFixed(1), chartX + normalizedWidth + 10, y + 7, { r: 36, g: 48, b: 76 }, 2);
   });
 
   return encodePng(bitmap);
@@ -281,6 +365,9 @@ export function createStructureRadarChartPng(values: {
     bitmap.fillCircle(point.x, point.y, 10, brand.teal);
     bitmap.fillCircle(point.x, point.y, 4, { r: 255, g: 255, b: 255 });
   });
+  drawBitmapText(bitmap, `PERSONA ${values.persona.toFixed(1)}/5`, 282, 38, { r: 36, g: 48, b: 76 }, 3);
+  drawBitmapText(bitmap, `SOMBRA BASE ${values.shadowBase.toFixed(1)}/5`, 462, 412, { r: 36, g: 48, b: 76 }, 2);
+  drawBitmapText(bitmap, `SOMBRA TOTAL ${values.shadowTotal.toFixed(1)}/5`, 42, 412, { r: 36, g: 48, b: 76 }, 2);
 
   return encodePng(bitmap);
 }
@@ -317,6 +404,10 @@ export function createKeirseyMatrixChartPng(activeLabel: string): Buffer {
       a: active ? 255 : 145
     });
     bitmap.fillCircle(x + columnWidth / 2, y - 28, active ? 9 : 6, { r: 255, g: 255, b: 255 });
+    drawBitmapText(bitmap, column.label.replace(" / ", " "), x - 10, baseY + 28, { r: 36, g: 48, b: 76 }, active ? 2 : 1);
+    if (active) {
+      drawBitmapText(bitmap, "ACTIVO", x + 62, y + columnHeight / 2 - 8, { r: 255, g: 255, b: 255 }, 2);
+    }
   });
 
   return encodePng(bitmap);
@@ -357,7 +448,9 @@ export function createJourneyStageChartPng(activeStage: string): Buffer {
     bitmap.fillCircle(x, y, active ? 31 : 24, color);
     bitmap.fillCircle(x, y, active ? 13 : 9, { r: 255, g: 255, b: 255 });
     bitmap.fillCircle(x, y - 68, active ? 9 : 5, color);
+    drawBitmapText(bitmap, `${index + 1}`, x - 8, y - 8, active ? { r: 36, g: 48, b: 76 } : { r: 255, g: 255, b: 255 }, 2);
   });
+  drawBitmapText(bitmap, `ETAPA ACTUAL: ${activeIndex + 1}/5`, 360, 228, { r: 36, g: 48, b: 76 }, 3);
 
   return encodePng(bitmap);
 }
@@ -384,6 +477,7 @@ export function createActionPlanChartPng(stepCount = 4): Buffer {
     const color = colors[index % colors.length];
 
     drawRoundedBar(bitmap, x, y, stepWidth, stepHeight, { ...color, a: 230 });
+    drawBitmapText(bitmap, `PASO ${index + 1}`, x + 34, y + 13, { r: 255, g: 255, b: 255 }, 2);
     bitmap.fillCircle(x + stepWidth / 2, y - 34, 20, color);
     bitmap.fillCircle(x + stepWidth / 2, y - 34, 7, { r: 255, g: 255, b: 255 });
 

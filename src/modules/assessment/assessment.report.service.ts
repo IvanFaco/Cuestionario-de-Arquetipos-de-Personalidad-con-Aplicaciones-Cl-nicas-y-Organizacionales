@@ -226,9 +226,26 @@ function lineHas(line: string, needle: string): boolean {
   return normalizeText(line).includes(normalizeText(needle));
 }
 
-function extractBlock(reportText: string, start: string, endMarkers: string[]): string {
+function getSectionMarkers(index: number): string[] {
+  const section = findSectionRule(index);
+
+  return [
+    section.startMarker,
+    `${section.number}. ${section.title}`,
+    section.title,
+    ...section.startAliases
+  ];
+}
+
+function getEndMarkersAfter(index: number): string[] {
+  return REPORT_SECTIONS
+    .slice(index + 1)
+    .flatMap((_section, sectionOffset) => getSectionMarkers(index + 1 + sectionOffset));
+}
+
+function extractBlock(reportText: string, startMarkers: string[], endMarkers: string[]): string {
   const lines = reportText.replace(/\r/g, "").split("\n");
-  const startIndex = lines.findIndex((line) => lineHas(line, start));
+  const startIndex = lines.findIndex((line) => startMarkers.some((marker) => lineHas(line, marker)));
 
   if (startIndex < 0) {
     return "";
@@ -249,16 +266,36 @@ function extractBlock(reportText: string, start: string, endMarkers: string[]): 
     .join("\n");
 }
 
+function isStructuralLabelLine(line: string, label: string): boolean {
+  const normalizedLine = normalizeText(line).replace(/^\d+\s*/, "").trim();
+  const normalizedLabel = normalizeText(label);
+
+  if (!normalizedLabel) {
+    return false;
+  }
+
+  return normalizedLine === normalizedLabel ||
+    (normalizedLine.startsWith(normalizedLabel) &&
+      normalizedLine.split(" ").length <= normalizedLabel.split(" ").length + 3);
+}
+
 function cleanSectionBody(text: string, labels: string[]): string {
   const lines = text
     .split("\n")
     .map((line) => line.trim())
     .filter(Boolean)
-    .filter((line) => !labels.some((label) => lineHas(line, label)))
+    .filter((line) => !labels.some((label) => isStructuralLabelLine(line, label)))
     .filter((line) => !lineHas(line, "pregunta metacognitiva"))
     .filter((line) => !lineHas(line, "pregunta guia"));
 
   return lines.join(" ").replace(/\s+/g, " ").trim();
+}
+
+function cleanQuestionText(text: string): string {
+  return text
+    .replace(/\*\*/g, "")
+    .replace(/^\s*[-:]\s*/, "")
+    .trim();
 }
 
 function extractQuestion(text: string, fallback: string): string {
@@ -269,7 +306,7 @@ function extractQuestion(text: string, fallback: string): string {
     return fallback;
   }
 
-  return questionLine.replace(/^.*?:\s*/, "").trim() || fallback;
+  return cleanQuestionText(questionLine.replace(/^.*?:\s*/, "")) || fallback;
 }
 
 function firstUseful(agentValue: string, fallback: string, maxLength = 860): string {
@@ -461,13 +498,12 @@ function buildLocalReport(input: ReportInput): StructuredReport {
 
 function mergeAgentReport(input: ReportInput, reportText: string): StructuredReport {
   const local = buildLocalReport(input);
-  const introBlock = extractBlock(reportText, REPORT_INTRO_TITLE, [REPORT_SECTIONS[0].startMarker]);
-  const sectionStarts = REPORT_SECTIONS.map((section) => section.startMarker);
+  const introBlock = extractBlock(reportText, [REPORT_INTRO_TITLE, "Introduccion", "Resumen"], getSectionMarkers(0));
 
   return {
     intro: pickIntro(cleanSectionBody(introBlock, [REPORT_INTRO_TITLE]), local.intro),
     sections: local.sections.map((section, index) => {
-      const block = extractBlock(reportText, sectionStarts[index], sectionStarts.slice(index + 1));
+      const block = extractBlock(reportText, getSectionMarkers(index), getEndMarkersAfter(index));
       const body = cleanSectionBody(block, [section.title, section.subtitle]);
       const question = extractQuestion(block, section.question);
 

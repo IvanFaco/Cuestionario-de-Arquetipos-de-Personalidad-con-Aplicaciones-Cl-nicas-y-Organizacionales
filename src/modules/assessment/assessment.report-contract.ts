@@ -33,6 +33,7 @@ export type ReportSectionRule = {
   title: string;
   subtitle: string;
   startMarker: string;
+  startAliases: string[];
   questionLabel: "Pregunta metacognitiva" | "Pregunta guia";
   minWords: number;
   maxChars: number;
@@ -45,6 +46,11 @@ export const REPORT_SECTIONS: ReportSectionRule[] = [
     title: "Tu Mapa Visual: La Fortaleza de la Triada",
     subtitle: "Apertura y Espejo",
     startMarker: "1. Tu Mapa Visual",
+    startAliases: [
+      "1. Apertura y Espejo",
+      "Apertura y Espejo (Radar de Ejes)",
+      "Radar de Ejes"
+    ],
     questionLabel: "Pregunta metacognitiva",
     minWords: 55,
     maxChars: 860
@@ -55,6 +61,10 @@ export const REPORT_SECTIONS: ReportSectionRule[] = [
     title: "Tu Sombra Oculta",
     subtitle: "Profundidad y Autosabotaje",
     startMarker: "2. Tu Sombra Oculta",
+    startAliases: [
+      "2. Profundidad y Autosabotaje",
+      "Profundidad y Autosabotaje (Tu Sombra Oculta)"
+    ],
     questionLabel: "Pregunta metacognitiva",
     minWords: 55,
     maxChars: 860
@@ -65,6 +75,11 @@ export const REPORT_SECTIONS: ReportSectionRule[] = [
     title: "El Sistema Operativo: Matriz Keirsey",
     subtitle: "",
     startMarker: "3. El Sistema Operativo",
+    startAliases: [
+      "3. El Sistema Operativo bajo Presion",
+      "El Sistema Operativo bajo Presion (Matriz Keirsey)",
+      "Matriz Keirsey"
+    ],
     questionLabel: "Pregunta metacognitiva",
     minWords: 50,
     maxChars: 760
@@ -75,6 +90,10 @@ export const REPORT_SECTIONS: ReportSectionRule[] = [
     title: "El Horizonte Evolutivo: El Viaje del Heroe",
     subtitle: "",
     startMarker: "4. El Horizonte Evolutivo",
+    startAliases: [
+      "4. El Horizonte Evolutivo",
+      "El Horizonte Evolutivo (El Viaje del Heroe)"
+    ],
     questionLabel: "Pregunta metacognitiva",
     minWords: 50,
     maxChars: 760
@@ -85,6 +104,11 @@ export const REPORT_SECTIONS: ReportSectionRule[] = [
     title: "Siguientes Pasos: Plan de Accion Tactico",
     subtitle: "Accion concreta",
     startMarker: "5. Siguientes Pasos",
+    startAliases: [
+      "5. Cierre y Plan de Accion",
+      "Cierre y Plan de Accion (Siguientes Pasos)",
+      "Plan de Accion (Siguientes Pasos)"
+    ],
     questionLabel: "Pregunta guia",
     minWords: 24,
     maxChars: 640
