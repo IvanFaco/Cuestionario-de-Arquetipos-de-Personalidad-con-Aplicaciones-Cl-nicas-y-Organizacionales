@@ -105,6 +105,23 @@ test("requestAiReport waits for agentMessage before returning", async () => {
   assert.ok(Date.now() - startedAt >= 50);
 });
 
+test("requestAiReport reads agentMessage from n8n array and fenced json", async () => {
+  const report = await requestAiReport(buildReportInput(), {
+    webhookUrl: "https://example.test/report",
+    fetchImpl: async () => new Response(JSON.stringify([
+      {
+        agentMessage: "```json\n{\n  \"agentMessage\": \"Informe anidado generado por agente.\"\n}\n```"
+      }
+    ]), {
+      status: 200,
+      headers: { "Content-Type": "application/json" }
+    })
+  });
+
+  assert.equal(report.source, "webhook");
+  assert.equal(report.text, "Informe anidado generado por agente.");
+});
+
 test("requestAiReport falls back when webhook response is invalid", async () => {
   const report = await requestAiReport(buildReportInput(), {
     webhookUrl: "https://example.test/report",

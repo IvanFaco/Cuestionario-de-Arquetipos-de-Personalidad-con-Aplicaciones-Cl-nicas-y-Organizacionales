@@ -123,6 +123,89 @@ function sanitizeAgentMessage(value: string): string {
   return value.replace(/\u0000/g, "").trim();
 }
 
+function unwrapMarkdownFence(value: string): string {
+  const match = value.trim().match(/^```(?:json)?\s*([\s\S]*?)\s*```$/i);
+  return match ? match[1].trim() : value.trim();
+}
+
+function parseJsonSafely(value: string): unknown {
+  try {
+    return JSON.parse(value);
+  } catch {
+    return null;
+  }
+}
+
+function extractAgentMessageFromPayload(payload: unknown, depth = 0): string {
+  if (depth > 5) {
+    return "";
+  }
+
+  if (typeof payload === "string") {
+    const sanitized = sanitizeAgentMessage(payload);
+
+    if (!sanitized) {
+      return "";
+    }
+
+    const unwrapped = unwrapMarkdownFence(sanitized);
+    const parsed = parseJsonSafely(unwrapped);
+
+    if (parsed !== null) {
+      const nestedMessage = extractAgentMessageFromPayload(parsed, depth + 1);
+
+      if (nestedMessage) {
+        return nestedMessage;
+      }
+
+      if (/^\s*[\[{]/.test(unwrapped)) {
+        return "";
+      }
+    }
+
+    return unwrapped;
+  }
+
+  if (Array.isArray(payload)) {
+    for (const item of payload) {
+      const message = extractAgentMessageFromPayload(item, depth + 1);
+
+      if (message) {
+        return message;
+      }
+    }
+
+    return "";
+  }
+
+  if (payload && typeof payload === "object") {
+    const record = payload as Record<string, unknown>;
+    const directCandidate = record.agentMessage ?? record.output ?? record.text;
+
+    if (directCandidate !== undefined) {
+      const message = extractAgentMessageFromPayload(directCandidate, depth + 1);
+
+      if (message) {
+        return message;
+      }
+    }
+
+    for (const key of ["body", "data", "json", "result"]) {
+      const nestedCandidate = record[key];
+
+      if (nestedCandidate !== undefined) {
+        const message = extractAgentMessageFromPayload(nestedCandidate, depth + 1);
+
+        if (message) {
+          return message;
+        }
+      }
+    }
+  }
+
+  return "";
+}
+
 export async function requestAiReport(input: ReportInput, options: {
   fetchImpl?: FetchLike;
   timeoutMs?: number;
@@ -165,8 +248,9 @@ export async function requestAiReport(input: ReportInput, options: {
       throw new Error(`Webhook respondio con estado ${response.status}.`);
     }
 
-    const payload = await response.json() as { agentMessage?: unknown };
-    const agentMessage = typeof payload.agentMessage === "string" ? sanitizeAgentMessage(payload.agentMessage) : "";
+    const responseText = await response.text();
+    const payload = parseJsonSafely(responseText) ?? responseText;
+    const agentMessage = extractAgentMessageFromPayload(payload);
 
     if (!agentMessage) {
       throw new Error("Webhook no devolvio agentMessage valido.");
