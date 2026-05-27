@@ -81,6 +81,7 @@ type ReportSection = {
   questionLabel: string;
   question: string;
   actionSteps?: string[];
+  archetypeScores?: { displayName: string; score: number }[];
   chart: Buffer;
   chartWidth: number;
   chartHeight: number;
@@ -406,6 +407,10 @@ function buildLocalReport(input: ReportInput): StructuredReport {
           `${interpretation.dominant.motivation} Tu fortaleza aparece cuando ${interpretation.dominant.strength.toLowerCase()}`,
         questionLabel: mapRule.questionLabel,
         question: "Que parte de esta triada estas usando como recurso y cual podria estar ocupando demasiado espacio en tus decisiones?",
+        archetypeScores: ranking.map((item) => ({
+          displayName: item.displayName,
+          score: item.score
+        })),
         chart: createArchetypeBarChartPng(input.hook.ranking),
         chartWidth: REPORT_RENDER_RULES.chartSizes.archetypes.width,
         chartHeight: REPORT_RENDER_RULES.chartSizes.archetypes.height,
@@ -609,6 +614,200 @@ function drawMetricCards(context: PdfContext, metrics: { label: string; value: s
   context.currentY = y - 18;
 }
 
+function drawRoundedRect(
+  context: PdfContext,
+  options: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    radius?: number;
+    color: unknown;
+  }
+) {
+  const radius = Math.min(options.radius ?? options.height / 2, options.height / 2, options.width / 2);
+  const centerY = options.y + options.height / 2;
+
+  context.page.drawRectangle({
+    x: options.x + radius,
+    y: options.y,
+    width: Math.max(0, options.width - radius * 2),
+    height: options.height,
+    color: options.color
+  });
+  context.page.drawRectangle({
+    x: options.x,
+    y: options.y + radius,
+    width: options.width,
+    height: Math.max(0, options.height - radius * 2),
+    color: options.color
+  });
+  context.page.drawEllipse({
+    x: options.x + radius,
+    y: centerY,
+    xScale: radius,
+    yScale: radius,
+    color: options.color
+  });
+  context.page.drawEllipse({
+    x: options.x + options.width - radius,
+    y: centerY,
+    xScale: radius,
+    yScale: radius,
+    color: options.color
+  });
+}
+
+function drawRightAlignedText(
+  context: PdfContext,
+  text: string,
+  options: {
+    x: number;
+    y: number;
+    size: number;
+    font?: any;
+    color?: unknown;
+  }
+) {
+  const font = options.font ?? context.regularFont;
+  const textWidth = font.widthOfTextAtSize(text, options.size);
+
+  context.page.drawText(text, {
+    x: options.x - textWidth,
+    y: options.y,
+    size: options.size,
+    font,
+    color: options.color ?? context.bodyColor
+  });
+}
+
+function drawArchetypeVectorChart(
+  context: PdfContext,
+  section: ReportSection,
+  options: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  }
+) {
+  const scores = section.archetypeScores?.slice(0, 12) ?? [];
+
+  if (!scores.length) {
+    return;
+  }
+
+  const maxScore = Math.max(7.5, ...scores.map((item) => item.score));
+  const chartPaddingX = 14;
+  const headerHeight = 30;
+  const footerHeight = 20;
+  const labelWidth = 122;
+  const valueWidth = 32;
+  const plotX = options.x + chartPaddingX + labelWidth;
+  const plotWidth = options.width - chartPaddingX * 2 - labelWidth - valueWidth - 10;
+  const plotTop = options.y + options.height - headerHeight;
+  const plotBottom = options.y + footerHeight;
+  const rowSlot = (plotTop - plotBottom) / scores.length;
+  const barHeight = Math.min(9, rowSlot * 0.44);
+  const valueX = plotX + plotWidth + 24;
+  const barColors = [
+    context.brand.blue,
+    context.brand.violet,
+    context.brand.teal,
+    context.brand.coral
+  ];
+
+  context.page.drawRectangle({
+    x: options.x,
+    y: options.y,
+    width: options.width,
+    height: options.height,
+    color: context.brand.surface
+  });
+  context.page.drawText("Ranking completo de arquetipos", {
+    x: options.x + chartPaddingX,
+    y: options.y + options.height - 17,
+    size: 8.4,
+    font: context.boldFont,
+    color: context.titleColor
+  });
+  drawRightAlignedText(context, "Puntaje", {
+    x: options.x + options.width - chartPaddingX,
+    y: options.y + options.height - 17,
+    size: 7.6,
+    font: context.boldFont,
+    color: context.mutedColor
+  });
+
+  [0, 2.5, 5, 7.5].forEach((tick) => {
+    const tickX = plotX + (plotWidth * tick) / maxScore;
+
+    context.page.drawLine({
+      start: { x: tickX, y: plotBottom + 1 },
+      end: { x: tickX, y: plotTop - 2 },
+      thickness: tick === 0 ? 0.9 : 0.55,
+      color: context.brand.border
+    });
+    drawRightAlignedText(context, tick.toFixed(tick % 1 === 0 ? 0 : 1), {
+      x: tickX + 8,
+      y: options.y + 7,
+      size: 6.8,
+      color: context.mutedColor
+    });
+  });
+
+  scores.forEach((item, index) => {
+    const centerY = plotTop - rowSlot * index - rowSlot / 2;
+    const barY = centerY - barHeight / 2;
+    const normalizedWidth = Math.max(7, Math.min(plotWidth, (item.score / maxScore) * plotWidth));
+    const color =
+      index < 4
+        ? barColors[index]
+        : [context.brand.blue, context.brand.violet, context.brand.teal, context.brand.coral][index % 4];
+    const rank = `${String(index + 1).padStart(2, "0")}`;
+    const label = `${rank}  ${item.displayName}`;
+    const font = index < 3 ? context.boldFont : context.regularFont;
+
+    if (index > 0) {
+      context.page.drawLine({
+        start: { x: options.x + chartPaddingX, y: centerY + rowSlot / 2 },
+        end: { x: options.x + options.width - chartPaddingX, y: centerY + rowSlot / 2 },
+        thickness: 0.35,
+        color: context.brand.border
+      });
+    }
+
+    context.page.drawText(label, {
+      x: options.x + chartPaddingX,
+      y: centerY - 2.7,
+      size: 7.5,
+      font,
+      color: context.titleColor
+    });
+    drawRoundedRect(context, {
+      x: plotX,
+      y: barY,
+      width: plotWidth,
+      height: barHeight,
+      color: context.brand.surfaceStrong
+    });
+    drawRoundedRect(context, {
+      x: plotX,
+      y: barY,
+      width: normalizedWidth,
+      height: barHeight,
+      color
+    });
+    drawRightAlignedText(context, item.score.toFixed(1), {
+      x: valueX,
+      y: centerY - 2.7,
+      size: 7.4,
+      font: context.boldFont,
+      color: context.titleColor
+    });
+  });
+}
+
 function drawQuestionBox(context: PdfContext, section: ReportSection) {
   const boxHeight = REPORT_RENDER_RULES.questionBox.height;
   const y = context.marginBottom + 26;
@@ -670,7 +869,7 @@ async function drawSectionPage(context: PdfContext, section: ReportSection) {
   drawSectionMarker(context, section);
 
   const chartX = context.marginX + (pageWidth - context.marginX * 2 - section.chartWidth) / 2;
-  const chartImage = await context.doc.embedPng(section.chart);
+  const chartY = context.currentY - section.chartHeight - 16;
   context.page.drawRectangle({
     x: context.marginX,
     y: context.currentY - section.chartHeight - 12,
@@ -687,12 +886,23 @@ async function drawSectionPage(context: PdfContext, section: ReportSection) {
     font: context.boldFont,
     color: context.mutedColor
   });
-  context.page.drawImage(chartImage, {
-    x: chartX,
-    y: context.currentY - section.chartHeight - 16,
-    width: section.chartWidth,
-    height: section.chartHeight
-  });
+  if (section.id === "mapa") {
+    drawArchetypeVectorChart(context, section, {
+      x: chartX,
+      y: chartY,
+      width: section.chartWidth,
+      height: section.chartHeight
+    });
+  } else {
+    const chartImage = await context.doc.embedPng(section.chart);
+
+    context.page.drawImage(chartImage, {
+      x: chartX,
+      y: chartY,
+      width: section.chartWidth,
+      height: section.chartHeight
+    });
+  }
   context.currentY -= section.chartHeight + 42;
   drawMetricCards(context, section.metrics);
 

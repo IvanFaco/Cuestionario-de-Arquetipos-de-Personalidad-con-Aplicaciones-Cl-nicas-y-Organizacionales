@@ -230,10 +230,13 @@ test("buildExecutiveReportPdf returns a valid pdf buffer", async () => {
     reportSource: "webhook"
   });
   const parsed = await PDFDocument.load(pdf);
+  const text = extractPdfText(pdf);
 
   assert.ok(pdf.length > 1000);
   assert.equal(pdf.subarray(0, 4).toString(), "%PDF");
   assert.ok(parsed.getPageCount() >= 6);
+  assert.match(text, /Ranking completo de arquetipos/);
+  assert.match(text, /Puntaje/);
 });
 
 test("buildExecutiveReportPdf accepts agent alternative section headings", async () => {
