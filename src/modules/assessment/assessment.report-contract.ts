@@ -5,6 +5,26 @@ export const REPORT_INTRO_TITLE = "Resumen Introduccion";
 export const REPORT_SOURCE_LABEL = "Fuente narrativa: Coach de autoconocimiento digital";
 export const REPORT_ACTION_STEP_COUNT = 3;
 
+export const REPORT_BRAND = {
+  logoPath: "public/assets/logo-256.png",
+  name: "MiRealYo.com",
+  colors: {
+    lavender: "#D2CBE0",
+    surface: "#F8F6FC",
+    surfaceStrong: "#F1EDF8",
+    border: "#E0DCEB",
+    ink: "#24304C",
+    secondary: "#656C84",
+    blue: "#2E7AFF",
+    violet: "#7658C4",
+    teal: "#4DC4C9",
+    coral: "#F38E54",
+    success: "#48B478",
+    warning: "#F5BE46",
+    error: "#E15C5C"
+  }
+} as const;
+
 export type ReportSectionId = "mapa" | "sombra" | "keirsey" | "heroe" | "pasos";
 
 export type ReportSectionRule = {
@@ -115,6 +135,10 @@ export const REPORT_RENDER_RULES = {
   },
   questionBox: {
     height: 70
+  },
+  brand: {
+    logoSize: 34,
+    headerLogoSize: 22
   }
 } as const;
 

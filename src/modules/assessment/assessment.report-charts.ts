@@ -14,6 +14,18 @@ type Point = {
   y: number;
 };
 
+const brand = {
+  background: { r: 248, g: 246, b: 252 },
+  surface: { r: 255, g: 255, b: 255 },
+  border: { r: 224, g: 220, b: 235 },
+  muted: { r: 210, g: 203, b: 224 },
+  blue: { r: 46, g: 122, b: 255 },
+  violet: { r: 118, g: 88, b: 196 },
+  teal: { r: 77, g: 196, b: 201 },
+  coral: { r: 243, g: 142, b: 84 },
+  success: { r: 72, g: 180, b: 120 }
+} satisfies Record<string, Color>;
+
 const pngSignature = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
 const crcTable = new Uint32Array(256).map((_, index) => {
   let crc = index;
@@ -190,7 +202,7 @@ function drawRoundedBar(bitmap: Bitmap, x: number, y: number, width: number, hei
 export function createArchetypeBarChartPng(scores: ArchetypeScore[]): Buffer {
   const width = 1000;
   const height = 520;
-  const bitmap = new Bitmap(width, height, { r: 248, g: 246, b: 252 });
+  const bitmap = new Bitmap(width, height, brand.background);
   const chartX = 120;
   const chartY = 58;
   const chartWidth = 790;
@@ -198,15 +210,15 @@ export function createArchetypeBarChartPng(scores: ArchetypeScore[]): Buffer {
   const rowGap = 11;
   const maxScore = 7.5;
   const colors: Color[] = [
-    { r: 46, g: 122, b: 255 },
-    { r: 118, g: 88, b: 196 },
-    { r: 77, g: 196, b: 201 },
-    { r: 243, g: 142, b: 84 }
+    brand.blue,
+    brand.violet,
+    brand.teal,
+    brand.coral
   ];
 
   for (let grid = 1; grid <= 5; grid += 1) {
     const x = chartX + (chartWidth * grid) / 5;
-    bitmap.drawLine({ x, y: 34 }, { x, y: height - 44 }, { r: 224, g: 220, b: 235 }, 2);
+    bitmap.drawLine({ x, y: 34 }, { x, y: height - 44 }, brand.border, 2);
   }
 
   scores.slice(0, 12).forEach((item, index) => {
@@ -214,7 +226,7 @@ export function createArchetypeBarChartPng(scores: ArchetypeScore[]): Buffer {
     const normalizedWidth = Math.max(12, Math.min(chartWidth, (item.score / maxScore) * chartWidth));
     const color = colors[index % colors.length];
 
-    drawRoundedBar(bitmap, chartX, y, chartWidth, rowHeight, { r: 235, g: 239, b: 247 });
+    drawRoundedBar(bitmap, chartX, y, chartWidth, rowHeight, { ...brand.muted, a: 150 });
     drawRoundedBar(bitmap, chartX, y, normalizedWidth, rowHeight, color);
     bitmap.fillCircle(chartX - 45, y + rowHeight / 2, 13, color);
     bitmap.fillCircle(chartX - 45, y + rowHeight / 2, 5, { r: 255, g: 255, b: 255 });
@@ -230,7 +242,7 @@ export function createStructureRadarChartPng(values: {
 }): Buffer {
   const width = 760;
   const height = 560;
-  const bitmap = new Bitmap(width, height, { r: 248, g: 246, b: 252 });
+  const bitmap = new Bitmap(width, height, brand.background);
   const center = { x: width / 2, y: 275 };
   const radius = 205;
   const axes = [
@@ -252,21 +264,21 @@ export function createStructureRadarChartPng(values: {
     const ringPoints = axes.map((axis) => pointAt(axis.angle, scale));
 
     ringPoints.forEach((point, index) => {
-      bitmap.drawLine(point, ringPoints[(index + 1) % ringPoints.length], { r: 224, g: 220, b: 235 }, 2);
+      bitmap.drawLine(point, ringPoints[(index + 1) % ringPoints.length], brand.border, 2);
     });
   }
 
   axes.forEach((axis) => {
-    bitmap.drawLine(center, pointAt(axis.angle, 1), { r: 204, g: 209, b: 222 }, 2);
+    bitmap.drawLine(center, pointAt(axis.angle, 1), brand.muted, 2);
   });
 
   const valuePoints = axes.map((axis) => pointAt(axis.angle, Math.max(0, Math.min(5, axis.value)) / 5));
-  bitmap.fillPolygon(valuePoints, { r: 46, g: 122, b: 255, a: 64 });
+  bitmap.fillPolygon(valuePoints, { ...brand.violet, a: 70 });
 
   valuePoints.forEach((point, index) => {
     const next = valuePoints[(index + 1) % valuePoints.length];
-    bitmap.drawLine(point, next, { r: 46, g: 122, b: 255 }, 6);
-    bitmap.fillCircle(point.x, point.y, 10, { r: 118, g: 88, b: 196 });
+    bitmap.drawLine(point, next, brand.violet, 6);
+    bitmap.fillCircle(point.x, point.y, 10, brand.teal);
     bitmap.fillCircle(point.x, point.y, 4, { r: 255, g: 255, b: 255 });
   });
 
@@ -276,18 +288,18 @@ export function createStructureRadarChartPng(values: {
 export function createKeirseyMatrixChartPng(activeLabel: string): Buffer {
   const width = 900;
   const height = 360;
-  const bitmap = new Bitmap(width, height, { r: 248, g: 246, b: 252 });
+  const bitmap = new Bitmap(width, height, brand.background);
   const columns = [
-    { label: "Racional / Estratega (NT)", color: { r: 46, g: 122, b: 255 } },
-    { label: "Guardian / Logistico (SJ)", color: { r: 77, g: 196, b: 201 } },
-    { label: "Idealista / Diplomatico (NF)", color: { r: 118, g: 88, b: 196 } }
+    { label: "Racional / Estratega (NT)", color: brand.blue },
+    { label: "Guardian / Logistico (SJ)", color: brand.teal },
+    { label: "Idealista / Diplomatico (NF)", color: brand.violet }
   ];
   const startX = 95;
   const columnWidth = 200;
   const gap = 55;
   const baseY = 265;
 
-  bitmap.drawLine({ x: 60, y: baseY }, { x: width - 60, y: baseY }, { r: 224, g: 220, b: 235 }, 3);
+  bitmap.drawLine({ x: 60, y: baseY }, { x: width - 60, y: baseY }, brand.border, 3);
 
   columns.forEach((column, index) => {
     const active = activeLabel === column.label;
@@ -313,7 +325,7 @@ export function createKeirseyMatrixChartPng(activeLabel: string): Buffer {
 export function createJourneyStageChartPng(activeStage: string): Buffer {
   const width = 1000;
   const height = 300;
-  const bitmap = new Bitmap(width, height, { r: 248, g: 246, b: 252 });
+  const bitmap = new Bitmap(width, height, brand.background);
   const stages = [
     "La Llamada a la Aventura",
     "El Cruce del Umbral",
@@ -326,7 +338,7 @@ export function createJourneyStageChartPng(activeStage: string): Buffer {
   const startX = 115;
   const gap = 190;
 
-  bitmap.drawLine({ x: startX, y }, { x: startX + gap * (stages.length - 1), y }, { r: 224, g: 220, b: 235 }, 8);
+  bitmap.drawLine({ x: startX, y }, { x: startX + gap * (stages.length - 1), y }, brand.border, 8);
 
   stages.forEach((_stage, index) => {
     const x = startX + index * gap;
@@ -335,11 +347,11 @@ export function createJourneyStageChartPng(activeStage: string): Buffer {
     const color = active
       ? { r: 243, g: 142, b: 84 }
       : complete
-        ? { r: 77, g: 196, b: 201 }
-        : { r: 198, g: 205, b: 218 };
+        ? brand.teal
+        : brand.muted;
 
     if (index > 0 && index <= activeIndex) {
-      bitmap.drawLine({ x: startX + (index - 1) * gap, y }, { x, y }, { r: 77, g: 196, b: 201 }, 8);
+      bitmap.drawLine({ x: startX + (index - 1) * gap, y }, { x, y }, brand.teal, 8);
     }
 
     bitmap.fillCircle(x, y, active ? 31 : 24, color);
@@ -353,17 +365,17 @@ export function createJourneyStageChartPng(activeStage: string): Buffer {
 export function createActionPlanChartPng(stepCount = 4): Buffer {
   const width = 900;
   const height = 360;
-  const bitmap = new Bitmap(width, height, { r: 248, g: 246, b: 252 });
+  const bitmap = new Bitmap(width, height, brand.background);
   const startX = 115;
   const baseY = 285;
   const stepWidth = 145;
   const stepHeight = 42;
   const gap = 35;
   const colors: Color[] = [
-    { r: 46, g: 122, b: 255 },
-    { r: 77, g: 196, b: 201 },
-    { r: 118, g: 88, b: 196 },
-    { r: 243, g: 142, b: 84 }
+    brand.blue,
+    brand.teal,
+    brand.violet,
+    brand.coral
   ];
 
   for (let index = 0; index < stepCount; index += 1) {
@@ -379,7 +391,7 @@ export function createActionPlanChartPng(stepCount = 4): Buffer {
       bitmap.drawLine(
         { x: x + stepWidth, y: y + stepHeight / 2 },
         { x: x + stepWidth + gap, y: y - 45 + stepHeight / 2 },
-        { r: 198, g: 205, b: 218 },
+        brand.muted,
         5
       );
     }

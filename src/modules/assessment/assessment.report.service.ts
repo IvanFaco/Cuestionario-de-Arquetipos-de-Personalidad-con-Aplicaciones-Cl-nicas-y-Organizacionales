@@ -1,3 +1,5 @@
+import fs from "node:fs";
+import path from "node:path";
 import { createRequire } from "node:module";
 
 import { buildFallbackReportText } from "./assessment.ai-report.service.js";
@@ -8,6 +10,7 @@ import {
 } from "./assessment.interpretation.js";
 import {
   REPORT_ACTION_STEP_COUNT,
+  REPORT_BRAND,
   REPORT_INTRO_RULE,
   REPORT_INTRO_TITLE,
   REPORT_RENDER_RULES,
@@ -45,6 +48,7 @@ type ReportInput = {
 type PdfContext = {
   doc: any;
   page: any;
+  logoImage: any;
   regularFont: any;
   boldFont: any;
   marginX: number;
@@ -55,6 +59,17 @@ type PdfContext = {
   titleColor: unknown;
   mutedColor: unknown;
   accentColor: unknown;
+  brand: {
+    lavender: unknown;
+    surface: unknown;
+    surfaceStrong: unknown;
+    border: unknown;
+    blue: unknown;
+    violet: unknown;
+    teal: unknown;
+    coral: unknown;
+    white: unknown;
+  };
 };
 
 type ReportSection = {
@@ -80,6 +95,29 @@ type StructuredReport = {
 const pageWidth = REPORT_RENDER_RULES.page.width;
 const pageHeight = REPORT_RENDER_RULES.page.height;
 
+function colorFromHex(hex: string) {
+  const normalized = hex.replace("#", "");
+  const red = Number.parseInt(normalized.slice(0, 2), 16) / 255;
+  const green = Number.parseInt(normalized.slice(2, 4), 16) / 255;
+  const blue = Number.parseInt(normalized.slice(4, 6), 16) / 255;
+
+  return rgb(red, green, blue);
+}
+
+function buildBrandColors() {
+  return {
+    lavender: colorFromHex(REPORT_BRAND.colors.lavender),
+    surface: colorFromHex(REPORT_BRAND.colors.surface),
+    surfaceStrong: colorFromHex(REPORT_BRAND.colors.surfaceStrong),
+    border: colorFromHex(REPORT_BRAND.colors.border),
+    blue: colorFromHex(REPORT_BRAND.colors.blue),
+    violet: colorFromHex(REPORT_BRAND.colors.violet),
+    teal: colorFromHex(REPORT_BRAND.colors.teal),
+    coral: colorFromHex(REPORT_BRAND.colors.coral),
+    white: rgb(1, 1, 1)
+  };
+}
+
 export function getShadowLabel(shadowTotal: number): string {
   return shadowTotal >= 3.5
     ? "Alto nivel de represion. Conviene integrar vulnerabilidad antes del burnout."
@@ -89,6 +127,33 @@ export function getShadowLabel(shadowTotal: number): string {
 function addPage(context: PdfContext) {
   context.page = context.doc.addPage([pageWidth, pageHeight]);
   context.currentY = context.marginTop;
+}
+
+function drawBrandMark(context: PdfContext, options: {
+  x: number;
+  y: number;
+  size?: number;
+  showName?: boolean;
+  nameColor?: unknown;
+}) {
+  const size = options.size ?? REPORT_RENDER_RULES.brand.logoSize;
+
+  context.page.drawImage(context.logoImage, {
+    x: options.x,
+    y: options.y,
+    width: size,
+    height: size
+  });
+
+  if (options.showName) {
+    context.page.drawText(REPORT_BRAND.name, {
+      x: options.x + size + 8,
+      y: options.y + size / 2 - 4,
+      size: 10,
+      font: context.boldFont,
+      color: options.nameColor ?? context.mutedColor
+    });
+  }
 }
 
 function splitText(text: string, font: any, size: number, maxWidth: number): string[] {
@@ -431,28 +496,29 @@ function mergeAgentReport(input: ReportInput, reportText: string): StructuredRep
 }
 
 function drawSectionMarker(context: PdfContext, section: ReportSection) {
-  context.page.drawCircle({
-    x: context.marginX + 18,
-    y: context.currentY - 14,
-    size: 18,
-    color: context.accentColor
+  context.page.drawRectangle({
+    x: context.marginX,
+    y: context.currentY - 34,
+    width: 38,
+    height: 38,
+    color: context.brand.violet
   });
   context.page.drawText(section.number, {
-    x: context.marginX + 12,
-    y: context.currentY - 20,
+    x: context.marginX + 14,
+    y: context.currentY - 22,
     size: 14,
     font: context.boldFont,
-    color: rgb(1, 1, 1)
+    color: context.brand.white
   });
   context.page.drawText(section.title, {
-    x: context.marginX + 48,
+    x: context.marginX + 52,
     y: context.currentY - 4,
     size: 16,
     font: context.boldFont,
     color: context.titleColor
   });
   context.page.drawText(section.subtitle, {
-    x: context.marginX + 48,
+    x: context.marginX + 52,
     y: context.currentY - 22,
     size: 10,
     font: context.boldFont,
@@ -475,9 +541,16 @@ function drawMetricCards(context: PdfContext, metrics: { label: string; value: s
       y,
       width: cardWidth,
       height: cardHeight,
-      color: rgb(0.97, 0.98, 1),
-      borderColor: rgb(0.87, 0.88, 0.93),
+      color: context.brand.white,
+      borderColor: context.brand.border,
       borderWidth: 1
+    });
+    context.page.drawRectangle({
+      x,
+      y: y + cardHeight - 4,
+      width: cardWidth,
+      height: 4,
+      color: [context.brand.blue, context.brand.violet, context.brand.teal][index] ?? context.brand.coral
     });
     context.page.drawText(metric.label, {
       x: x + 9,
@@ -509,9 +582,16 @@ function drawQuestionBox(context: PdfContext, section: ReportSection) {
     y,
     width: pageWidth - context.marginX * 2,
     height: boxHeight,
-    color: rgb(0.93, 0.96, 1),
-    borderColor: rgb(0.76, 0.84, 0.96),
+    color: context.brand.surfaceStrong,
+    borderColor: context.brand.border,
     borderWidth: 1
+  });
+  context.page.drawRectangle({
+    x: context.marginX,
+    y,
+    width: 5,
+    height: boxHeight,
+    color: context.brand.teal
   });
   context.page.drawText(section.questionLabel, {
     x: context.marginX + 14,
@@ -534,22 +614,50 @@ async function drawSectionPage(context: PdfContext, section: ReportSection) {
   addPage(context);
   context.page.drawRectangle({
     x: 0,
-    y: pageHeight - 112,
+    y: pageHeight - 118,
     width: pageWidth,
-    height: 112,
-    color: rgb(0.94, 0.98, 1)
+    height: 118,
+    color: context.brand.surface
+  });
+  context.page.drawRectangle({
+    x: 0,
+    y: pageHeight - 118,
+    width: pageWidth,
+    height: 6,
+    color: context.brand.lavender
+  });
+  drawBrandMark(context, {
+    x: pageWidth - context.marginX - REPORT_RENDER_RULES.brand.headerLogoSize,
+    y: pageHeight - 50,
+    size: REPORT_RENDER_RULES.brand.headerLogoSize
   });
   drawSectionMarker(context, section);
 
   const chartX = context.marginX + (pageWidth - context.marginX * 2 - section.chartWidth) / 2;
   const chartImage = await context.doc.embedPng(section.chart);
+  context.page.drawRectangle({
+    x: context.marginX,
+    y: context.currentY - section.chartHeight - 12,
+    width: pageWidth - context.marginX * 2,
+    height: section.chartHeight + 24,
+    color: context.brand.white,
+    borderColor: context.brand.border,
+    borderWidth: 1
+  });
+  context.page.drawText("Grafica generada con datos del test MiRealYo", {
+    x: context.marginX + 12,
+    y: context.currentY - 10,
+    size: 7.8,
+    font: context.boldFont,
+    color: context.mutedColor
+  });
   context.page.drawImage(chartImage, {
     x: chartX,
-    y: context.currentY - section.chartHeight,
+    y: context.currentY - section.chartHeight - 16,
     width: section.chartWidth,
     height: section.chartHeight
   });
-  context.currentY -= section.chartHeight + 18;
+  context.currentY -= section.chartHeight + 42;
   drawMetricCards(context, section.metrics);
 
   context.page.drawRectangle({
@@ -557,8 +665,8 @@ async function drawSectionPage(context: PdfContext, section: ReportSection) {
     y: context.marginBottom + 116,
     width: pageWidth - context.marginX * 2,
     height: Math.max(REPORT_RENDER_RULES.body.minBoxHeight, context.currentY - context.marginBottom - 126),
-    color: rgb(1, 1, 1),
-    borderColor: rgb(0.88, 0.89, 0.94),
+    color: context.brand.white,
+    borderColor: context.brand.border,
     borderWidth: 1
   });
   drawWrappedTextAt(context, section.body, {
@@ -574,6 +682,12 @@ async function drawSectionPage(context: PdfContext, section: ReportSection) {
 
 function drawFooter(doc: any, regularFont: any) {
   doc.getPages().forEach((page: any, index: number) => {
+    page.drawLine({
+      start: { x: 42, y: 44 },
+      end: { x: pageWidth - 42, y: 44 },
+      thickness: 0.6,
+      color: colorFromHex(REPORT_BRAND.colors.border)
+    });
     page.drawText("MiRealYo - Lectura interpretativa y educativa. No sustituye evaluacion clinica profesional.", {
       x: 42,
       y: 28,
@@ -594,50 +708,58 @@ function drawFooter(doc: any, regularFont: any) {
 function drawCover(context: PdfContext, input: ReportInput, report: StructuredReport) {
   context.page.drawRectangle({
     x: 0,
-    y: pageHeight - 260,
+    y: 0,
     width: pageWidth,
-    height: 260,
-    color: rgb(0.92, 0.97, 1)
+    height: pageHeight,
+    color: context.brand.surface
   });
-  context.page.drawCircle({
-    x: pageWidth - 88,
-    y: pageHeight - 96,
-    size: 34,
-    color: rgb(0.29, 0.77, 0.79)
+  context.page.drawRectangle({
+    x: 0,
+    y: pageHeight - 250,
+    width: pageWidth,
+    height: 250,
+    color: context.brand.surfaceStrong
   });
-  context.page.drawCircle({
-    x: pageWidth - 128,
-    y: pageHeight - 132,
-    size: 24,
-    color: rgb(0.46, 0.35, 0.77)
+  context.page.drawRectangle({
+    x: 0,
+    y: pageHeight - 250,
+    width: pageWidth,
+    height: 8,
+    color: context.brand.lavender
   });
-  context.page.drawText("INFORME AMPLIADO DE", {
+  drawBrandMark(context, {
     x: context.marginX,
-    y: pageHeight - 96,
-    size: 22,
-    font: context.boldFont,
-    color: context.titleColor
+    y: pageHeight - 78,
+    size: REPORT_RENDER_RULES.brand.logoSize,
+    showName: true
   });
-  context.page.drawText("PERSONALIDAD", {
+  context.page.drawText(REPORT_TITLE, {
     x: context.marginX,
-    y: pageHeight - 124,
-    size: 26,
+    y: pageHeight - 134,
+    size: 23,
     font: context.boldFont,
     color: context.titleColor
   });
   context.page.drawText(`Preparado para ${input.demo.nombre}`, {
     x: context.marginX,
-    y: pageHeight - 158,
+    y: pageHeight - 164,
     size: 11,
     font: context.boldFont,
     color: context.mutedColor
   });
   context.page.drawText(REPORT_SOURCE_LABEL, {
     x: context.marginX,
-    y: pageHeight - 176,
+    y: pageHeight - 182,
     size: 9,
     font: context.regularFont,
     color: context.mutedColor
+  });
+  context.page.drawRectangle({
+    x: context.marginX,
+    y: pageHeight - 220,
+    width: pageWidth - context.marginX * 2,
+    height: 1,
+    color: context.brand.border
   });
 
   context.currentY = pageHeight - 310;
@@ -679,21 +801,25 @@ export async function buildExecutiveReportPdf(
   doc.setCreator("MiRealYo");
   const boldFont = await doc.embedFont(StandardFonts.HelveticaBold);
   const regularFont = await doc.embedFont(StandardFonts.Helvetica);
+  const logoImage = await doc.embedPng(fs.readFileSync(path.join(process.cwd(), REPORT_BRAND.logoPath)));
   const reportText = options.reportText?.trim() || buildFallbackReportText(input);
   const report = mergeAgentReport(input, reportText);
+  const brandColors = buildBrandColors();
   const context: PdfContext = {
     doc,
     page: doc.addPage([pageWidth, pageHeight]),
+    logoImage,
     regularFont,
     boldFont,
     marginX: REPORT_RENDER_RULES.margins.x,
     marginTop: REPORT_RENDER_RULES.margins.top,
     marginBottom: REPORT_RENDER_RULES.margins.bottom,
     currentY: REPORT_RENDER_RULES.margins.top,
-    bodyColor: rgb(0.14, 0.18, 0.28),
-    titleColor: rgb(0.13, 0.19, 0.36),
-    mutedColor: rgb(0.38, 0.42, 0.52),
-    accentColor: rgb(0.18, 0.48, 1)
+    bodyColor: colorFromHex(REPORT_BRAND.colors.ink),
+    titleColor: colorFromHex(REPORT_BRAND.colors.ink),
+    mutedColor: colorFromHex(REPORT_BRAND.colors.secondary),
+    accentColor: colorFromHex(REPORT_BRAND.colors.violet),
+    brand: brandColors
   };
 
   drawCover(context, input, report);
