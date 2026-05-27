@@ -86,16 +86,26 @@ function buildReportPayload(input: ReportInput) {
 }
 
 export function buildAiReportUserMessage(input: ReportInput): string {
+  const payload = buildReportPayload(input);
   const sectionLines = REPORT_SECTIONS.flatMap((section) => [
     `${section.number}. ${section.title}`,
     section.subtitle,
     `${section.questionLabel}:`
   ]).filter(Boolean);
+  const formatScoreList = (items: { name: string; score: number }[]) =>
+    items.map((item) => `${item.name} (${item.score})`).join(", ");
 
   return [
     "Genera el informe premium descargable de MiRealYo a partir del resultado del test.",
     "El agente solo debe devolver prosa interpretativa. Devuelve solo texto crudo del informe, sin JSON.",
     "No generes graficas, imagenes, tablas ni instrucciones visuales: MiRealYo renderiza las graficas con los datos locales del test.",
+    "Datos obligatorios para la narracion del agente:",
+    `[NOMBRE_PERSONA]: ${payload.profile.name}`,
+    `[ARQUETIPOS_DOMINANTES]: ${formatScoreList(payload.results.dominantArchetypes)}`,
+    `[ARQUETIPOS_REPRIMIDOS]: ${formatScoreList(payload.results.repressedArchetypes)}`,
+    `[NIVEL_DE_SOMBRA]: ${payload.results.normalizedShadow.load} (${payload.results.normalizedShadow.shadowTotal}/5)`,
+    `[ESTILO_KEIRSEY]: ${payload.results.normalizedKeirsey.label}`,
+    `[ETAPA_VIAJE_HEROE]: ${payload.results.normalizedHeroJourney.stage}`,
     "El informe debe seguir exactamente esta estructura y usar estos encabezados:",
     `Titulo: ${REPORT_TITLE}`,
     REPORT_INTRO_TITLE,
@@ -106,7 +116,7 @@ export function buildAiReportUserMessage(input: ReportInput): string {
     "Traduce los puntajes a narrativa vital; no entregues solo etiquetas.",
     "Evita promesas clinicas absolutas y aclara que es una lectura interpretativa y educativa.",
     "Resultado del test en JSON:",
-    JSON.stringify(buildReportPayload(input), null, 2)
+    JSON.stringify(payload, null, 2)
   ].join("\n");
 }
 

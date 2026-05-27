@@ -74,6 +74,12 @@ test("buildAiReportUserMessage includes the complete test result payload", () =>
   assert.match(userMessage, /MiRealYo renderiza las graficas con los datos locales del test/);
   assert.match(userMessage, /exactamente 3 pasos/);
   assert.doesNotMatch(userMessage, /4 acciones/);
+  assert.match(userMessage, /\[NOMBRE_PERSONA\]: Camila/);
+  assert.match(userMessage, /\[ARQUETIPOS_DOMINANTES\]:/);
+  assert.match(userMessage, /\[ARQUETIPOS_REPRIMIDOS\]:/);
+  assert.match(userMessage, /\[NIVEL_DE_SOMBRA\]:/);
+  assert.match(userMessage, /\[ESTILO_KEIRSEY\]:/);
+  assert.match(userMessage, /\[ETAPA_VIAJE_HEROE\]:/);
 });
 
 test("report contract enforces exactly three action steps and prohibited patterns", () => {

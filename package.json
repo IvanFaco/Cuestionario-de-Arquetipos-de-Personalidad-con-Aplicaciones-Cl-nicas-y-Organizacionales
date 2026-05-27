@@ -1,6 +1,6 @@
 {
   "name": "mi-real-yo-migration",
-  "version": "0.10.4",
+  "version": "0.10.5",
   "private": true,
   "type": "module",
   "description": "Aplicacion web SSR para MiRealYo en Express + TypeScript + EJS.",
