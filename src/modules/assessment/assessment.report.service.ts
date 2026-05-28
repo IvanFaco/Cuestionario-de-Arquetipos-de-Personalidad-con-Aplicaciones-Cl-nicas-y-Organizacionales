@@ -698,6 +698,86 @@ function drawMetricCards(context: PdfContext, metrics: { label: string; value: s
   context.currentY = y - 18;
 }
 
+function measureTextBlock(lines: string[], size: number, lineGap: number) {
+  return lines.length * size + Math.max(0, lines.length - 1) * lineGap;
+}
+
+function getFittedTextBlock(options: {
+  text: string;
+  font: any;
+  width: number;
+  maxHeight: number;
+  maxSize: number;
+  minSize: number;
+  lineGap: number;
+}) {
+  let selectedSize = options.maxSize;
+  let selectedLineGap = options.lineGap;
+  let selectedLines = splitText(options.text, options.font, selectedSize, options.width);
+
+  for (let size = options.maxSize; size >= options.minSize; size -= 0.2) {
+    const lineGap = Math.max(1.4, options.lineGap * (size / options.maxSize));
+    const lines = splitText(options.text, options.font, size, options.width);
+    const totalHeight = measureTextBlock(lines, size, lineGap);
+
+    selectedSize = size;
+    selectedLineGap = lineGap;
+    selectedLines = lines;
+
+    if (totalHeight <= options.maxHeight) {
+      break;
+    }
+  }
+
+  return {
+    lines: selectedLines,
+    size: selectedSize,
+    lineGap: selectedLineGap,
+    height: measureTextBlock(selectedLines, selectedSize, selectedLineGap)
+  };
+}
+
+function drawNarrativeBodyBox(context: PdfContext, text: string) {
+  const boxX = context.marginX;
+  const boxY = context.marginBottom + 116;
+  const boxWidth = pageWidth - context.marginX * 2;
+  const boxHeight = Math.max(REPORT_RENDER_RULES.body.minBoxHeight, context.currentY - boxY - 10);
+  const paddingX = 18;
+  const paddingY = 18;
+  const fitted = getFittedTextBlock({
+    text,
+    font: context.regularFont,
+    width: boxWidth - paddingX * 2,
+    maxHeight: boxHeight - paddingY * 2,
+    maxSize: REPORT_RENDER_RULES.body.fontSize,
+    minSize: 8.2,
+    lineGap: REPORT_RENDER_RULES.body.lineGap
+  });
+  const topPadding = Math.max(paddingY, (boxHeight - fitted.height) / 2);
+  let y = boxY + boxHeight - topPadding - fitted.size;
+
+  context.page.drawRectangle({
+    x: boxX,
+    y: boxY,
+    width: boxWidth,
+    height: boxHeight,
+    color: context.brand.white,
+    borderColor: context.brand.border,
+    borderWidth: 1
+  });
+
+  for (const line of fitted.lines) {
+    context.page.drawText(line, {
+      x: boxX + paddingX,
+      y,
+      size: fitted.size,
+      font: context.regularFont,
+      color: context.bodyColor
+    });
+    y -= fitted.size + fitted.lineGap;
+  }
+}
+
 function drawRoundedRect(
   context: PdfContext,
   options: {
@@ -1636,23 +1716,7 @@ async function drawSectionPage(context: PdfContext, section: ReportSection) {
 
   drawMetricCards(context, section.metrics);
 
-  context.page.drawRectangle({
-    x: context.marginX,
-    y: context.marginBottom + 116,
-    width: pageWidth - context.marginX * 2,
-    height: Math.max(REPORT_RENDER_RULES.body.minBoxHeight, context.currentY - context.marginBottom - 126),
-    color: context.brand.white,
-    borderColor: context.brand.border,
-    borderWidth: 1
-  });
-  drawWrappedTextAt(context, section.body, {
-    x: context.marginX + 16,
-    y: context.currentY - 8,
-    width: pageWidth - context.marginX * 2 - 32,
-    size: REPORT_RENDER_RULES.body.fontSize,
-    color: context.bodyColor,
-    lineGap: REPORT_RENDER_RULES.body.lineGap
-  });
+  drawNarrativeBodyBox(context, section.body);
   drawQuestionBox(context, section);
 }
 
