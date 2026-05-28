@@ -241,6 +241,8 @@ test("buildExecutiveReportPdf returns a valid pdf buffer", async () => {
   assert.match(text, /Matriz de respuesta bajo presion/);
   assert.match(text, /Linea evolutiva/);
   assert.match(text, /Plan tactico semanal/);
+  assert.match(text, /Busca coherencia interna,\s+sentido\s+humano y cuidado del vinculo/);
+  assert.match(text, /Elige una sola decision pendiente,\s+define\s+el criterio minimo y delega una parte\s+visible del proceso/);
 });
 
 test("buildExecutiveReportPdf accepts agent alternative section headings", async () => {

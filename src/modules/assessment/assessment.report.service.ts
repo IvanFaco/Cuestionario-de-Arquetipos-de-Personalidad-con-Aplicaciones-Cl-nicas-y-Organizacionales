@@ -232,6 +232,58 @@ function drawWrappedTextAt(
   return y;
 }
 
+function drawFittedWrappedTextAt(
+  context: PdfContext,
+  text: string,
+  options: {
+    x: number;
+    y: number;
+    width: number;
+    maxHeight: number;
+    maxSize: number;
+    minSize: number;
+    font?: any;
+    color?: unknown;
+    lineGap?: number;
+  }
+) {
+  const font = options.font ?? context.regularFont;
+  let selectedSize = options.maxSize;
+  let selectedLineGap = options.lineGap ?? 2;
+  let selectedLines = splitText(text, font, selectedSize, options.width);
+
+  for (let size = options.maxSize; size >= options.minSize; size -= 0.2) {
+    const lineGap = Math.max(1.2, options.lineGap ?? size * 0.28);
+    const lines = splitText(text, font, size, options.width);
+    const totalHeight = lines.length * size + Math.max(0, lines.length - 1) * lineGap;
+
+    if (totalHeight <= options.maxHeight) {
+      selectedSize = size;
+      selectedLineGap = lineGap;
+      selectedLines = lines;
+      break;
+    }
+
+    selectedSize = size;
+    selectedLineGap = lineGap;
+    selectedLines = lines;
+  }
+
+  let y = options.y;
+  for (const line of selectedLines) {
+    context.page.drawText(line, {
+      x: options.x,
+      y,
+      size: selectedSize,
+      font,
+      color: options.color ?? context.bodyColor
+    });
+    y -= selectedSize + selectedLineGap;
+  }
+
+  return y;
+}
+
 function normalizeText(text: string): string {
   return text
     .normalize("NFD")
@@ -351,10 +403,6 @@ function formatScoreList(items: { displayName: string; score: number }[], limit 
     .slice(0, limit)
     .map((item) => `${item.displayName} ${item.score.toFixed(1)}`)
     .join(" / ");
-}
-
-function abbreviate(value: string, maxLength: number): string {
-  return value.length > maxLength ? `${value.slice(0, maxLength).trim()}...` : value;
 }
 
 function extractActionSteps(text: string): string[] {
@@ -486,7 +534,7 @@ function buildLocalReport(input: ReportInput): StructuredReport {
         metrics: [
           { label: "Perfil", value: normalizedKeirsey.normalized },
           { label: "Codigo", value: normalizedKeirsey.code },
-          { label: "Bajo estres", value: abbreviate(normalizedKeirsey.stressResponse, 42) }
+          { label: "Bajo estres", value: normalizedKeirsey.stressResponse }
         ]
       },
       {
@@ -522,7 +570,7 @@ function buildLocalReport(input: ReportInput): StructuredReport {
         chartHeight: REPORT_RENDER_RULES.chartSizes.actionPlan.height,
         metrics: actionSteps.map((item, index) => ({
           label: `Paso ${index + 1}`,
-          value: item.length > 24 ? `${item.slice(0, 24)}...` : item
+          value: item
         }))
       }
     ]
@@ -549,7 +597,7 @@ function mergeAgentReport(input: ReportInput, reportText: string): StructuredRep
           actionSteps,
           metrics: actionSteps.map((item, stepIndex) => ({
             label: `Paso ${stepIndex + 1}`,
-            value: abbreviate(item, 27)
+            value: item
           })),
           question
         };
@@ -600,7 +648,15 @@ function drawMetricCards(context: PdfContext, metrics: { label: string; value: s
   const visibleMetrics = metrics.slice(0, 3);
   const gap = 8;
   const cardWidth = (pageWidth - context.marginX * 2 - gap * 2) / 3;
-  const cardHeight = 56;
+  const valueSize = 7.4;
+  const valueLineGap = 2.2;
+  const maxValueLines = Math.max(
+    1,
+    ...visibleMetrics.map((metric) =>
+      splitText(metric.value, context.boldFont, valueSize, cardWidth - 18).length
+    )
+  );
+  const cardHeight = Math.max(56, 31 + maxValueLines * (valueSize + valueLineGap));
   const y = context.currentY - cardHeight;
 
   visibleMetrics.forEach((metric, index) => {
@@ -632,10 +688,10 @@ function drawMetricCards(context: PdfContext, metrics: { label: string; value: s
       x: x + 9,
       y: y + cardHeight - 34,
       width: cardWidth - 18,
-      size: 8,
+      size: valueSize,
       font: context.boldFont,
       color: context.bodyColor,
-      lineGap: 2
+      lineGap: valueLineGap
     });
   });
 
@@ -1373,8 +1429,8 @@ function drawActionPlanVectorChart(
   const colors = [context.brand.blue, context.brand.teal, context.brand.violet];
   const gap = 10;
   const cardWidth = (options.width - 28 - gap * 2) / 3;
-  const cardHeight = 118;
-  const cardY = options.y + 48;
+  const cardHeight = 132;
+  const cardY = options.y + 38;
   const connectorY = cardY + cardHeight / 2;
 
   steps.forEach((step, index) => {
@@ -1428,14 +1484,16 @@ function drawActionPlanVectorChart(
       font: context.boldFont,
       color: context.titleColor
     });
-    drawWrappedTextAt(context, abbreviate(step, 74), {
+    drawFittedWrappedTextAt(context, step, {
       x: x + 12,
-      y: cardY + cardHeight - 58,
+      y: cardY + cardHeight - 60,
       width: cardWidth - 24,
-      size: 7.3,
+      maxHeight: cardHeight - 74,
+      maxSize: 6.8,
+      minSize: 5.2,
       font: context.regularFont,
       color: context.bodyColor,
-      lineGap: 2.6
+      lineGap: 1.7
     });
   });
 }
