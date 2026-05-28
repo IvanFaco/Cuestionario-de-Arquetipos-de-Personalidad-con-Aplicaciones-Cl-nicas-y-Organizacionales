@@ -150,7 +150,7 @@ export const REPORT_RENDER_RULES = {
     shadow: { width: 360, height: 265 },
     keirsey: { width: 500, height: 200 },
     heroJourney: { width: 500, height: 150 },
-    actionPlan: { width: 500, height: 205 }
+    actionPlan: { width: 500, height: 390 }
   },
   body: {
     minBoxHeight: 160,

@@ -1429,8 +1429,8 @@ function drawActionPlanVectorChart(
   const colors = [context.brand.blue, context.brand.teal, context.brand.violet];
   const gap = 10;
   const cardWidth = (options.width - 28 - gap * 2) / 3;
-  const cardHeight = 132;
-  const cardY = options.y + 38;
+  const cardHeight = options.height - 80;
+  const cardY = options.y + 40;
   const connectorY = cardY + cardHeight / 2;
 
   steps.forEach((step, index) => {
@@ -1628,6 +1628,12 @@ async function drawSectionPage(context: PdfContext, section: ReportSection) {
     height: section.chartHeight
   });
   context.currentY -= section.chartHeight + 42;
+
+  if (section.id === "pasos") {
+    drawQuestionBox(context, section);
+    return;
+  }
+
   drawMetricCards(context, section.metrics);
 
   context.page.drawRectangle({
