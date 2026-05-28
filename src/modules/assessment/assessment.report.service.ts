@@ -112,6 +112,11 @@ type StructuredReport = {
   sections: ReportSection[];
 };
 
+type AnnexBlock = {
+  kind: "heading" | "paragraph";
+  text: string;
+};
+
 const pageWidth = REPORT_RENDER_RULES.page.width;
 const pageHeight = REPORT_RENDER_RULES.page.height;
 
@@ -370,6 +375,21 @@ function cleanQuestionText(text: string): string {
     .trim();
 }
 
+function sanitizePdfText(text: string): string {
+  return text
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[“”]/g, "\"")
+    .replace(/[‘’]/g, "'")
+    .replace(/[–—]/g, "-")
+    .replace(/\*\*/g, "")
+    .replace(/```(?:json)?/gi, "")
+    .replace(/```/g, "")
+    .replace(/[^\x09\x0A\x0D\x20-\x7E]/g, "")
+    .replace(/[ \t]+/g, " ")
+    .trim();
+}
+
 function extractQuestion(text: string, fallback: string): string {
   const lines = text.split("\n").map((line) => line.trim()).filter(Boolean);
   const questionLine = lines.find((line) => lineHas(line, "pregunta metacognitiva") || lineHas(line, "pregunta guia"));
@@ -420,6 +440,51 @@ function extractActionSteps(text: string): string[] {
     .map((line) => line.replace(/^\s*[-*]\s+/, "").trim())
     .map(sanitizeNarrativeText)
     .filter(Boolean);
+}
+
+function isAnnexHeading(line: string): boolean {
+  return lineHas(line, REPORT_TITLE) ||
+    lineHas(line, REPORT_INTRO_TITLE) ||
+    /^\d+\.\s+(tu mapa|apertura|profundidad|tu sombra|el sistema|el horizonte|cierre|siguientes|plan de accion)/i.test(
+      normalizeText(line)
+    );
+}
+
+function buildAnnexBlocks(reportText: string): AnnexBlock[] {
+  const lines = reportText.replace(/\r/g, "").split("\n");
+  const blocks: AnnexBlock[] = [];
+  let paragraph: string[] = [];
+
+  const flushParagraph = () => {
+    const text = sanitizePdfText(paragraph.join(" "));
+
+    if (text) {
+      blocks.push({ kind: "paragraph", text });
+    }
+
+    paragraph = [];
+  };
+
+  for (const rawLine of lines) {
+    const line = sanitizePdfText(rawLine);
+
+    if (!line) {
+      flushParagraph();
+      continue;
+    }
+
+    if (isAnnexHeading(line)) {
+      flushParagraph();
+      blocks.push({ kind: "heading", text: line.replace(/^Titulo:\s*/i, "") });
+      continue;
+    }
+
+    paragraph.push(line);
+  }
+
+  flushParagraph();
+
+  return blocks.length ? blocks : [{ kind: "paragraph", text: "No se recibio prosa adicional para anexar." }];
 }
 
 function pickIntro(agentValue: string, fallback: string): string {
@@ -644,6 +709,60 @@ function drawSectionMarker(context: PdfContext, section: ReportSection) {
   context.currentY -= 54;
 }
 
+function drawAnnexHeader(context: PdfContext, pageIndex: number) {
+  addPage(context);
+  context.page.drawRectangle({
+    x: 0,
+    y: pageHeight - 118,
+    width: pageWidth,
+    height: 118,
+    color: context.brand.surface
+  });
+  context.page.drawRectangle({
+    x: 0,
+    y: pageHeight - 118,
+    width: pageWidth,
+    height: 6,
+    color: context.brand.lavender
+  });
+  drawBrandMark(context, {
+    x: pageWidth - context.marginX - REPORT_RENDER_RULES.brand.headerLogoSize,
+    y: pageHeight - 50,
+    size: REPORT_RENDER_RULES.brand.headerLogoSize
+  });
+  context.page.drawRectangle({
+    x: context.marginX,
+    y: context.currentY - 34,
+    width: 38,
+    height: 38,
+    color: context.brand.violet
+  });
+  context.page.drawText("A", {
+    x: context.marginX + 13,
+    y: context.currentY - 22,
+    size: 14,
+    font: context.boldFont,
+    color: context.brand.white
+  });
+  context.page.drawText("Anexo del Coach de autoconocimiento digital", {
+    x: context.marginX + 52,
+    y: context.currentY - 4,
+    size: 16,
+    font: context.boldFont,
+    color: context.titleColor
+  });
+  context.page.drawText(pageIndex > 0 ? "Lectura completa - continuacion" : "Lectura completa en prosa",
+    {
+      x: context.marginX + 52,
+      y: context.currentY - 22,
+      size: 10,
+      font: context.boldFont,
+      color: context.mutedColor
+    }
+  );
+  context.currentY -= 58;
+}
+
 function drawMetricCards(context: PdfContext, metrics: { label: string; value: string }[]) {
   const visibleMetrics = metrics.slice(0, 3);
   const gap = 8;
@@ -776,6 +895,87 @@ function drawNarrativeBodyBox(context: PdfContext, text: string) {
     });
     y -= fitted.size + fitted.lineGap;
   }
+}
+
+function drawCoachAnnexPages(context: PdfContext, reportText: string) {
+  const blocks = buildAnnexBlocks(reportText);
+  const columnGap = 18;
+  const contentBottom = context.marginBottom + 18;
+  const contentX = context.marginX;
+  const contentWidth = pageWidth - context.marginX * 2;
+  const columnWidth = (contentWidth - columnGap) / 2;
+  let pageIndex = -1;
+  let columnIndex = 0;
+  let columnTop = 0;
+  let y = 0;
+
+  const newAnnexPage = () => {
+    pageIndex += 1;
+    columnIndex = 0;
+    drawAnnexHeader(context, pageIndex);
+    columnTop = context.currentY - 8;
+    y = columnTop;
+    context.page.drawRectangle({
+      x: contentX,
+      y: contentBottom - 8,
+      width: contentWidth,
+      height: columnTop - contentBottom + 18,
+      color: context.brand.white,
+      borderColor: context.brand.border,
+      borderWidth: 1
+    });
+  };
+  const nextColumn = () => {
+    if (columnIndex === 0) {
+      columnIndex = 1;
+      y = columnTop;
+      return;
+    }
+
+    newAnnexPage();
+  };
+  const currentColumnX = () => contentX + 16 + columnIndex * (columnWidth + columnGap);
+  const currentTextWidth = () => columnWidth - 18;
+
+  newAnnexPage();
+
+  blocks.forEach((block) => {
+    const isHeading = block.kind === "heading";
+    const font = isHeading ? context.boldFont : context.regularFont;
+    const size = isHeading ? 8.2 : 7.4;
+    const lineGap = isHeading ? 2.6 : 2.4;
+    const paragraphGap = isHeading ? 8 : 7;
+    const lines = splitText(block.text, font, size, currentTextWidth());
+    let lineIndex = 0;
+
+    if (isHeading && y - (size + paragraphGap) < contentBottom) {
+      nextColumn();
+    } else if (!isHeading && y - paragraphGap < contentBottom) {
+      nextColumn();
+    }
+
+    if (!isHeading) {
+      y -= 2;
+    }
+
+    while (lineIndex < lines.length) {
+      if (y - size < contentBottom) {
+        nextColumn();
+      }
+
+      context.page.drawText(lines[lineIndex], {
+        x: currentColumnX(),
+        y,
+        size,
+        font,
+        color: isHeading ? context.brand.violet : context.bodyColor
+      });
+      y -= size + lineGap;
+      lineIndex += 1;
+    }
+
+    y -= paragraphGap;
+  });
 }
 
 function drawRoundedRect(
@@ -1868,6 +2068,7 @@ export async function buildExecutiveReportPdf(
     await drawSectionPage(context, section);
   }
 
+  drawCoachAnnexPages(context, reportText);
   drawFooter(doc, regularFont);
   const bytes = await doc.save({
     useObjectStreams: false

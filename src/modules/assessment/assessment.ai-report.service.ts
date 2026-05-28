@@ -8,6 +8,7 @@ import {
   calculateDominantArchetypes,
   calculateRepressedArchetypes,
   enforceActionStepCount,
+  hasProhibitedNarrativePattern,
   normalizeHeroJourney,
   normalizeKeirsey,
   normalizeShadow
@@ -87,11 +88,19 @@ function buildReportPayload(input: ReportInput) {
 
 export function buildAiReportUserMessage(input: ReportInput): string {
   const payload = buildReportPayload(input);
-  const sectionLines = REPORT_SECTIONS.flatMap((section) => [
-    `${section.number}. ${section.title}`,
-    section.subtitle,
-    `${section.questionLabel}:`
-  ]).filter(Boolean);
+  const agentHeadings = [
+    REPORT_INTRO_TITLE,
+    "1. Apertura y Espejo (Radar de Ejes)",
+    "Pregunta metacognitiva:",
+    "2. Profundidad y Autosabotaje (Tu Sombra Oculta)",
+    "Pregunta metacognitiva:",
+    "3. El Sistema Operativo bajo Presion (Matriz Keirsey)",
+    "Pregunta metacognitiva:",
+    "4. El Horizonte Evolutivo (El Viaje del Heroe)",
+    "Pregunta metacognitiva:",
+    "5. Cierre y Plan de Accion (Siguientes Pasos)",
+    "Pregunta guia:"
+  ];
   const formatScoreList = (items: { name: string; score: number }[]) =>
     items.map((item) => `${item.name} (${item.score})`).join(", ");
 
@@ -106,10 +115,8 @@ export function buildAiReportUserMessage(input: ReportInput): string {
     `[NIVEL_DE_SOMBRA]: ${payload.results.normalizedShadow.load} (${payload.results.normalizedShadow.shadowTotal}/5)`,
     `[ESTILO_KEIRSEY]: ${payload.results.normalizedKeirsey.label}`,
     `[ETAPA_VIAJE_HEROE]: ${payload.results.normalizedHeroJourney.stage}`,
-    "El informe debe seguir exactamente esta estructura y usar estos encabezados:",
-    `Titulo: ${REPORT_TITLE}`,
-    REPORT_INTRO_TITLE,
-    ...sectionLines,
+    "El informe debe seguir exactamente esta estructura narrativa y usar estos encabezados:",
+    ...agentHeadings,
     "El informe debe ser claro, calido, directo, accionable y visualmente pensado para un PDF premium.",
     "Cada seccion narrativa debe tener entre 90 y 130 palabras.",
     `El plan tactico debe tener exactamente ${REPORT_ACTION_STEP_COUNT} pasos numerados, sin pasos extra.`,
@@ -247,6 +254,10 @@ function extractAgentMessageFromPayload(payload: unknown, depth = 0): string {
   return "";
 }
 
+function isAgentMessageValid(agentMessage: string): boolean {
+  return Boolean(agentMessage.trim()) && !hasProhibitedNarrativePattern(agentMessage);
+}
+
 export async function requestAiReport(input: ReportInput, options: {
   fetchImpl?: FetchLike;
   timeoutMs?: number;
@@ -295,6 +306,10 @@ export async function requestAiReport(input: ReportInput, options: {
 
     if (!agentMessage) {
       throw new Error("Webhook no devolvio agentMessage valido.");
+    }
+
+    if (!isAgentMessageValid(agentMessage)) {
+      throw new Error("Webhook devolvio una respuesta de validacion, no una narrativa valida.");
     }
 
     return {

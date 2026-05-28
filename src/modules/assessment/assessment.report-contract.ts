@@ -132,7 +132,10 @@ export const REPORT_PROHIBITED_PATTERNS = [
   "cura garantizada",
   "tratamiento medico",
   "terapia obligatoria",
-  "ranking keirsey campbell"
+  "ranking keirsey campbell",
+  "validation_error",
+  "no cumple el contrato",
+  "no es posible generar un informe"
 ];
 
 export const REPORT_RENDER_RULES = {

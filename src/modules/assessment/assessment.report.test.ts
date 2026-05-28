@@ -113,6 +113,8 @@ test("buildAiReportUserMessage includes the complete test result payload", () =>
   assert.match(userMessage, /\[NIVEL_DE_SOMBRA\]:/);
   assert.match(userMessage, /\[ESTILO_KEIRSEY\]:/);
   assert.match(userMessage, /\[ETAPA_VIAJE_HEROE\]:/);
+  assert.match(userMessage, /Apertura y Espejo \(Radar de Ejes\)/);
+  assert.match(userMessage, /Cierre y Plan de Accion \(Siguientes Pasos\)/);
 });
 
 test("report contract enforces exactly three action steps and prohibited patterns", () => {
@@ -201,6 +203,22 @@ test("requestAiReport falls back when webhook response is invalid", async () => 
   assert.match(report.text, /Apertura y Espejo/);
 });
 
+test("requestAiReport rejects validation error responses", async () => {
+  const report = await requestAiReport(buildReportInput(), {
+    webhookUrl: "https://example.test/report",
+    fetchImpl: async () => new Response(JSON.stringify({
+      agentMessage: "VALIDATION_ERROR\nLa respuesta no cumple el contrato de salida del informe narrativo."
+    }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" }
+    })
+  });
+
+  assert.equal(report.source, "fallback");
+  assert.match(report.error ?? "", /respuesta de validacion/);
+  assert.match(report.text, /INFORME AMPLIADO DE PERSONALIDAD/);
+});
+
 test("requestAiReport waits until timeout before fallback", async () => {
   const startedAt = Date.now();
   const report = await requestAiReport(buildReportInput(), {
@@ -234,7 +252,9 @@ test("buildExecutiveReportPdf returns a valid pdf buffer", async () => {
 
   assert.ok(pdf.length > 1000);
   assert.equal(pdf.subarray(0, 4).toString(), "%PDF");
-  assert.ok(parsed.getPageCount() >= 6);
+  assert.ok(parsed.getPageCount() >= 7);
+  assert.match(text, /Anexo del Coach de autoconocimiento digital/);
+  assert.match(text, /Informe generado para validar el PDF con graficas/);
   assert.match(text, /Ranking completo de arquetipos/);
   assert.match(text, /Puntaje/);
   assert.match(text, /Estructura interna/);
