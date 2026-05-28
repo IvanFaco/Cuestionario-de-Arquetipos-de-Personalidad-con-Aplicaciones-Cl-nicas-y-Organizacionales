@@ -1155,6 +1155,10 @@ function drawKeirseyVectorChart(
   const cardWidth = (options.width - 28 - gap * 2) / 3;
   const cardHeight = 116;
   const cardY = options.y + 42;
+  const profileBadgeY = cardY + cardHeight - 25;
+  const profileCodeY = cardY + cardHeight - 28;
+  const profileTitleY = cardY + 58;
+  const profileDetailY = cardY + 39;
 
   profiles.forEach((profile, index) => {
     const isActive = profile.label === active.label;
@@ -1178,14 +1182,14 @@ function drawKeirseyVectorChart(
     });
     context.page.drawEllipse({
       x: x + 26,
-      y: cardY + cardHeight - 31,
+      y: profileBadgeY,
       xScale: isActive ? 14 : 11,
       yScale: isActive ? 14 : 11,
       color: profile.color
     });
     drawCenteredText(context, profile.code, {
       x: x + 14,
-      y: cardY + cardHeight - 34,
+      y: profileCodeY,
       width: 24,
       size: 7.8,
       font: context.boldFont,
@@ -1193,14 +1197,14 @@ function drawKeirseyVectorChart(
     });
     context.page.drawText(profile.title, {
       x: x + 14,
-      y: cardY + 67,
+      y: profileTitleY,
       size: isActive ? 12 : 10.5,
       font: context.boldFont,
       color: context.titleColor
     });
     context.page.drawText(profile.detail, {
       x: x + 14,
-      y: cardY + 49,
+      y: profileDetailY,
       size: 7.2,
       font: context.regularFont,
       color: context.mutedColor
