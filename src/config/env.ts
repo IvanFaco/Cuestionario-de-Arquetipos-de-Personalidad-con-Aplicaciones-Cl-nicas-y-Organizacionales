@@ -23,6 +23,7 @@ const assetVersion =
   (nodeEnv === "production" ? `${Date.now()}` : "dev");
 const normalizedPort = Number.isNaN(port) ? 3000 : port;
 const premiumAmountInCents = Number.parseInt(getEnv("WOMPI_PREMIUM_AMOUNT_CENTS", "4900000"), 10);
+const aiReportTimeoutMs = Number.parseInt(getEnv("AI_REPORT_TIMEOUT_MS", "120000"), 10);
 
 function isLocalSiteUrl(value: string) {
   try {
@@ -71,6 +72,10 @@ export const env = {
     forcedSandbox: resolvedWompiEnvironment.forcedSandbox,
     premiumAmountInCents: Number.isNaN(premiumAmountInCents) ? 4900000 : premiumAmountInCents,
     currency: getEnv("WOMPI_CURRENCY", "COP")
+  },
+  aiReport: {
+    webhookUrl: getEnv("AI_REPORT_WEBHOOK_URL", "https://n8n.agenttic.ai/webhook/agente-informe-ia"),
+    timeoutMs: Number.isNaN(aiReportTimeoutMs) ? 120000 : aiReportTimeoutMs
   }
 };
 
@@ -82,6 +87,8 @@ export const editableEnvVariables = [
   { name: "WOMPI_EVENTS_SECRET", secret: true, restartRequired: false },
   { name: "WOMPI_PREMIUM_AMOUNT_CENTS", secret: false, restartRequired: false },
   { name: "WOMPI_CURRENCY", secret: false, restartRequired: false },
+  { name: "AI_REPORT_WEBHOOK_URL", secret: false, restartRequired: false },
+  { name: "AI_REPORT_TIMEOUT_MS", secret: false, restartRequired: false },
   { name: "NODE_ENV", secret: false, restartRequired: true },
   { name: "SESSION_SECRET", secret: true, restartRequired: true }
 ] as const;
@@ -187,6 +194,11 @@ function applyRuntimeEnv(values: EnvFileValues) {
     if (!Number.isNaN(amount)) env.wompi.premiumAmountInCents = amount;
   }
   if (values.WOMPI_CURRENCY !== undefined) env.wompi.currency = values.WOMPI_CURRENCY;
+  if (values.AI_REPORT_WEBHOOK_URL !== undefined) env.aiReport.webhookUrl = values.AI_REPORT_WEBHOOK_URL;
+  if (values.AI_REPORT_TIMEOUT_MS !== undefined) {
+    const timeoutMs = Number.parseInt(values.AI_REPORT_TIMEOUT_MS, 10);
+    if (!Number.isNaN(timeoutMs)) env.aiReport.timeoutMs = timeoutMs;
+  }
   if (values.NODE_ENV !== undefined) env.nodeEnv = values.NODE_ENV;
   if (values.SESSION_SECRET !== undefined) env.sessionSecret = values.SESSION_SECRET;
 

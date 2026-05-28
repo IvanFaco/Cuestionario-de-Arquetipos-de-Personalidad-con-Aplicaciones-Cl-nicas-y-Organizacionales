@@ -18,6 +18,8 @@ import {
   buildPremiumOutcome
 } from "./assessment.domain.js";
 import { getHookQuestions, getPremiumQuestions, likertOptions } from "./assessment.questions.js";
+import { requestAiReport } from "./assessment.ai-report.service.js";
+import { buildResultInterpretation, mapScoresForDisplay } from "./assessment.interpretation.js";
 import { buildExecutiveReportPdf, getShadowLabel } from "./assessment.report.service.js";
 import { resolveAssessmentJourneyPath } from "./assessment.journey.js";
 import { buildSeoMeta } from "./assessment.seo.js";
@@ -1333,6 +1335,12 @@ export function renderTeaser(req: Request, res: Response) {
     return res.redirect(getAuthenticatedJourneyPath(req));
   }
 
+  const ranking = session.hookOutcome.ranking;
+  const interpretation = buildResultInterpretation({
+    demo: session.demo,
+    hook: session.hookOutcome
+  });
+
   res.render("layouts/main", {
     title: "MiRealYo | Quick Results",
     page: "../pages/quick-results/index",
@@ -1348,12 +1356,14 @@ export function renderTeaser(req: Request, res: Response) {
     ),
     pageData: {
       name: session.demo.nombre,
-      dominantArchetype: session.hookOutcome.ranking[0].name,
+      dominantArchetype: interpretation.dominant.displayName,
+      dominantArchetypeSlug: interpretation.dominant.imageSlug,
       objective: session.demo.objetivo_label,
-      topThree: session.hookOutcome.ranking.slice(0, 3).map((item) => item.name),
-      topScores: session.hookOutcome.ranking.slice(0, 3),
+      topThree: mapScoresForDisplay(ranking.slice(0, 3)).map((item) => item.displayName),
+      topScores: mapScoresForDisplay(ranking.slice(0, 3)),
       persona: session.hookOutcome.estructuras.Persona,
-      sombraBase: session.hookOutcome.estructuras.Sombra_Base
+      sombraBase: session.hookOutcome.estructuras.Sombra_Base,
+      interpretation
     }
   });
 }
@@ -1534,6 +1544,11 @@ export function renderDashboard(req: Request, res: Response) {
   }
 
   const ranking = session.hookOutcome.ranking;
+  const interpretation = buildResultInterpretation({
+    demo: session.demo,
+    hook: session.hookOutcome,
+    premium: session.premiumOutcome
+  });
   res.render("layouts/main", {
     title: "MiRealYo | Full Results",
     page: "../pages/full-results/index",
@@ -1548,15 +1563,17 @@ export function renderDashboard(req: Request, res: Response) {
       res.app.locals.siteUrl
     ),
     pageData: {
-      dominantArchetype: ranking[0].name,
-      topThree: ranking.slice(0, 3).map((item) => item.name),
-      scores: ranking,
+      dominantArchetype: interpretation.dominant.displayName,
+      dominantArchetypeSlug: interpretation.dominant.imageSlug,
+      topThree: mapScoresForDisplay(ranking.slice(0, 3)).map((item) => item.displayName),
+      scores: mapScoresForDisplay(ranking),
       persona: session.hookOutcome.estructuras.Persona,
       sombraBase: session.hookOutcome.estructuras.Sombra_Base,
       sombraTotal: session.premiumOutcome.Sombra_Total,
       shadowLabel: getShadowLabel(session.premiumOutcome.Sombra_Total),
       keirsey: session.premiumOutcome.Keirsey,
-      campbell: session.premiumOutcome.Campbell
+      campbell: session.premiumOutcome.Campbell,
+      interpretation
     }
   });
 }
@@ -1568,14 +1585,20 @@ export async function downloadDashboardPdf(req: Request, res: Response) {
     return res.redirect("/onboarding");
   }
 
-  const pdfBuffer = await buildExecutiveReportPdf({
+  const reportInput = {
     demo: session.demo,
     hook: session.hookOutcome,
     premium: session.premiumOutcome
+  };
+
+  const report = await requestAiReport(reportInput);
+  const pdfBuffer = await buildExecutiveReportPdf(reportInput, {
+    reportText: report.text,
+    reportSource: report.source
   });
 
   res.setHeader("Content-Type", "application/pdf");
-  res.setHeader("Content-Disposition", 'attachment; filename="Reporte_Clinico_Ejecutivo.pdf"');
+  res.setHeader("Content-Disposition", 'attachment; filename="Informe_MiRealYo.pdf"');
   return res.send(pdfBuffer);
 }
 

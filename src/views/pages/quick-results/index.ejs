@@ -10,25 +10,25 @@
         <section class="teaser-carousel__slide is-active" data-teaser-slide>
           <div class="question-card-panel__body teaser-card__body">
             <div class="teaser-card__copy teaser-card__copy--unlock">
-              <h2 class="teaser-card__headline teaser-card__headline--unlock mb-0">🔓 Desbloquea tu Mapa Clínico</h2>
+              <h2 class="teaser-card__headline teaser-card__headline--unlock mb-0">&#128275; Desbloquea tu Mapa Cl&iacute;nico</h2>
               <p class="teaser-card__summary teaser-card__summary--unlock mb-0">
-                Tu perfil está incompleto. Accede a la Calibración Profunda y descubre:
+                Tu perfil est&aacute; incompleto. Accede a la Calibraci&oacute;n Profunda y descubre:
               </p>
-              <div class="teaser-unlock-list" aria-label="Beneficios de la Calibración Profunda">
+              <div class="teaser-unlock-list" aria-label="Beneficios de la Calibracion Profunda">
                 <p class="teaser-unlock-list__item mb-0">
-                  <strong>🕸️ Radar de 12 Ejes:</strong> El mapa visual de tus arquetipos dominantes y reprimidos.
+                  <strong>&#128376;&#65039; Radar de 12 Ejes:</strong> El mapa visual de tus arquetipos dominantes y reprimidos.
                 </p>
                 <p class="teaser-unlock-list__item mb-0">
-                  <strong>🌑 Tu Sombra Oculta:</strong> Qué te autosabotea bajo estrés y cómo integrarlo.
+                  <strong>&#127761; Tu Sombra Oculta:</strong> Qu&eacute; te autosabotea bajo estr&eacute;s y c&oacute;mo integrarlo.
                 </p>
                 <p class="teaser-unlock-list__item mb-0">
-                  <strong>🧬 Matriz Keirsey:</strong> Tu sistema operativo para tomar decisiones bajo presión.
+                  <strong>&#129516; Matriz Keirsey:</strong> Tu sistema operativo para tomar decisiones bajo presi&oacute;n.
                 </p>
                 <p class="teaser-unlock-list__item mb-0">
-                  <strong>⚔️ El Viaje del Héroe:</strong> Tu etapa evolutiva actual y tu próximo paso a dar.
+                  <strong>&#9876;&#65039; El Viaje del H&eacute;roe:</strong> Tu etapa evolutiva actual y tu pr&oacute;ximo paso a dar.
                 </p>
                 <p class="teaser-unlock-list__item teaser-unlock-list__item--gift mb-0">
-                  <strong>🎁 INCLUYE:</strong> Reporte PDF Ejecutivo (3 Páginas). Tus gráficas y plan de acción inmediato. Sin relleno; directo al grano.
+                  <strong>&#127873; INCLUYE:</strong> Reporte PDF Ejecutivo (3 P&aacute;ginas). Tus gr&aacute;ficas y plan de acci&oacute;n inmediato. Sin relleno; directo al grano.
                 </p>
               </div>
             </div>
@@ -39,21 +39,7 @@
           <div class="question-card-panel__body teaser-card__body">
             <div class="teaser-card__copy">
               <%
-                const archetypeMap = {
-                  'Gobernante': 'gobernante',
-                  'Sabio': 'sabio',
-                  'Cuidador': 'cuidador',
-                  'Explorador': 'explorador',
-                  'Mago': 'mago',
-                  'Huerfano': 'huerfano',
-                  'Creador': 'creador',
-                  'Guerrero': 'guerrero',
-                  'Buscador': 'buscador',
-                  'Amante': 'amante',
-                  'Rebelde': 'rebelde',
-                  'Bufón': 'bufon'
-                };
-                const archetypeFile = archetypeMap[pageData.dominantArchetype] || pageData.dominantArchetype.toLowerCase();
+                const archetypeFile = pageData.dominantArchetypeSlug || pageData.dominantArchetype.toLowerCase();
               %>
               <p class="teaser-card__kicker mb-0">Perfil parcial identificado</p>
               <h2 class="teaser-card__headline mb-0"><%= pageData.dominantArchetype %> al frente</h2>
@@ -74,7 +60,7 @@
                 <% pageData.topScores.forEach((item, index) => { %>
                   <article class="teaser-metric">
                     <span class="teaser-metric__rank">#<%= index + 1 %></span>
-                    <strong class="teaser-metric__name"><%= item.name %></strong>
+                    <strong class="teaser-metric__name"><%= item.displayName ?? item.name %></strong>
                     <span class="teaser-metric__score"><%= item.score.toFixed(1) %></span>
                   </article>
                 <% }) %>
@@ -125,7 +111,7 @@
         <button class="teaser-carousel__dot is-active" type="button" data-teaser-dot aria-label="Desbloquea tu mapa clinico"></button>
         <button class="teaser-carousel__dot" type="button" data-teaser-dot aria-label="Perfil parcial"></button>
         <button class="teaser-carousel__dot" type="button" data-teaser-dot aria-label="Valores"></button>
-        <button class="teaser-carousel__dot" type="button" data-teaser-dot aria-label="Interpretaci&oacute;n"></button>
+        <button class="teaser-carousel__dot" type="button" data-teaser-dot aria-label="Interpretacion"></button>
         <button class="teaser-carousel__dot" type="button" data-teaser-dot aria-label="Recomendaciones"></button>
       </div>
 
@@ -135,15 +121,6 @@
       </div>
     </div>
   </article>
-
-  <!-- section class="teaser-ranking" aria-label="Triada visible">
-    <% pageData.topThree.forEach((item, index) => { %>
-      <article class="teaser-ranking__item">
-        <span class="teaser-ranking__position">#<%= index + 1 %></span>
-        <strong class="teaser-ranking__name"><%= item %></strong>
-      </article>
-    <% }) %>
-  </section -->
 
   <form action="/pagos/estudio-profundo" method="get" class="question-actions teaser-screen__actions">
     <span class="question-actions__back question-actions__back--ghost"></span>
