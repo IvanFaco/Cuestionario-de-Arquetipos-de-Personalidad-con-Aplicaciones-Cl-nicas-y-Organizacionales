@@ -237,6 +237,10 @@ test("buildExecutiveReportPdf returns a valid pdf buffer", async () => {
   assert.ok(parsed.getPageCount() >= 6);
   assert.match(text, /Ranking completo de arquetipos/);
   assert.match(text, /Puntaje/);
+  assert.match(text, /Estructura interna/);
+  assert.match(text, /Matriz de respuesta bajo presion/);
+  assert.match(text, /Linea evolutiva/);
+  assert.match(text, /Plan tactico semanal/);
 });
 
 test("buildExecutiveReportPdf accepts agent alternative section headings", async () => {

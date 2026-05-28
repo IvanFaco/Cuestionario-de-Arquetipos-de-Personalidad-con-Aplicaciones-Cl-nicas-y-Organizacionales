@@ -82,6 +82,25 @@ type ReportSection = {
   question: string;
   actionSteps?: string[];
   archetypeScores?: { displayName: string; score: number }[];
+  shadowMetrics?: {
+    persona: number;
+    shadowBase: number;
+    shadowTotal: number;
+    integrationIndex: number;
+    load: string;
+  };
+  keirseyProfile?: {
+    label: string;
+    code: string;
+    normalized: string;
+    stressResponse: string;
+  };
+  heroJourney?: {
+    stage: string;
+    position: number;
+    total: number;
+    progress: number;
+  };
   chart: Buffer;
   chartWidth: number;
   chartHeight: number;
@@ -430,6 +449,13 @@ function buildLocalReport(input: ReportInput): StructuredReport {
           `${interpretation.shadow.summary} Bajo estres, el autosabotaje puede aparecer como exceso de control, retirada emocional, juicio interno o dificultad para pedir apoyo antes del limite.`,
         questionLabel: shadowRule.questionLabel,
         question: "Que emocion o necesidad estas intentando mantener fuera de escena para conservar una imagen de fortaleza?",
+        shadowMetrics: {
+          persona: normalizedShadow.persona,
+          shadowBase: normalizedShadow.shadowBase,
+          shadowTotal: normalizedShadow.shadowTotal,
+          integrationIndex: normalizedShadow.integrationIndex,
+          load: normalizedShadow.load
+        },
         chart: createStructureRadarChartPng({
           persona: normalizedShadow.persona,
           shadowBase: normalizedShadow.shadowBase,
@@ -453,6 +479,7 @@ function buildLocalReport(input: ReportInput): StructuredReport {
           `${interpretation.keirsey?.nextStep ?? ""}`,
         questionLabel: keirseyRule.questionLabel,
         question: "Bajo estres, que criterio usas primero: eficiencia, seguridad, armonia o coherencia interna?",
+        keirseyProfile: normalizedKeirsey,
         chart: createKeirseyMatrixChartPng(input.premium.Keirsey),
         chartWidth: REPORT_RENDER_RULES.chartSizes.keirsey.width,
         chartHeight: REPORT_RENDER_RULES.chartSizes.keirsey.height,
@@ -471,6 +498,7 @@ function buildLocalReport(input: ReportInput): StructuredReport {
           `${input.premium.Campbell}. ${interpretation.campbell?.summary ?? ""} Esta etapa senala el tipo de umbral que estas atravesando: no solo que debes resolver, sino que version de ti necesita madurar para sostener el siguiente tramo.`,
         questionLabel: heroRule.questionLabel,
         question: "Cual es la prueba real de esta etapa: actuar, soltar, pedir ayuda, sostener un limite o confiar en tu criterio?",
+        heroJourney: normalizedJourney,
         chart: createJourneyStageChartPng(input.premium.Campbell),
         chartWidth: REPORT_RENDER_RULES.chartSizes.heroJourney.width,
         chartHeight: REPORT_RENDER_RULES.chartSizes.heroJourney.height,
@@ -681,6 +709,118 @@ function drawRightAlignedText(
   });
 }
 
+function drawCenteredText(
+  context: PdfContext,
+  text: string,
+  options: {
+    x: number;
+    y: number;
+    width: number;
+    size: number;
+    font?: any;
+    color?: unknown;
+  }
+) {
+  const font = options.font ?? context.regularFont;
+  const textWidth = font.widthOfTextAtSize(text, options.size);
+
+  context.page.drawText(text, {
+    x: options.x + (options.width - textWidth) / 2,
+    y: options.y,
+    size: options.size,
+    font,
+    color: options.color ?? context.bodyColor
+  });
+}
+
+function clampScore(value: number, max = 5) {
+  return Math.max(0, Math.min(max, value));
+}
+
+function drawChartShell(
+  context: PdfContext,
+  options: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    title: string;
+    meta?: string;
+  }
+) {
+  context.page.drawRectangle({
+    x: options.x,
+    y: options.y,
+    width: options.width,
+    height: options.height,
+    color: context.brand.surface
+  });
+  context.page.drawText(options.title, {
+    x: options.x + 14,
+    y: options.y + options.height - 17,
+    size: 8.4,
+    font: context.boldFont,
+    color: context.titleColor
+  });
+
+  if (options.meta) {
+    drawRightAlignedText(context, options.meta, {
+      x: options.x + options.width - 14,
+      y: options.y + options.height - 17,
+      size: 7.4,
+      font: context.boldFont,
+      color: context.mutedColor
+    });
+  }
+}
+
+function drawScoreBar(
+  context: PdfContext,
+  options: {
+    label: string;
+    value: number;
+    max?: number;
+    x: number;
+    y: number;
+    width: number;
+    color: unknown;
+  }
+) {
+  const max = options.max ?? 5;
+  const barHeight = 7;
+  const barY = options.y - 16;
+  const normalizedWidth = Math.max(4, (clampScore(options.value, max) / max) * options.width);
+
+  context.page.drawText(options.label, {
+    x: options.x,
+    y: options.y,
+    size: 7.6,
+    font: context.boldFont,
+    color: context.titleColor
+  });
+  drawRightAlignedText(context, `${options.value.toFixed(1)} / ${max}`, {
+    x: options.x + options.width,
+    y: options.y,
+    size: 7.2,
+    font: context.boldFont,
+    color: context.mutedColor
+  });
+  drawRoundedRect(context, {
+    x: options.x,
+    y: barY,
+    width: options.width,
+    height: barHeight,
+    color: context.brand.surfaceStrong
+  });
+  drawRoundedRect(context, {
+    x: options.x,
+    y: barY,
+    width: normalizedWidth,
+    height: barHeight,
+    color: options.color
+  });
+}
+
 function drawArchetypeVectorChart(
   context: PdfContext,
   section: ReportSection,
@@ -717,26 +857,13 @@ function drawArchetypeVectorChart(
     context.brand.coral
   ];
 
-  context.page.drawRectangle({
+  drawChartShell(context, {
     x: options.x,
     y: options.y,
     width: options.width,
     height: options.height,
-    color: context.brand.surface
-  });
-  context.page.drawText("Ranking completo de arquetipos", {
-    x: options.x + chartPaddingX,
-    y: options.y + options.height - 17,
-    size: 8.4,
-    font: context.boldFont,
-    color: context.titleColor
-  });
-  drawRightAlignedText(context, "Puntaje", {
-    x: options.x + options.width - chartPaddingX,
-    y: options.y + options.height - 17,
-    size: 7.6,
-    font: context.boldFont,
-    color: context.mutedColor
+    title: "Ranking completo de arquetipos",
+    meta: "Puntaje"
   });
 
   [0, 2.5, 5, 7.5].forEach((tick) => {
@@ -805,6 +932,552 @@ function drawArchetypeVectorChart(
       font: context.boldFont,
       color: context.titleColor
     });
+  });
+}
+
+function drawShadowVectorChart(
+  context: PdfContext,
+  section: ReportSection,
+  options: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  }
+) {
+  const values = section.shadowMetrics;
+
+  if (!values) {
+    return;
+  }
+
+  drawChartShell(context, {
+    x: options.x,
+    y: options.y,
+    width: options.width,
+    height: options.height,
+    title: "Estructura interna",
+    meta: `Carga ${values.load}`
+  });
+
+  const center = { x: options.x + 108, y: options.y + 124 };
+  const radius = 68;
+  const axes = [
+    { label: "Persona", value: values.persona, angle: -90 },
+    { label: "Sombra base", value: values.shadowBase, angle: 30 },
+    { label: "Sombra total", value: values.shadowTotal, angle: 150 }
+  ];
+  const pointAt = (angle: number, scale: number) => {
+    const radians = (angle * Math.PI) / 180;
+
+    return {
+      x: center.x + Math.cos(radians) * radius * scale,
+      y: center.y + Math.sin(radians) * radius * scale
+    };
+  };
+
+  for (let ring = 1; ring <= 5; ring += 1) {
+    const scale = ring / 5;
+    const points = axes.map((axis) => pointAt(axis.angle, scale));
+
+    points.forEach((point, index) => {
+      context.page.drawLine({
+        start: point,
+        end: points[(index + 1) % points.length],
+        thickness: 0.45,
+        color: context.brand.border
+      });
+    });
+  }
+
+  axes.forEach((axis) => {
+    context.page.drawLine({
+      start: center,
+      end: pointAt(axis.angle, 1),
+      thickness: 0.45,
+      color: context.brand.border
+    });
+  });
+
+  const valuePoints = axes.map((axis) => pointAt(axis.angle, clampScore(axis.value) / 5));
+  const valuePath = valuePoints
+    .map((point, index) => `${index === 0 ? "M" : "L"} ${point.x} ${point.y}`)
+    .join(" ");
+
+  context.page.drawSvgPath(`${valuePath} Z`, {
+    color: context.brand.violet,
+    opacity: 0.16
+  });
+  valuePoints.forEach((point, index) => {
+    context.page.drawLine({
+      start: point,
+      end: valuePoints[(index + 1) % valuePoints.length],
+      thickness: 2.2,
+      color: context.brand.violet
+    });
+    context.page.drawEllipse({
+      x: point.x,
+      y: point.y,
+      xScale: 4.6,
+      yScale: 4.6,
+      color: context.brand.teal
+    });
+    context.page.drawEllipse({
+      x: point.x,
+      y: point.y,
+      xScale: 2.1,
+      yScale: 2.1,
+      color: context.brand.white
+    });
+  });
+
+  drawCenteredText(context, "Persona", {
+    x: center.x - 38,
+    y: center.y + radius + 14,
+    width: 76,
+    size: 7.2,
+    font: context.boldFont,
+    color: context.mutedColor
+  });
+  context.page.drawText("Sombra total", {
+    x: center.x - radius - 18,
+    y: center.y - radius - 20,
+    size: 7.0,
+    font: context.boldFont,
+    color: context.mutedColor
+  });
+  context.page.drawText("Sombra base", {
+    x: center.x + radius - 52,
+    y: center.y - radius - 20,
+    size: 7.0,
+    font: context.boldFont,
+    color: context.mutedColor
+  });
+
+  const barsX = options.x + 205;
+  const barsWidth = options.width - 224;
+  drawScoreBar(context, {
+    label: "Persona",
+    value: values.persona,
+    x: barsX,
+    y: options.y + 193,
+    width: barsWidth,
+    color: context.brand.blue
+  });
+  drawScoreBar(context, {
+    label: "Sombra base",
+    value: values.shadowBase,
+    x: barsX,
+    y: options.y + 143,
+    width: barsWidth,
+    color: context.brand.teal
+  });
+  drawScoreBar(context, {
+    label: "Sombra total",
+    value: values.shadowTotal,
+    x: barsX,
+    y: options.y + 93,
+    width: barsWidth,
+    color: context.brand.violet
+  });
+
+  context.page.drawRectangle({
+    x: barsX,
+    y: options.y + 24,
+    width: barsWidth,
+    height: 38,
+    color: context.brand.white,
+    borderColor: context.brand.border,
+    borderWidth: 0.7
+  });
+  context.page.drawText("Integracion", {
+    x: barsX + 9,
+    y: options.y + 47,
+    size: 7.2,
+    font: context.boldFont,
+    color: context.mutedColor
+  });
+  context.page.drawText(`${values.integrationIndex.toFixed(1)} / 5`, {
+    x: barsX + 9,
+    y: options.y + 31,
+    size: 11,
+    font: context.boldFont,
+    color: context.titleColor
+  });
+}
+
+function drawKeirseyVectorChart(
+  context: PdfContext,
+  section: ReportSection,
+  options: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  }
+) {
+  const activeLabel = section.keirseyProfile?.label ?? section.subtitle;
+  const profiles = [
+    {
+      label: "Racional / Estratega (NT)",
+      code: "NT",
+      title: "Racional",
+      detail: "Logica y estrategia",
+      color: context.brand.blue
+    },
+    {
+      label: "Guardian / Logistico (SJ)",
+      code: "SJ",
+      title: "Guardian",
+      detail: "Orden y continuidad",
+      color: context.brand.teal
+    },
+    {
+      label: "Idealista / Diplomatico (NF)",
+      code: "NF",
+      title: "Idealista",
+      detail: "Sentido y vinculo",
+      color: context.brand.violet
+    }
+  ];
+  const active = profiles.find((profile) => profile.label === activeLabel) ?? profiles[0];
+
+  drawChartShell(context, {
+    x: options.x,
+    y: options.y,
+    width: options.width,
+    height: options.height,
+    title: "Matriz de respuesta bajo presion",
+    meta: `Activo ${active.code}`
+  });
+
+  const gap = 10;
+  const cardWidth = (options.width - 28 - gap * 2) / 3;
+  const cardHeight = 116;
+  const cardY = options.y + 42;
+
+  profiles.forEach((profile, index) => {
+    const isActive = profile.label === active.label;
+    const x = options.x + 14 + index * (cardWidth + gap);
+
+    context.page.drawRectangle({
+      x,
+      y: cardY,
+      width: cardWidth,
+      height: cardHeight,
+      color: context.brand.white,
+      borderColor: isActive ? profile.color : context.brand.border,
+      borderWidth: isActive ? 1.4 : 0.7
+    });
+    context.page.drawRectangle({
+      x,
+      y: cardY + cardHeight - 6,
+      width: cardWidth,
+      height: 6,
+      color: profile.color
+    });
+    context.page.drawEllipse({
+      x: x + 26,
+      y: cardY + cardHeight - 31,
+      xScale: isActive ? 14 : 11,
+      yScale: isActive ? 14 : 11,
+      color: profile.color
+    });
+    drawCenteredText(context, profile.code, {
+      x: x + 14,
+      y: cardY + cardHeight - 34,
+      width: 24,
+      size: 7.8,
+      font: context.boldFont,
+      color: context.brand.white
+    });
+    context.page.drawText(profile.title, {
+      x: x + 14,
+      y: cardY + 67,
+      size: isActive ? 12 : 10.5,
+      font: context.boldFont,
+      color: context.titleColor
+    });
+    context.page.drawText(profile.detail, {
+      x: x + 14,
+      y: cardY + 49,
+      size: 7.2,
+      font: context.regularFont,
+      color: context.mutedColor
+    });
+
+    if (isActive) {
+      drawRoundedRect(context, {
+        x: x + 14,
+        y: cardY + 17,
+        width: 58,
+        height: 18,
+        color: profile.color
+      });
+      drawCenteredText(context, "ACTIVO", {
+        x: x + 14,
+        y: cardY + 22,
+        width: 58,
+        size: 7.5,
+        font: context.boldFont,
+        color: context.brand.white
+      });
+    } else {
+      context.page.drawText("Referencia", {
+        x: x + 14,
+        y: cardY + 22,
+        size: 7.3,
+        font: context.boldFont,
+        color: context.mutedColor
+      });
+    }
+  });
+}
+
+function drawHeroJourneyVectorChart(
+  context: PdfContext,
+  section: ReportSection,
+  options: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  }
+) {
+  const journey = section.heroJourney;
+
+  if (!journey) {
+    return;
+  }
+
+  const stages = [
+    "Llamada",
+    "Umbral",
+    "Prueba",
+    "Retorno",
+    "Maestro"
+  ];
+  const activeIndex = Math.max(0, journey.position - 1);
+
+  drawChartShell(context, {
+    x: options.x,
+    y: options.y,
+    width: options.width,
+    height: options.height,
+    title: "Linea evolutiva",
+    meta: `Etapa ${journey.position} / ${journey.total}`
+  });
+
+  const lineY = options.y + 78;
+  const startX = options.x + 54;
+  const endX = options.x + options.width - 54;
+  const gap = (endX - startX) / (stages.length - 1);
+  const activeX = startX + gap * activeIndex;
+
+  context.page.drawLine({
+    start: { x: startX, y: lineY },
+    end: { x: endX, y: lineY },
+    thickness: 4,
+    color: context.brand.border
+  });
+  context.page.drawLine({
+    start: { x: startX, y: lineY },
+    end: { x: activeX, y: lineY },
+    thickness: 4,
+    color: context.brand.teal
+  });
+
+  stages.forEach((stage, index) => {
+    const x = startX + gap * index;
+    const isActive = index === activeIndex;
+    const isComplete = index <= activeIndex;
+    const color = isActive ? context.brand.coral : isComplete ? context.brand.teal : context.brand.border;
+
+    context.page.drawEllipse({
+      x,
+      y: lineY,
+      xScale: isActive ? 17 : 13,
+      yScale: isActive ? 17 : 13,
+      color
+    });
+    context.page.drawEllipse({
+      x,
+      y: lineY,
+      xScale: isActive ? 7 : 5,
+      yScale: isActive ? 7 : 5,
+      color: context.brand.white
+    });
+    drawCenteredText(context, String(index + 1), {
+      x: x - 11,
+      y: lineY - 3.4,
+      width: 22,
+      size: 7.4,
+      font: context.boldFont,
+      color: isActive ? context.titleColor : context.mutedColor
+    });
+    drawCenteredText(context, stage, {
+      x: x - 40,
+      y: options.y + 33,
+      width: 80,
+      size: 6.8,
+      font: isActive ? context.boldFont : context.regularFont,
+      color: isActive ? context.titleColor : context.mutedColor
+    });
+  });
+
+  context.page.drawText(journey.stage, {
+    x: options.x + 14,
+    y: options.y + 12,
+    size: 8.2,
+    font: context.boldFont,
+    color: context.titleColor
+  });
+  drawRightAlignedText(context, `${Math.round(journey.progress * 100)}% del arco`, {
+    x: options.x + options.width - 14,
+    y: options.y + 12,
+    size: 7.4,
+    font: context.boldFont,
+    color: context.mutedColor
+  });
+}
+
+function drawActionPlanVectorChart(
+  context: PdfContext,
+  section: ReportSection,
+  options: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  }
+) {
+  const steps = (section.actionSteps ?? []).slice(0, REPORT_ACTION_STEP_COUNT);
+
+  if (!steps.length) {
+    return;
+  }
+
+  drawChartShell(context, {
+    x: options.x,
+    y: options.y,
+    width: options.width,
+    height: options.height,
+    title: "Plan tactico semanal",
+    meta: `${steps.length} acciones`
+  });
+
+  const colors = [context.brand.blue, context.brand.teal, context.brand.violet];
+  const gap = 10;
+  const cardWidth = (options.width - 28 - gap * 2) / 3;
+  const cardHeight = 118;
+  const cardY = options.y + 48;
+  const connectorY = cardY + cardHeight / 2;
+
+  steps.forEach((step, index) => {
+    const x = options.x + 14 + index * (cardWidth + gap);
+    const color = colors[index] ?? context.brand.coral;
+
+    if (index > 0) {
+      context.page.drawLine({
+        start: { x: x - gap, y: connectorY },
+        end: { x, y: connectorY },
+        thickness: 2.2,
+        color: context.brand.border
+      });
+    }
+
+    context.page.drawRectangle({
+      x,
+      y: cardY,
+      width: cardWidth,
+      height: cardHeight,
+      color: context.brand.white,
+      borderColor: context.brand.border,
+      borderWidth: 0.7
+    });
+    context.page.drawRectangle({
+      x,
+      y: cardY + cardHeight - 6,
+      width: cardWidth,
+      height: 6,
+      color
+    });
+    context.page.drawEllipse({
+      x: x + 21,
+      y: cardY + cardHeight - 30,
+      xScale: 13,
+      yScale: 13,
+      color
+    });
+    drawCenteredText(context, String(index + 1), {
+      x: x + 10,
+      y: cardY + cardHeight - 33,
+      width: 22,
+      size: 8,
+      font: context.boldFont,
+      color: context.brand.white
+    });
+    context.page.drawText(`Paso ${index + 1}`, {
+      x: x + 41,
+      y: cardY + cardHeight - 33,
+      size: 8.3,
+      font: context.boldFont,
+      color: context.titleColor
+    });
+    drawWrappedTextAt(context, abbreviate(step, 74), {
+      x: x + 12,
+      y: cardY + cardHeight - 58,
+      width: cardWidth - 24,
+      size: 7.3,
+      font: context.regularFont,
+      color: context.bodyColor,
+      lineGap: 2.6
+    });
+  });
+}
+
+async function drawVectorOrPngChart(
+  context: PdfContext,
+  section: ReportSection,
+  options: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  }
+) {
+  if (section.id === "mapa") {
+    drawArchetypeVectorChart(context, section, options);
+    return;
+  }
+
+  if (section.id === "sombra") {
+    drawShadowVectorChart(context, section, options);
+    return;
+  }
+
+  if (section.id === "keirsey") {
+    drawKeirseyVectorChart(context, section, options);
+    return;
+  }
+
+  if (section.id === "heroe") {
+    drawHeroJourneyVectorChart(context, section, options);
+    return;
+  }
+
+  if (section.id === "pasos") {
+    drawActionPlanVectorChart(context, section, options);
+    return;
+  }
+
+  const chartImage = await context.doc.embedPng(section.chart);
+
+  context.page.drawImage(chartImage, {
+    x: options.x,
+    y: options.y,
+    width: options.width,
+    height: options.height
   });
 }
 
@@ -886,23 +1559,12 @@ async function drawSectionPage(context: PdfContext, section: ReportSection) {
     font: context.boldFont,
     color: context.mutedColor
   });
-  if (section.id === "mapa") {
-    drawArchetypeVectorChart(context, section, {
-      x: chartX,
-      y: chartY,
-      width: section.chartWidth,
-      height: section.chartHeight
-    });
-  } else {
-    const chartImage = await context.doc.embedPng(section.chart);
-
-    context.page.drawImage(chartImage, {
-      x: chartX,
-      y: chartY,
-      width: section.chartWidth,
-      height: section.chartHeight
-    });
-  }
+  await drawVectorOrPngChart(context, section, {
+    x: chartX,
+    y: chartY,
+    width: section.chartWidth,
+    height: section.chartHeight
+  });
   context.currentY -= section.chartHeight + 42;
   drawMetricCards(context, section.metrics);
 
