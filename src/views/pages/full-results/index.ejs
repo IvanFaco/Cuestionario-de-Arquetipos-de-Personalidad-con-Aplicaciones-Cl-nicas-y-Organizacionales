@@ -128,8 +128,28 @@
   </section>
 
   <footer class="question-actions">
-    <a class="btn btn-primary app-cta" href="/full-results/pdf">Descargar informe completo</a>
+    <a class="btn btn-primary app-cta" href="/full-results/pdf" data-report-download>Descargar informe completo</a>
   </footer>
+
+  <div class="share-invite" data-share-invite hidden>
+    <div class="share-invite__panel" role="dialog" aria-modal="true" aria-labelledby="share-invite-title">
+      <button class="share-invite__close" type="button" data-share-close aria-label="Cerrar invitacion">&times;</button>
+      <div class="share-invite__brand">
+        <img src="/assets/logo-256.png" alt="MiRealYo.com" class="share-invite__logo" />
+        <span>MiRealYo.com</span>
+      </div>
+      <p class="share-invite__kicker mb-0">Informe descargado</p>
+      <h2 class="share-invite__title mb-0" id="share-invite-title">Comparte esta experiencia con alguien cercano</h2>
+      <p class="share-invite__copy mb-0">
+        Si esta lectura te ayudo a verte con mas claridad, invita a tus amigos a descubrir su propio mapa.
+      </p>
+      <div class="share-invite__actions">
+        <button class="btn btn-primary share-invite__button" type="button" data-share-copy>Copiar enlace</button>
+        <a class="btn btn-outline share-invite__button" href="#" target="_blank" rel="noopener" data-share-whatsapp>Enviar por WhatsApp</a>
+      </div>
+      <p class="share-invite__status mb-0" data-share-status aria-live="polite"></p>
+    </div>
+  </div>
 </section>
 
 <script>
@@ -167,6 +187,113 @@
         currentIndex = index;
         sync();
       });
+    });
+  })();
+
+  (() => {
+    const downloadLink = document.querySelector("[data-report-download]");
+    const invite = document.querySelector("[data-share-invite]");
+    const closeButton = document.querySelector("[data-share-close]");
+    const copyButton = document.querySelector("[data-share-copy]");
+    const whatsAppLink = document.querySelector("[data-share-whatsapp]");
+    const status = document.querySelector("[data-share-status]");
+
+    if (!downloadLink || !invite) return;
+
+    const shareUrl = `${window.location.origin}/`;
+    const shareText = "Descubre tu mapa de personalidad en MiRealYo.";
+
+    if (whatsAppLink) {
+      whatsAppLink.href = `https://wa.me/?text=${encodeURIComponent(`${shareText} ${shareUrl}`)}`;
+    }
+
+    const showInvite = () => {
+      invite.hidden = false;
+      document.body.classList.add("share-invite-open");
+      closeButton?.focus();
+    };
+
+    const hideInvite = () => {
+      invite.hidden = true;
+      document.body.classList.remove("share-invite-open");
+      downloadLink.focus();
+    };
+
+    const resolveFilename = (disposition) => {
+      const match = disposition?.match(/filename="?([^"]+)"?/i);
+      return match?.[1] || "Informe_MiRealYo.pdf";
+    };
+
+    const triggerDownload = (blob, filename) => {
+      const objectUrl = window.URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = objectUrl;
+      anchor.download = filename;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      window.setTimeout(() => window.URL.revokeObjectURL(objectUrl), 1500);
+    };
+
+    closeButton?.addEventListener("click", hideInvite);
+    invite.addEventListener("click", (event) => {
+      if (event.target === invite) {
+        hideInvite();
+      }
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && !invite.hidden) {
+        hideInvite();
+      }
+    });
+
+    copyButton?.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(shareUrl);
+        if (status) status.textContent = "Enlace copiado.";
+      } catch (_error) {
+        if (status) status.textContent = shareUrl;
+      }
+    });
+
+    downloadLink.addEventListener("click", async (event) => {
+      event.preventDefault();
+
+      const originalText = downloadLink.textContent;
+      downloadLink.setAttribute("aria-busy", "true");
+      downloadLink.classList.add("is-loading");
+      downloadLink.textContent = "Preparando informe...";
+
+      try {
+        const response = await fetch(downloadLink.href, {
+          credentials: "same-origin"
+        });
+
+        if (!response.ok) {
+          throw new Error("No fue posible descargar el informe.");
+        }
+
+        const contentType = response.headers.get("Content-Type") || "";
+        if (!contentType.includes("application/pdf")) {
+          throw new Error("La respuesta no contiene un PDF.");
+        }
+
+        const cacheStatus = response.headers.get("X-MiRealYo-Report-Cache");
+        const filename = resolveFilename(response.headers.get("Content-Disposition"));
+        const blob = await response.blob();
+        triggerDownload(blob, filename);
+
+        if (cacheStatus === "miss") {
+          window.setTimeout(showInvite, 500);
+        }
+      } catch (_error) {
+        window.location.href = downloadLink.href;
+      } finally {
+        downloadLink.removeAttribute("aria-busy");
+        downloadLink.classList.remove("is-loading");
+        downloadLink.textContent = originalText;
+      }
     });
   })();
 </script>
