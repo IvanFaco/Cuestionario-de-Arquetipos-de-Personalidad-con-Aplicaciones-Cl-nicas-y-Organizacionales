@@ -5,6 +5,7 @@ import { AuthError } from "../auth/auth.service.js";
 import { getAuthService } from "../auth/auth.container.js";
 import { getPaymentsService } from "../payments/payments.container.js";
 import { getAssessmentPersistenceService } from "./assessment.persistence.container.js";
+import { getAssessmentReportCacheService } from "./assessment.report-cache.container.js";
 import { getDatabaseInspector } from "../../shared/database/database.inspector.factory.js";
 import {
   getAppearanceOptions,
@@ -236,6 +237,7 @@ const profilePronounOptions = [
 
 const authService = getAuthService();
 const assessmentPersistenceService = getAssessmentPersistenceService();
+const assessmentReportCacheService = getAssessmentReportCacheService();
 const paymentsService = getPaymentsService();
 const databaseInspector = getDatabaseInspector();
 const registerIntentOptions = ["account", "download"] as const;
@@ -1591,15 +1593,29 @@ export async function downloadDashboardPdf(req: Request, res: Response) {
     premium: session.premiumOutcome
   };
 
-  const report = await requestAiReport(reportInput);
-  const pdfBuffer = await buildExecutiveReportPdf(reportInput, {
-    reportText: report.text,
-    reportSource: report.source
+  const cachedReport = await assessmentReportCacheService.getOrCreate({
+    userId: req.session.auth?.userId,
+    input: reportInput,
+    appVersion: env.appVersion,
+    create: async () => {
+      const report = await requestAiReport(reportInput);
+      const pdfBuffer = await buildExecutiveReportPdf(reportInput, {
+        reportText: report.text,
+        reportSource: report.source
+      });
+
+      return {
+        reportSource: report.source,
+        reportText: report.text,
+        pdfBuffer
+      };
+    }
   });
 
   res.setHeader("Content-Type", "application/pdf");
   res.setHeader("Content-Disposition", 'attachment; filename="Informe_MiRealYo.pdf"');
-  return res.send(pdfBuffer);
+  res.setHeader("X-MiRealYo-Report-Cache", cachedReport.cacheStatus);
+  return res.send(cachedReport.pdfBuffer);
 }
 
 export function renderMigrationStatus(req: Request, res: Response) {
