@@ -94,5 +94,25 @@ export const sqliteMigrations: SqliteMigration[] = [
       CREATE INDEX IF NOT EXISTS idx_sessions_expires_at
         ON sessions(expires_at);
     `
+  },
+  {
+    id: "006_create_assessment_report_cache",
+    sql: `
+      CREATE TABLE IF NOT EXISTS assessment_report_cache (
+        user_id TEXT NOT NULL,
+        input_hash TEXT NOT NULL,
+        app_version TEXT NOT NULL,
+        report_source TEXT NOT NULL CHECK (report_source IN ('webhook', 'fallback')),
+        report_text TEXT NOT NULL,
+        pdf_blob BLOB NOT NULL,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        PRIMARY KEY (user_id, input_hash, app_version),
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_assessment_report_cache_user
+        ON assessment_report_cache(user_id, created_at);
+    `
   }
 ];

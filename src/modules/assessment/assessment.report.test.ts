@@ -6,6 +6,13 @@ import { inflateSync } from "node:zlib";
 import { buildDemoProfile, buildHookOutcome, buildPremiumOutcome } from "./assessment.domain.js";
 import { buildAiReportUserMessage, requestAiReport } from "./assessment.ai-report.service.js";
 import {
+  AssessmentReportCacheService,
+  createReportInputHash,
+  type AssessmentReportCacheRepository,
+  type CachedReportEntry,
+  type CachedReportKey
+} from "./assessment.report-cache.service.js";
+import {
   REPORT_ACTION_STEP_COUNT,
   enforceActionStepCount,
   hasProhibitedNarrativePattern
@@ -85,6 +92,26 @@ function buildReportInput() {
   };
 }
 
+class MemoryReportCacheRepository implements AssessmentReportCacheRepository {
+  private readonly entries = new Map<string, CachedReportEntry>();
+
+  findByKey(key: CachedReportKey): CachedReportEntry | null {
+    return this.entries.get(this.keyFor(key)) ?? null;
+  }
+
+  save(entry: CachedReportEntry): void {
+    const key = this.keyFor(entry);
+
+    if (!this.entries.has(key)) {
+      this.entries.set(key, entry);
+    }
+  }
+
+  private keyFor(key: CachedReportKey) {
+    return `${key.userId}:${key.inputHash}:${key.appVersion}`;
+  }
+}
+
 test("getShadowLabel matches dashboard messaging", () => {
   assert.equal(
     getShadowLabel(4),
@@ -131,6 +158,108 @@ test("report contract enforces exactly three action steps and prohibited pattern
   assert.equal(steps.length, REPORT_ACTION_STEP_COUNT);
   assert.equal(steps[2], "Separa impulso, dato y necesidad antes de actuar bajo presion.");
   assert.equal(hasProhibitedNarrativePattern("Fuente narrativa: agente IA"), true);
+});
+
+test("report cache stores the first generated PDF and reuses it", async () => {
+  const service = new AssessmentReportCacheService(new MemoryReportCacheRepository());
+  const input = buildReportInput();
+  let createCount = 0;
+  const create = async () => {
+    createCount += 1;
+    return {
+      reportSource: "webhook" as const,
+      reportText: `Narrativa ${createCount}`,
+      pdfBuffer: Buffer.from(`PDF ${createCount}`)
+    };
+  };
+
+  const first = await service.getOrCreate({
+    userId: "user-1",
+    input,
+    appVersion: "0.10.14",
+    create
+  });
+  const second = await service.getOrCreate({
+    userId: "user-1",
+    input,
+    appVersion: "0.10.14",
+    create
+  });
+
+  assert.equal(first.cacheStatus, "miss");
+  assert.equal(second.cacheStatus, "hit");
+  assert.equal(createCount, 1);
+  assert.equal(second.reportText, "Narrativa 1");
+  assert.equal(second.pdfBuffer.toString(), "PDF 1");
+});
+
+test("report cache invalidates when the test input changes", async () => {
+  const service = new AssessmentReportCacheService(new MemoryReportCacheRepository());
+  const input = buildReportInput();
+  const changedInput = {
+    ...input,
+    demo: buildDemoProfile({
+      nombre: "Camila nueva",
+      objetivo: "relationships"
+    })
+  };
+  let createCount = 0;
+
+  const create = async () => {
+    createCount += 1;
+    return {
+      reportSource: "webhook" as const,
+      reportText: `Narrativa ${createCount}`,
+      pdfBuffer: Buffer.from(`PDF ${createCount}`)
+    };
+  };
+
+  assert.notEqual(createReportInputHash(input), createReportInputHash(changedInput));
+
+  await service.getOrCreate({
+    userId: "user-1",
+    input,
+    appVersion: "0.10.14",
+    create
+  });
+  const second = await service.getOrCreate({
+    userId: "user-1",
+    input: changedInput,
+    appVersion: "0.10.14",
+    create
+  });
+
+  assert.equal(second.cacheStatus, "miss");
+  assert.equal(createCount, 2);
+  assert.equal(second.pdfBuffer.toString(), "PDF 2");
+});
+
+test("report cache bypasses storage when there is no authenticated user", async () => {
+  const service = new AssessmentReportCacheService(new MemoryReportCacheRepository());
+  let createCount = 0;
+  const create = async () => {
+    createCount += 1;
+    return {
+      reportSource: "fallback" as const,
+      reportText: `Fallback ${createCount}`,
+      pdfBuffer: Buffer.from(`PDF ${createCount}`)
+    };
+  };
+
+  const first = await service.getOrCreate({
+    input: buildReportInput(),
+    appVersion: "0.10.14",
+    create
+  });
+  const second = await service.getOrCreate({
+    input: buildReportInput(),
+    appVersion: "0.10.14",
+    create
+  });
+
+  assert.equal(first.cacheStatus, "bypass");
+  assert.equal(second.cacheStatus, "bypass");
+  assert.equal(createCount, 2);
 });
 
 test("requestAiReport sends userMessage and reads agentMessage", async () => {
